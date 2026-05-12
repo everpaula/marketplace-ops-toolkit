@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent ROI Calculator — Fraud Ops Toolkit</title>
+<meta name="description" content="Evaluate workforce ROI in manual review operations. Built from a methodology run across 340 agents in 11 countries at Shopee.">
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-elev: #131c33;
+    --bg-card: #131c33;
+    --border: #1f2a44;
+    --border-bright: #2e3d5f;
+    --text: #e6ecf5;
+    --text-muted: #8a96b4;
+    --accent: #14b8a6;
+    --accent-hover: #0d9488;
+    --accent-soft: rgba(20, 184, 166, 0.1);
+    --green: #10b981;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --blue: #60a5fa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+  /* === HEADER === */
+  header { margin-bottom: 2rem; }
+  .brand {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  header h1 {
+    font-size: 1.9rem;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  header .tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 720px;
+    line-height: 1.55;
+  }
+  header .tagline strong { color: var(--text); }
+
+  /* === GRID === */
+  .grid-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 820px) {
+    .grid-main { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem;
+  }
+  .card h2 {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+
+  /* === INPUT === */
+  .input-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
+  .input-row label {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    margin-bottom: 0.35rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .input-row label .hint {
+    color: var(--border-bright);
+    font-size: 0.72rem;
+    font-style: italic;
+  }
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .input-wrap input[type="number"] {
+    flex: 0 0 110px;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.5rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    font-weight: 600;
+  }
+  .input-wrap input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .input-wrap .prefix {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    width: 14px;
+  }
+  .input-wrap .suffix {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  .input-wrap input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+
+  /* === OUTPUT === */
+  .roi-headline {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .roi-value {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .roi-x {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  .tier-badge {
+    display: inline-block;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .tier-badge.green { background: var(--green); color: #062e23; }
+  .tier-badge.yellow { background: var(--yellow); color: #422a05; }
+  .tier-badge.red { background: var(--red); color: #fff; }
+
+  .tier-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    padding: 0.7rem 0.9rem;
+    background: var(--bg);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem 1.2rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .breakdown-item {
+    display: flex;
+    flex-direction: column;
+  }
+  .breakdown-label {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.2rem;
+  }
+  .breakdown-value {
+    color: var(--text);
+    font-size: 1.15rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .breakdown-value.positive { color: var(--green); }
+  .breakdown-value.negative { color: var(--red); }
+  .breakdown-sub {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-top: 0.1rem;
+  }
+
+  /* === DECOMPOSITION === */
+  .decomp { margin-bottom: 1.5rem; }
+  .decomp-intro {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .decomp-bar-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 90px;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.7rem;
+    font-size: 0.88rem;
+  }
+  .decomp-label {
+    color: var(--text);
+  }
+  .decomp-bar-track {
+    height: 10px;
+    background: var(--bg);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+  }
+  .decomp-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.25s ease, background 0.25s ease;
+    border-radius: 5px;
+  }
+  .decomp-bar-fill.weak { background: var(--red); }
+  .decomp-bar-fill.mid { background: var(--yellow); }
+  .decomp-bar-fill.strong { background: var(--green); }
+  .decomp-value {
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .decomp-recommendation {
+    background: rgba(20, 184, 166, 0.06);
+    border-left: 3px solid var(--accent);
+    padding: 0.85rem 1.1rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+    font-size: 0.92rem;
+  }
+  .decomp-recommendation strong {
+    display: block;
+    color: var(--accent);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+    font-weight: 800;
+  }
+
+  /* === SCENARIOS === */
+  .scenarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.6rem;
+  }
+  .scenario-btn {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .scenario-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .scenario-btn .scenario-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+  }
+  .scenario-btn .scenario-meta {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  /* === ABOUT === */
+  .about {
+    margin-top: 2rem;
+    padding: 1.5rem 1.6rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .about h2 {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+  .about p { margin-bottom: 0.85rem; color: var(--text); font-size: 0.94rem; line-height: 1.7; }
+  .about p strong { color: var(--accent); }
+  .about .formula {
+    background: var(--bg);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.92rem;
+    color: var(--text);
+    margin: 0.5rem 0 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .about ul { margin: 0.5rem 0 1rem 1.4rem; color: var(--text); }
+  .about ul li { margin-bottom: 0.35rem; font-size: 0.93rem; }
+
+  .tier-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.6rem;
+    margin: 0.6rem 0 1rem;
+  }
+  .tier-legend-item {
+    padding: 0.7rem 0.9rem;
+    border-radius: 6px;
+    border-left: 3px solid;
+    background: var(--bg);
+    font-size: 0.85rem;
+  }
+  .tier-legend-item.green { border-color: var(--green); }
+  .tier-legend-item.yellow { border-color: var(--yellow); }
+  .tier-legend-item.red { border-color: var(--red); }
+  .tier-legend-item strong {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.2rem;
+    font-weight: 800;
+  }
+  .tier-legend-item.green strong { color: var(--green); }
+  .tier-legend-item.yellow strong { color: var(--yellow); }
+  .tier-legend-item.red strong { color: var(--red); }
+
+  footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="brand">fraud-ops-toolkit · tool #1</div>
+    <h1>Agent ROI Calculator</h1>
+    <div class="tagline">
+      Evaluate workforce ROI in manual review operations. Built from a methodology I ran across <strong>340 agents in 11 countries</strong> at Shopee. Use it to decide which queues to scale, which to optimize, and which need root-cause investigation before another dollar gets spent.
+    </div>
+  </header>
+
+  <div class="grid-main">
+
+    <!-- INPUT -->
+    <div class="card">
+      <h2>Inputs</h2>
+
+      <div class="input-row">
+        <label>Number of agents <span class="hint">team size</span></label>
+        <div class="input-wrap">
+          <input type="number" id="numAgents" value="10" min="1" step="1">
+          <input type="range" id="numAgentsRange" min="1" max="200" value="10">
+        </div>
+      </div>
+
+      <div class="input-row">
+        <label>Daily cost per agent <span class="hint">fully loaded</span></label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input type="number" id="dailyCost" value="45" min="1" step="1">
+          <input type="range" id="dailyCostRange" min="5" max="500" value="45">
+        </div>
+      </div>
+
+      <div class="input-row">
+        <label>Orders reviewed per agent per day <span class="hint">throughput</span></label>
+        <div class="input-wrap">
+          <input type="number" id="ordersPerAgent" value="200" min="0" step="1">
+          <input type="range" id="ordersPerAgentRange" min="0" max="1500" value="200">
+        </div>
+      </div>
+
+      <div class="input-row">
+        <label>Cancellation accuracy <span class="hint">% of reviewed orders correctly cancelled</span></label>
+        <div class="input-wrap">
+          <input type="number" id="accuracy" value="15" min="0" max="100" step="0.5">
+          <input type="range" id="accuracyRange" min="0" max="50" value="15" step="0.5">
+          <span class="suffix">%</span>
+        </div>
+      </div>
+
+      <div class="input-row">
+        <label>Average savings per cancelled order <span class="hint">avg fraud loss prevented</span></label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input type="number" id="avgSavings" value="5" min="0" step="0.1">
+          <input type="range" id="avgSavingsRange" min="0" max="30" value="5" step="0.1">
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="card">
+      <h2>Output</h2>
+
+      <div class="roi-headline">
+        <div class="roi-value" id="roiValue">3.33</div>
+        <div class="roi-x">x ROI</div>
+      </div>
+
+      <div class="tier-badge green" id="tierBadge">Scale</div>
+
+      <div class="tier-desc" id="tierDesc">Each $1 invested in this queue generates $3.33 in savings. The queue is operating profitably — consider scaling headcount or expanding scope.</div>
+
+      <div class="breakdown">
+        <div class="breakdown-item">
+          <div class="breakdown-label">Savings per agent / day</div>
+          <div class="breakdown-value positive" id="savingsPerAgent">$150.00</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-label">Cost per agent / day</div>
+          <div class="breakdown-value" id="costPerAgentDisplay">$45.00</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-label">Net per agent / day</div>
+          <div class="breakdown-value positive" id="netPerAgent">+$105.00</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-label">Team net / day</div>
+          <div class="breakdown-value positive" id="teamNetDay">+$1,050.00</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-label">Team net / month</div>
+          <div class="breakdown-value positive" id="teamNetMonth">+$31,500.00</div>
+          <div class="breakdown-sub">22 working days</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-label">Team net / year</div>
+          <div class="breakdown-value positive" id="teamNetYear">+$383,250.00</div>
+          <div class="breakdown-sub">365 days operational</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECOMPOSITION -->
+  <div class="card decomp">
+    <h2>Where is your ROI coming from?</h2>
+    <div class="decomp-intro">
+      Each lever benchmarked against industry averages from real fraud-ops teams. The weakest lever is where investigation pays off first — not where you have the most pain, but where the gap to benchmark is biggest.
+    </div>
+
+    <div class="decomp-bar-row">
+      <div class="decomp-label">Orders reviewed/day</div>
+      <div class="decomp-bar-track"><div class="decomp-bar-fill" id="bar-orders"></div></div>
+      <div class="decomp-value" id="val-orders">200 / 250</div>
+    </div>
+    <div class="decomp-bar-row">
+      <div class="decomp-label">Cancellation accuracy</div>
+      <div class="decomp-bar-track"><div class="decomp-bar-fill" id="bar-accuracy"></div></div>
+      <div class="decomp-value" id="val-accuracy">15% / 15%</div>
+    </div>
+    <div class="decomp-bar-row">
+      <div class="decomp-label">Avg savings/cancellation</div>
+      <div class="decomp-bar-track"><div class="decomp-bar-fill" id="bar-savings"></div></div>
+      <div class="decomp-value" id="val-savings">$5 / $4</div>
+    </div>
+    <div class="decomp-bar-row">
+      <div class="decomp-label">Daily cost/agent</div>
+      <div class="decomp-bar-track"><div class="decomp-bar-fill" id="bar-cost"></div></div>
+      <div class="decomp-value" id="val-cost">$45 / $30</div>
+    </div>
+
+    <div class="decomp-recommendation" id="recommendation">
+      <strong>Where to look first</strong>
+      <span id="recText">All levers are within benchmark range. Focus on scaling rather than optimizing.</span>
+    </div>
+  </div>
+
+  <!-- SCENARIOS -->
+  <div class="card">
+    <h2>Try a pre-loaded scenario</h2>
+    <div class="decomp-intro">
+      Real situations sanitized from a multi-country fraud ops dataset. Click to load and see how ROI changes the conversation.
+    </div>
+    <div class="scenarios" id="scenarioGrid"></div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="about">
+    <h2>About this calculator</h2>
+
+    <p>At Shopee Brazil (2020–2022) I was the first hire in Fraud Prevention. The team grew to seven specialists running on roughly 1.5M daily transactions. Cutting chargebacks 60% took a lot of things — a CatBoost model with AUC 0.9883, contracts redesigned with payment processors, Cybersource Decision Manager integrated as a manual review layer — but the question that came up <strong>every quarter</strong> was simpler than any of those: <strong>which queues should we scale, and which are losing us money?</strong></p>
+
+    <p>This calculator is the methodology I used to answer that, across 340 agents and 11 countries. Open-sourced for any ops leader making the same call.</p>
+
+    <p><strong>The formula</strong></p>
+    <div class="formula">Agent ROI = (Orders reviewed × Accuracy × Avg savings/cancellation) ÷ Daily cost</div>
+
+    <p><strong>Tier classification</strong></p>
+    <div class="tier-legend">
+      <div class="tier-legend-item green">
+        <strong>ROI ≥ 1.0 — Scale</strong>
+        Each $1 in agent cost generates $1+ in savings. Add headcount, expand case mix, raise the bar on what flows to the queue.
+      </div>
+      <div class="tier-legend-item yellow">
+        <strong>0.5 ≤ ROI &lt; 1.0 — Optimize</strong>
+        Marginal. Don't scale yet. Tune one lever before adding people. Usually accuracy or orders/agent.
+      </div>
+      <div class="tier-legend-item red">
+        <strong>ROI &lt; 0.5 — Root cause</strong>
+        Negative. Adding more agents amplifies the loss. Investigate rule precision, tooling, training, or whether this case type belongs in a queue at all.
+      </div>
+    </div>
+
+    <p><strong>Use cases</strong></p>
+    <ul>
+      <li>Fraud operations queue management (the original use case)</li>
+      <li>Content moderation teams reviewing flagged content</li>
+      <li>Customer service quality assurance review</li>
+      <li>KYC and compliance manual review</li>
+      <li>Any operations function with a manual decision queue and measurable savings per intervention</li>
+    </ul>
+
+    <p><strong>What this calculator does NOT replace</strong></p>
+    <ul>
+      <li>Forecasting volume changes — you still need a separate model for that</li>
+      <li>Vendor vs in-house split decisions — ROI calculation is one input, not the whole call</li>
+      <li>Quality framework design (sampling, calibration, IRR) — different problem</li>
+      <li>Rule precision tuning — that's where Fraud Strategy lives, not Operations</li>
+    </ul>
+
+    <p><strong>A note on the benchmarks</strong></p>
+    <p>The decomposition bars compare your inputs against rough industry averages. They are not a competitive benchmark — they are a <strong>sanity check</strong>. If your orders-per-agent is 50 against a 250 benchmark, that's a signal to investigate tooling or process bottlenecks, not a verdict that your team is bad. Real benchmarks come from your own data over time.</p>
+  </div>
+
+  <footer>
+    Open source · MIT License · Built by Everton Paula · <a href="https://github.com/everpaula/fraud-ops-toolkit" target="_blank">View on GitHub</a>
+  </footer>
+
+</div>
+
+<script>
+// =========================================================================
+// Benchmarks (industry averages from multi-country fraud ops data)
+// =========================================================================
+const BENCH = {
+  ordersPerAgent: 250,
+  accuracy: 15,
+  avgSavings: 4,
+  dailyCost: 30
+};
+
+// Lower bound for cost is inverted (lower cost is better)
+// For others, higher is better
+
+// =========================================================================
+// Pre-loaded scenarios (real situations sanitized)
+// =========================================================================
+const SCENARIOS = [
+  {
+    title: "High-ROI Mature Market",
+    meta: "18 agents · ROI ~10.7 · scale aggressively",
+    data: { numAgents: 18, dailyCost: 20, ordersPerAgent: 222, accuracy: 20.45, avgSavings: 4.81 }
+  },
+  {
+    title: "Best-in-Class Lean Team",
+    meta: "2 agents · ROI ~35 · highest efficiency",
+    data: { numAgents: 2, dailyCost: 15, ordersPerAgent: 998, accuracy: 18.79, avgSavings: 2.79 }
+  },
+  {
+    title: "Borderline Underperformer",
+    meta: "5 agents · ROI ~0.36 · root cause needed",
+    data: { numAgents: 5, dailyCost: 37, ordersPerAgent: 155, accuracy: 1.37, avgSavings: 6.33 }
+  },
+  {
+    title: "Stalled New Market",
+    meta: "1 agent · ROI 0 · queue not yet operational",
+    data: { numAgents: 1, dailyCost: 55, ordersPerAgent: 7, accuracy: 0, avgSavings: 0 }
+  },
+  {
+    title: "Premium Market w/ Cost Drag",
+    meta: "4 agents · ROI ~1.0 · marginal, watch cost",
+    data: { numAgents: 4, dailyCost: 73, ordersPerAgent: 58, accuracy: 49.01, avgSavings: 2.55 }
+  },
+  {
+    title: "Volume Heavy, Accuracy Low",
+    meta: "19 agents · ROI ~3.5 · scaling but inefficient",
+    data: { numAgents: 19, dailyCost: 29, ordersPerAgent: 1006, accuracy: 4.05, avgSavings: 2.55 }
+  }
+];
+
+// =========================================================================
+// State
+// =========================================================================
+let state = {
+  numAgents: 10,
+  dailyCost: 45,
+  ordersPerAgent: 200,
+  accuracy: 15,
+  avgSavings: 5
+};
+
+// =========================================================================
+// Helpers
+// =========================================================================
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+const fmtSign = n => (n >= 0 ? '+' : '') + fmt(n);
+const fmtPct = n => n.toFixed(1) + '%';
+
+// =========================================================================
+// Calculation
+// =========================================================================
+function calculate() {
+  const { numAgents, dailyCost, ordersPerAgent, accuracy, avgSavings } = state;
+
+  // Savings per agent per day = orders × (accuracy/100) × avg savings per cancellation
+  const savingsPerAgent = ordersPerAgent * (accuracy / 100) * avgSavings;
+  const netPerAgent = savingsPerAgent - dailyCost;
+  const roi = dailyCost > 0 ? savingsPerAgent / dailyCost : 0;
+  const teamNetDay = netPerAgent * numAgents;
+  const teamNetMonth = teamNetDay * 22; // ~22 working days
+  const teamNetYear = teamNetDay * 365;
+
+  // Update output values
+  $('roiValue').textContent = roi.toFixed(2);
+  $('savingsPerAgent').textContent = fmt(savingsPerAgent);
+  $('costPerAgentDisplay').textContent = fmt(dailyCost);
+  $('netPerAgent').textContent = fmtSign(netPerAgent);
+  $('teamNetDay').textContent = fmtSign(teamNetDay);
+  $('teamNetMonth').textContent = fmtSign(teamNetMonth);
+  $('teamNetYear').textContent = fmtSign(teamNetYear);
+
+  // Color net values
+  ['netPerAgent', 'teamNetDay', 'teamNetMonth', 'teamNetYear'].forEach(id => {
+    const el = $(id);
+    el.classList.remove('positive', 'negative');
+    el.classList.add(netPerAgent >= 0 ? 'positive' : 'negative');
+  });
+
+  // Tier classification
+  const tierBadge = $('tierBadge');
+  const tierDesc = $('tierDesc');
+  tierBadge.classList.remove('green', 'yellow', 'red');
+
+  if (roi >= 1) {
+    tierBadge.classList.add('green');
+    tierBadge.textContent = 'Scale';
+    tierDesc.textContent = `Each $1 invested in this queue generates $${roi.toFixed(2)} in savings. The queue is operating profitably — consider scaling headcount, expanding case mix, or raising the bar on what flows to the queue.`;
+  } else if (roi >= 0.5) {
+    tierBadge.classList.add('yellow');
+    tierBadge.textContent = 'Optimize';
+    tierDesc.textContent = `Marginal. Each $1 returns only $${roi.toFixed(2)}. Don't scale yet — tune one lever first. Look at the decomposition below to find where the gap is.`;
+  } else {
+    tierBadge.classList.add('red');
+    tierBadge.textContent = 'Root cause';
+    tierDesc.textContent = `Negative ROI. Each $1 returns only $${roi.toFixed(2)}. Adding more agents amplifies the loss. Stop scaling and investigate the weakest lever in the decomposition below.`;
+  }
+
+  updateDecomposition();
+}
+
+// =========================================================================
+// Decomposition (gap to benchmark)
+// =========================================================================
+function updateDecomposition() {
+  const { dailyCost, ordersPerAgent, accuracy, avgSavings } = state;
+
+  // For "higher is better" levers: ratio = actual / benchmark, capped at 1.5
+  // For "lower is better" (cost): ratio = benchmark / actual, capped at 1.5
+  const ratios = {
+    orders: Math.min(ordersPerAgent / BENCH.ordersPerAgent, 1.5),
+    accuracy: Math.min(accuracy / BENCH.accuracy, 1.5),
+    savings: Math.min(avgSavings / BENCH.avgSavings, 1.5),
+    cost: Math.min(BENCH.dailyCost / Math.max(dailyCost, 1), 1.5)
+  };
+
+  // Visual fill: scaled to 0-100% (1.0 = 67%, 1.5 = 100%, 0 = 0%)
+  const setBar = (id, ratio, valueText) => {
+    const fillEl = $(`bar-${id}`);
+    const valEl = $(`val-${id}`);
+    fillEl.style.width = `${Math.min(ratio / 1.5 * 100, 100)}%`;
+
+    fillEl.classList.remove('weak', 'mid', 'strong');
+    if (ratio < 0.6) fillEl.classList.add('weak');
+    else if (ratio < 0.95) fillEl.classList.add('mid');
+    else fillEl.classList.add('strong');
+
+    valEl.textContent = valueText;
+  };
+
+  setBar('orders', ratios.orders, `${ordersPerAgent} / ${BENCH.ordersPerAgent}`);
+  setBar('accuracy', ratios.accuracy, `${accuracy.toFixed(1)}% / ${BENCH.accuracy}%`);
+  setBar('savings', ratios.savings, `$${avgSavings.toFixed(2)} / $${BENCH.avgSavings}`);
+  setBar('cost', ratios.cost, `$${dailyCost} / $${BENCH.dailyCost}`);
+
+  // Find weakest lever
+  const sorted = Object.entries(ratios).sort((a, b) => a[1] - b[1]);
+  const weakest = sorted[0];
+
+  const RECOMMENDATIONS = {
+    orders: "Throughput is the gap. Likely causes: tooling friction (slow queue UI, manual data lookups), case complexity drifted higher, agents waiting on other teams. Ride along the queue for one day — count time per case. Compare top performer vs bottom. The gap is usually process, not effort.",
+    accuracy: "Cancellation accuracy is below benchmark. Likely causes: rules are flagging too many false positives, agent training lags new fraud patterns, or the gray-zone threshold is set too wide. Run a calibration session with senior reviewers on the last 50 cancelled cases. Look for the rule type with the worst precision.",
+    savings: "You're cancelling cases but the savings per cancellation is low. Likely causes: rules are catching low-value fraud first while high-value goes through, or savings calculation excludes downstream costs (chargeback fees, ops costs, brand). Review what your rules optimize for — volume of cancellations or dollar value of prevention.",
+    cost: "Daily cost per agent is high vs benchmark. Likely causes: geographic mix (high-cost regions for the case type), in-house vs BPO balance, tooling/license overhead. Benchmark cost is geography-dependent — only compare against comparable markets. If a true gap, the lever is vendor mix or location strategy."
+  };
+
+  const NAMES = {
+    orders: "Orders reviewed/day",
+    accuracy: "Cancellation accuracy",
+    savings: "Avg savings/cancellation",
+    cost: "Daily cost/agent"
+  };
+
+  if (weakest[1] >= 0.95) {
+    $('recText').textContent = "All levers are within benchmark range. Focus on scaling rather than optimizing individual levers.";
+  } else {
+    $('recText').textContent = `${NAMES[weakest[0]]} (${(weakest[1] * 100).toFixed(0)}% of benchmark). ${RECOMMENDATIONS[weakest[0]]}`;
+  }
+}
+
+// =========================================================================
+// Input binding
+// =========================================================================
+function bindInput(inputId, rangeId, stateKey) {
+  const input = $(inputId);
+  const range = $(rangeId);
+
+  const sync = (val) => {
+    state[stateKey] = parseFloat(val) || 0;
+    input.value = val;
+    range.value = Math.min(Math.max(val, range.min), range.max);
+    calculate();
+  };
+
+  input.addEventListener('input', () => sync(input.value));
+  range.addEventListener('input', () => sync(range.value));
+}
+
+bindInput('numAgents', 'numAgentsRange', 'numAgents');
+bindInput('dailyCost', 'dailyCostRange', 'dailyCost');
+bindInput('ordersPerAgent', 'ordersPerAgentRange', 'ordersPerAgent');
+bindInput('accuracy', 'accuracyRange', 'accuracy');
+bindInput('avgSavings', 'avgSavingsRange', 'avgSavings');
+
+// =========================================================================
+// Scenarios
+// =========================================================================
+function renderScenarios() {
+  const grid = $('scenarioGrid');
+  grid.innerHTML = SCENARIOS.map((s, i) => `
+    <button class="scenario-btn" data-idx="${i}">
+      <div class="scenario-title">${s.title}</div>
+      <div class="scenario-meta">${s.meta}</div>
+    </button>
+  `).join('');
+
+  grid.querySelectorAll('.scenario-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      const data = SCENARIOS[idx].data;
+      Object.entries(data).forEach(([key, val]) => {
+        state[key] = val;
+        const inputEl = $(key);
+        const rangeEl = $(`${key}Range`);
+        if (inputEl) inputEl.value = val;
+        if (rangeEl) rangeEl.value = Math.min(Math.max(val, rangeEl.min), rangeEl.max);
+      });
+      calculate();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+}
+
+renderScenarios();
+calculate();
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fraud Ops Toolkit</title>
+<meta name="description" content="Practical tools for operations leaders running manual review queues — fraud, content moderation, customer service QA.">
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-elev: #131c33;
+    --border: #1f2a44;
+    --border-bright: #2e3d5f;
+    --text: #e6ecf5;
+    --text-muted: #8a96b4;
+    --accent: #14b8a6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 3rem 1.5rem; }
+
+  .brand {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  h1 {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .tagline {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin-bottom: 2.5rem;
+    max-width: 680px;
+  }
+
+  .tools { display: grid; gap: 1rem; margin-bottom: 3rem; }
+  .tool-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+  }
+  .tool-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .tool-card.coming-soon {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .tool-num {
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .tool-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .tool-desc {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 0.8rem;
+  }
+  .tool-status {
+    display: inline-block;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .tool-status.live { background: var(--accent); color: #042f2e; }
+  .tool-status.soon { background: var(--border-bright); color: var(--text-muted); }
+
+  .footer {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+  .footer p { margin-bottom: 0.6rem; }
+  .footer a { color: var(--accent); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  .about-block {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .about-block h2 {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .about-block p {
+    color: var(--text);
+    font-size: 0.95rem;
+    margin-bottom: 0.7rem;
+  }
+  .about-block p strong { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="brand">fraud-ops-toolkit</div>
+  <h1>Practical tools for operations leaders running manual review queues.</h1>
+  <p class="tagline">
+    Fraud, content moderation, customer service QA — anywhere humans decision flagged cases at scale. Open-sourced from methodologies I built and ran while leading Fraud Prevention at Shopee Brazil across 11 countries.
+  </p>
+
+  <div class="tools">
+
+    <a href="./agent-roi.html" class="tool-card">
+      <div class="tool-num">Tool #1</div>
+      <div class="tool-title">Agent ROI Calculator</div>
+      <div class="tool-desc">
+        Decide which manual review queues to scale, which to optimize, and which need root-cause investigation before another dollar gets spent. Tier classification, lever decomposition, and 6 sanitized real-world scenarios.
+      </div>
+      <span class="tool-status live">Live</span>
+    </a>
+
+    <div class="tool-card coming-soon">
+      <div class="tool-num">Tool #2</div>
+      <div class="tool-title">BIN Monitoring Detection</div>
+      <div class="tool-desc">
+        Early detection logic for BIN attacks based on multi-day GMV velocity and new-user clustering. Open-sourced from the methodology I built at Shopee BR after the BIN 651653 attack cost us 300K BRL in one week.
+      </div>
+      <span class="tool-status soon">Coming soon</span>
+    </div>
+
+    <div class="tool-card coming-soon">
+      <div class="tool-num">Tool #3</div>
+      <div class="tool-title">Chargeback Dispute SOP Template</div>
+      <div class="tool-desc">
+        Sanitized version of the 8-section BR Chargeback SOP I authored at Shopee. Investigation flow, Bureau matching table, risk behavior criteria, action matrix.
+      </div>
+      <span class="tool-status soon">Coming soon</span>
+    </div>
+
+    <div class="tool-card coming-soon">
+      <div class="tool-num">Tool #4</div>
+      <div class="tool-title">Workforce Forecast Calculator</div>
+      <div class="tool-desc">
+        Volume forecast + complexity mix + shrinkage + ROI gating. The end-to-end manpower planning model I used quarterly at Shopee BR.
+      </div>
+      <span class="tool-status soon">Coming soon</span>
+    </div>
+
+  </div>
+
+  <div class="about-block">
+    <h2>About</h2>
+    <p>
+      I'm <strong>Everton Paula</strong>. I spent the last 12+ years building and running operations at hypergrowth marketplaces and consumer fintech across LATAM — Shopee, Rappi, inDrive. Most relevant to this toolkit: two years running Fraud Prevention at Shopee Brazil, hire one in the function, scaled the team to seven specialists, cut chargebacks 60% on roughly 1.5M daily transactions.
+    </p>
+    <p>
+      Currently based in Tampa, FL, looking for Director / VP roles in fraud operations or operations leadership at US consumer fintech and marketplaces.
+    </p>
+  </div>
+
+  <div class="footer">
+    <p>Open source · MIT License · <a href="https://github.com/everpaula/fraud-ops-toolkit" target="_blank">View on GitHub</a></p>
+    <p>If a particular tool would be useful for your team, open an issue and I'll prioritize it.</p>
+  </div>
+
+</div>
+</body>
+</html>
