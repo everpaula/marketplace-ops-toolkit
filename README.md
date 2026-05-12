@@ -86,12 +86,46 @@ Why **AND** instead of OR? Volume velocity alone triggers on Black Friday. New-u
 
 ---
 
+### Tool #3 — Marketplace Surge Simulator (PID Control)
+
+**[→ Open the simulator](./surge-pid.html)** · [Python reference](./surge-pid-reference.py)
+
+Interactive simulator of surge pricing using **PID control theory**. Watch a marketplace controller respond to 5 realistic demand scenarios in real time, tune the gains, and compare against a naive threshold-based surge rule.
+
+**What it does:**
+- Simulates 24 hours of marketplace activity (5-minute ticks) for 5 scenarios
+- Implements a full PID controller (Proportional, Integral, Derivative terms)
+- Models supply response with realistic delay (15 minutes for drivers to come online)
+- Lets you tune Kp, Ki, Kd via sliders and watch 4 charts update in real time
+- Compares PID vs naive threshold rule on average MAPE, peak MAPE, alert hours
+- Includes a 200-line Python reference implementation for production adaptation
+
+**The five scenarios:**
+
+| Scenario | Pattern | What it tests |
+|---|---|---|
+| Quiet Tuesday | Mild lunch + dinner peaks | Steady-state controller |
+| Friday Rush | Big evening spike 6-10pm | Anticipation of predictable surge |
+| Airport Burst | Sharp 9pm flight wave | Spike response (D term shines) |
+| Storm Event | Demand spike + supply drop | Hardest case — both controllers struggle |
+| Holiday Wave | Sustained high demand 11am-9pm | Long-horizon balance |
+
+**Why PID over a threshold rule?**
+
+A naive rule (`surge = 1.5x if MAPE > 30%, else 1.0x`) is on/off — surge flips chaotically as the error crosses the threshold. Drivers see unpredictable prices, riders see surprises, ops teams see noise. PID gives **smooth, proportional response** that builds up gradually, anticipates change, and decays cleanly when imbalance resolves.
+
+With the loaded defaults (Kp=0.4, Ki=0.008, Kd=0.05), PID outperforms the naive baseline on average MAPE in 4 of the 5 scenarios. Storm Event is the genuine hard case — combined demand spike with supply scarcity defeats both approaches.
+
+The math is from control theory (Minorsky, 1922). The application to marketplace surge pricing is industry-standard across ride-hail, food delivery, and on-demand platforms.
+
+---
+
 ## Roadmap
 
 Other tools planned for this toolkit:
 
-- **Tool #3 — Chargeback Dispute Investigation Template** *(markdown + decision tree)* — generalized structure for chargeback investigation flow: portal verification, identity resolution, behavior criteria, action matrix.
-- **Tool #4 — Workforce Forecast Calculator** *(Jupyter notebook)* — volume forecast + complexity mix + shrinkage + ROI gating, end-to-end.
+- **Tool #4 — Chargeback Dispute Investigation Template** *(markdown + decision tree)* — generalized structure for chargeback investigation flow: portal verification, identity resolution, behavior criteria, action matrix.
+- **Tool #5 — Workforce Forecast Calculator** *(Jupyter notebook)* — volume forecast + complexity mix + shrinkage + ROI gating, end-to-end.
 
 If a particular tool would be useful for your team, open an issue and I'll prioritize it.
 

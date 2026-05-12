@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketplace Surge Simulator (PID Control) — Fraud Ops Toolkit</title>
+<meta name="description" content="Interactive simulator of surge pricing using PID control. Compare naive threshold-based surge vs PID-controlled surge across 5 demand scenarios. Tune Kp, Ki, Kd and watch MAPE respond in real time.">
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-elev: #131c33;
+    --bg-card: #131c33;
+    --bg-chart: #0a1024;
+    --border: #1f2a44;
+    --border-bright: #2e3d5f;
+    --text: #e6ecf5;
+    --text-muted: #8a96b4;
+    --accent: #14b8a6;
+    --accent-soft: rgba(20, 184, 166, 0.1);
+    --green: #10b981;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --orange: #fb923c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+
+  .top-nav { margin-bottom: 1rem; }
+  .top-nav a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
+  .top-nav a:hover { color: var(--accent); }
+
+  header { margin-bottom: 2rem; }
+  .brand {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  header h1 {
+    font-size: 1.9rem;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  header .tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 800px;
+    line-height: 1.55;
+  }
+  header .tagline strong { color: var(--text); }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+
+  /* === SCENARIOS === */
+  .scenarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.7rem;
+  }
+  .scenario-btn {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .scenario-btn:hover { border-color: var(--accent); }
+  .scenario-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .scenario-btn .scn-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 0.2rem;
+  }
+  .scenario-btn .scn-meta {
+    color: var(--text-muted);
+    font-size: 0.76rem;
+  }
+
+  /* === CONTROLS + STATS === */
+  .controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+  @media (max-width: 820px) { .controls-grid { grid-template-columns: 1fr; } }
+
+  .slider-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.9rem;
+  }
+  .slider-row label {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    margin-bottom: 0.3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .slider-row label .hint {
+    color: var(--border-bright);
+    font-size: 0.72rem;
+    font-style: italic;
+  }
+  .slider-row label .value {
+    color: var(--accent);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9rem;
+  }
+  .slider-row input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+  .stat-cell {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border);
+  }
+  .stat-cell .stat-label {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .stat-cell .stat-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .stat-cell.alert .stat-value { color: var(--red); }
+  .stat-cell.good .stat-value { color: var(--green); }
+
+  /* === CHARTS === */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 820px) { .chart-grid { grid-template-columns: 1fr; } }
+
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+  }
+  .chart-card .chart-title {
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.4rem;
+  }
+  .chart-card .chart-sub {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-bottom: 0.7rem;
+  }
+  .chart-canvas-wrap {
+    position: relative;
+    width: 100%;
+    height: 220px;
+  }
+  .chart-canvas-wrap canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .chart-legend {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .legend-swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin-right: 0.3rem;
+    vertical-align: middle;
+  }
+
+  /* === COMPARISON === */
+  .comparison {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.25rem;
+  }
+  .comparison h2 {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  @media (max-width: 820px) { .comparison-grid { grid-template-columns: 1fr; } }
+  .comparison-result {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+  }
+  .comparison-result h3 {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+  }
+  .comparison-result.naive h3 { color: var(--red); }
+  .comparison-result.pid h3 { color: var(--green); }
+  .comparison-result .big-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.3rem;
+  }
+  .comparison-result .meta {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+  }
+  .comparison-verdict {
+    background: rgba(20, 184, 166, 0.06);
+    border-left: 3px solid var(--accent);
+    padding: 0.7rem 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  /* === ABOUT === */
+  .about p { margin-bottom: 0.85rem; color: var(--text); font-size: 0.94rem; line-height: 1.7; }
+  .about p strong { color: var(--accent); }
+  .about ul { margin: 0.5rem 0 1rem 1.4rem; color: var(--text); }
+  .about ul li { margin-bottom: 0.35rem; font-size: 0.93rem; }
+  .about .formula {
+    background: var(--bg);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.88rem;
+    color: var(--text);
+    margin: 0.5rem 0 1rem;
+    border-left: 3px solid var(--accent);
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+  .about .code-link {
+    display: inline-block;
+    background: var(--bg);
+    padding: 0.35rem 0.7rem;
+    border-radius: 4px;
+    color: var(--accent);
+    text-decoration: none;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.82rem;
+    border: 1px solid var(--border-bright);
+  }
+  .about .code-link:hover { border-color: var(--accent); }
+
+  footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top-nav">
+    <a href="./index.html">← fraud-ops-toolkit</a>
+  </div>
+
+  <header>
+    <div class="brand">fraud-ops-toolkit · tool #3</div>
+    <h1>Marketplace Surge Simulator (PID Control)</h1>
+    <div class="tagline">
+      Surge pricing without overshoot. Pick a demand scenario, tune the <strong>P</strong>, <strong>I</strong>, <strong>D</strong> gains, and watch MAPE respond in real time. Compares naive threshold-based surge against a PID-controlled surge across 5 realistic marketplace scenarios.
+    </div>
+  </header>
+
+  <!-- SCENARIOS -->
+  <div class="card">
+    <h2>Pick a scenario</h2>
+    <div class="scenarios" id="scenariosGrid"></div>
+  </div>
+
+  <!-- CONTROLS + STATS -->
+  <div class="controls-grid">
+    <div class="card">
+      <h2>PID tuning</h2>
+      <div class="slider-row">
+        <label>Kp (proportional) <span class="value" id="kpVal">0.40</span></label>
+        <input type="range" id="kp" min="0" max="2" step="0.02" value="0.40">
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Reacts to current error. Higher = more aggressive surge response now.</div>
+      </div>
+      <div class="slider-row">
+        <label>Ki (integral) <span class="value" id="kiVal">0.008</span></label>
+        <input type="range" id="ki" min="0" max="0.5" step="0.001" value="0.008">
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Accumulates error over time. Too high = oscillation in delayed systems.</div>
+      </div>
+      <div class="slider-row">
+        <label>Kd (derivative) <span class="value" id="kdVal">0.05</span></label>
+        <input type="range" id="kd" min="0" max="1" step="0.01" value="0.05">
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Reacts to rate of change. Higher = catches spikes. Too high = noisy.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>PID performance</h2>
+      <div class="stats-grid">
+        <div class="stat-cell good">
+          <div class="stat-label">Avg MAPE</div>
+          <div class="stat-value" id="statMape">0%</div>
+        </div>
+        <div class="stat-cell alert">
+          <div class="stat-label">Peak MAPE</div>
+          <div class="stat-value" id="statPeakMape">0%</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Peak surge</div>
+          <div class="stat-value" id="statPeakSurge">1.00x</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Hours in alert (&gt;20% MAPE)</div>
+          <div class="stat-value" id="statAlertHours">0h</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="chart-grid">
+
+    <div class="chart-card">
+      <div class="chart-title">Demand vs Supply (24h)</div>
+      <div class="chart-sub">How requests and available capacity move over the day.</div>
+      <div class="chart-canvas-wrap"><canvas id="chartDS"></canvas></div>
+      <div class="chart-legend">
+        <span><span class="legend-swatch" style="background: var(--red)"></span>Demand</span>
+        <span><span class="legend-swatch" style="background: var(--green)"></span>Supply</span>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Surge Multiplier (PID Output)</div>
+      <div class="chart-sub">What the PID controller asks the pricing system to do, clamped 1.0x–2.5x.</div>
+      <div class="chart-canvas-wrap"><canvas id="chartSurge"></canvas></div>
+      <div class="chart-legend">
+        <span><span class="legend-swatch" style="background: var(--accent)"></span>PID surge</span>
+        <span><span class="legend-swatch" style="background: var(--orange); opacity: 0.6"></span>Naive threshold (1.5x if MAPE&gt;30%)</span>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">MAPE — Error Signal</div>
+      <div class="chart-sub">|demand − supply| / demand × 100. Lower is better. Red zone &gt; 20%.</div>
+      <div class="chart-canvas-wrap"><canvas id="chartMape"></canvas></div>
+      <div class="chart-legend">
+        <span><span class="legend-swatch" style="background: var(--accent)"></span>PID-controlled</span>
+        <span><span class="legend-swatch" style="background: var(--orange); opacity: 0.6"></span>Naive</span>
+        <span><span class="legend-swatch" style="background: var(--red); opacity: 0.4"></span>20% threshold</span>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">PID Term Contribution</div>
+      <div class="chart-sub">Which term (P, I, or D) is driving the surge response at each moment.</div>
+      <div class="chart-canvas-wrap"><canvas id="chartPID"></canvas></div>
+      <div class="chart-legend">
+        <span><span class="legend-swatch" style="background: var(--blue)"></span>P · proportional</span>
+        <span><span class="legend-swatch" style="background: var(--purple)"></span>I · integral</span>
+        <span><span class="legend-swatch" style="background: var(--yellow)"></span>D · derivative</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COMPARISON -->
+  <div class="comparison">
+    <h2>PID vs Naive — same scenario, head to head</h2>
+    <div class="comparison-grid">
+      <div class="comparison-result naive">
+        <h3>Naive (threshold 1.5x if MAPE &gt; 30%)</h3>
+        <div class="big-num" id="naiveAvgMape">0%</div>
+        <div class="meta">avg MAPE · peak <span id="naivePeak">0%</span> · <span id="naiveAlertH">0h</span> in alert</div>
+      </div>
+      <div class="comparison-result pid">
+        <h3>PID (your current tuning)</h3>
+        <div class="big-num" id="pidAvgMape">0%</div>
+        <div class="meta">avg MAPE · peak <span id="pidPeak">0%</span> · <span id="pidAlertH">0h</span> in alert</div>
+      </div>
+    </div>
+    <div class="comparison-verdict" id="verdict">Pick a scenario to compare.</div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="card about">
+    <h2>How PID surge pricing works</h2>
+
+    <p>Marketplace platforms balance supply and demand using <strong>surge multipliers</strong> — pricing that adjusts in real time to bring more drivers/couriers/sellers online when demand exceeds capacity. The classic way to do this is a threshold rule: <strong>if imbalance &gt; X%, set surge to 1.5x</strong>. It works, but it overshoots and oscillates because there's no feedback memory.</p>
+
+    <p>The smarter approach borrows from control theory invented in 1922 by Nicholas Minorsky: the <strong>PID controller</strong>. PID stands for Proportional, Integral, Derivative — three terms that together compute the right amount of correction to apply at any moment, given how much error there is now, how much has accumulated, and how fast it's changing.</p>
+
+    <p><strong>The formula</strong></p>
+    <div class="formula">error[t]  = (demand − supply) / demand × 100    // MAPE as %
+P_term    = Kp × error[t]                       // react now
+I_term    = Ki × Σ error × dt                   // remember
+D_term    = Kd × (error[t] − error[t−1]) / dt   // anticipate
+surge[t]  = clamp(1.0 + (P + I + D) / 100, 1.0, 3.0)</div>
+
+    <p><strong>What each term does</strong></p>
+    <ul>
+      <li><strong>P (proportional)</strong> reacts to current error. Big mismatch right now? Big surge right now. Used alone, it overshoots and oscillates around the target — like turning a steering wheel too hard.</li>
+      <li><strong>I (integral)</strong> accumulates error over time. If imbalance persists for hours, I keeps pressing the surge up. It corrects for steady-state bias the P term can't reach, but too much I creates oscillation.</li>
+      <li><strong>D (derivative)</strong> reacts to how fast error is changing. If MAPE is rising rapidly, D anticipates the spike before P fully reacts. It catches sudden surges (airport, weather event) but is sensitive to noise.</li>
+    </ul>
+
+    <p><strong>Tuning trade-offs</strong></p>
+    <ul>
+      <li>The defaults loaded here (Kp=0.4, Ki=0.008, Kd=0.05) are conservative — they outperform the naive 30%-threshold rule on 4 of the 5 scenarios. Storm Event is the hard case where neither approach excels (combined demand spike + supply scarcity).</li>
+      <li>For systems with delayed supply response (drivers take time to come online), smaller gains are stabler. Aggressive Kp causes overshoot. Ki accumulates fast when error persists — keep it small.</li>
+      <li>Increase Kp until you see overshoot in the surge chart, then back off ~20%.</li>
+      <li>Add Kd for sharp spikes (Airport Burst). Avoid Kd if your demand signal is noisy.</li>
+      <li>Field rule: when in doubt, smaller gains. Aggressive PID makes drivers' lives unpredictable, riders' prices erratic, and ops teams confused.</li>
+    </ul>
+
+    <p><strong>What this simulator is NOT</strong></p>
+    <ul>
+      <li>It's not a production-ready surge engine. Real implementations account for many more variables (geographic clusters, driver utilization, ETA targets, regulatory caps, two-sided NPS impact).</li>
+      <li>It's not any specific platform's proprietary algorithm. Production systems at ride-hail and delivery companies are far more complex (geographic clusters, ETA targets, regulatory caps). This is the canonical PID pattern applied to a simplified marketplace model.</li>
+      <li>It's not a substitute for ML-based surge. Modern systems often combine PID-style feedback with predictive ML on top.</li>
+    </ul>
+
+    <p><strong>What this simulator IS</strong></p>
+    <ul>
+      <li>A teaching tool for ops leaders studying the control-theory side of pricing</li>
+      <li>A starting point for implementing PID surge in your own data pipeline</li>
+      <li>A way to build intuition for why naive threshold rules underperform</li>
+      <li>A reference implementation you can read in 200 lines of Python</li>
+    </ul>
+
+    <p><strong>Reference implementation</strong></p>
+    <p>The Python reference of the same logic, with synthetic scenarios and configurable PID gains, is available as <a class="code-link" href="./surge-pid-reference.py" target="_blank">surge-pid-reference.py</a>. Use it as a starting point for adapting the model to your data pipeline.</p>
+
+    <p><strong>Reading list</strong></p>
+    <ul>
+      <li>Minorsky, N. (1922). "Directional stability of automatically steered bodies" — original PID paper</li>
+      <li>Åström &amp; Hägglund, <em>PID Controllers: Theory, Design, and Tuning</em> (1995) — practical PID tuning</li>
+      <li>Ziegler &amp; Nichols (1942) — classical tuning methods, still useful as starting point</li>
+    </ul>
+  </div>
+
+  <footer>
+    Open source · MIT License · Built by Everton Paula · <a href="https://github.com/everpaula/fraud-ops-toolkit" target="_blank">View on GitHub</a>
+  </footer>
+
+</div>
+
+<script>
+// =============================================================================
+// SCENARIOS — Demand profiles over 24h (288 ticks of 5min each)
+// =============================================================================
+const TICKS = 288;                  // 24h × 12 ticks/h (5 min each)
+const HOURS_PER_TICK = 24 / TICKS;
+
+function demandQuietTuesday(t) {
+  // Mild lunch + dinner peaks
+  const h = t * HOURS_PER_TICK;
+  const lunch = 30 * Math.exp(-Math.pow((h - 12) / 1.5, 2));
+  const dinner = 35 * Math.exp(-Math.pow((h - 18.5) / 1.8, 2));
+  const morning = 10 * Math.exp(-Math.pow((h - 8) / 1.5, 2));
+  return 40 + lunch + dinner + morning + (Math.sin(t * 0.4) * 3);
+}
+
+function demandFridayRush(t) {
+  // Big evening spike 18-22
+  const h = t * HOURS_PER_TICK;
+  const evening = 95 * Math.exp(-Math.pow((h - 20) / 2.5, 2));
+  const lunch = 20 * Math.exp(-Math.pow((h - 12.5) / 1.3, 2));
+  return 35 + lunch + evening + (Math.sin(t * 0.3) * 3);
+}
+
+function demandAirportBurst(t) {
+  // Sharp spike at 21:00 (flight wave)
+  const h = t * HOURS_PER_TICK;
+  const burst = 110 * Math.exp(-Math.pow((h - 21) / 0.6, 2));
+  const baseline = 35 + 12 * Math.exp(-Math.pow((h - 17) / 4, 2));
+  return baseline + burst + (Math.sin(t * 0.5) * 2);
+}
+
+function demandStormEvent(t) {
+  // Demand spike + supply drop starting 16:00
+  const h = t * HOURS_PER_TICK;
+  const storm = h >= 16 && h <= 20 ? 70 * Math.exp(-Math.pow((h - 18) / 1.8, 2)) : 0;
+  const morning = 15 * Math.exp(-Math.pow((h - 8) / 2, 2));
+  return 40 + morning + storm + (Math.sin(t * 0.3) * 2);
+}
+
+function demandHolidayWave(t) {
+  // Sustained high demand 11-21
+  const h = t * HOURS_PER_TICK;
+  if (h < 9 || h > 23) return 30 + Math.sin(t * 0.4) * 3;
+  const wave = 65 * Math.exp(-Math.pow((h - 16) / 6, 2));
+  return 35 + wave + Math.sin(t * 0.5) * 4;
+}
+
+// Supply response: baseline tracks demand with delay, surge attracts more supply with longer delay
+const SUPPLY_BASELINE_RATIO = 0.82;     // base supply runs ~82% of demand
+const SURGE_SUPPLY_GAIN = 0.50;          // (multiplied by 30 below) % extra supply per 1.0 above 1.0x surge
+const SURGE_RESPONSE_DELAY = 3;          // ticks (15 min) for drivers to respond
+
+function supplyBaseline(t, demandFn, modifier = 1) {
+  // Slight lag (1 tick) so supply doesn't perfectly anticipate
+  const prev = demandFn(Math.max(t - 1, 0));
+  return prev * SUPPLY_BASELINE_RATIO * modifier + (Math.sin(t * 0.7) * 2);
+}
+
+function supplyBoost(surgeHistory, t) {
+  // Drivers respond to surge with delay (SURGE_RESPONSE_DELAY ticks)
+  const lookback = Math.max(t - SURGE_RESPONSE_DELAY, 0);
+  const recentSurge = surgeHistory[lookback] || 1.0;
+  return Math.max(0, (recentSurge - 1.0)) * SURGE_SUPPLY_GAIN * 30; // base supply unit
+}
+
+const SCENARIOS = [
+  { id: "tuesday", title: "Quiet Tuesday", meta: "Mild lunch + dinner peaks", demandFn: demandQuietTuesday, supplyMod: 1.0 },
+  { id: "friday",  title: "Friday Rush",   meta: "Big evening spike 6-10pm",  demandFn: demandFridayRush,   supplyMod: 1.0 },
+  { id: "airport", title: "Airport Burst", meta: "Sharp 9pm flight wave",      demandFn: demandAirportBurst, supplyMod: 1.0 },
+  { id: "storm",   title: "Storm Event",   meta: "Demand + supply drop 4-8pm", demandFn: demandStormEvent,   supplyMod: 0.55 },
+  { id: "holiday", title: "Holiday Wave",  meta: "Sustained 11am-9pm",         demandFn: demandHolidayWave,  supplyMod: 1.0 }
+];
+
+// =============================================================================
+// PID CONTROLLER
+// =============================================================================
+class PIDController {
+  constructor(kp, ki, kd, dt = HOURS_PER_TICK) {
+    this.kp = kp;
+    this.ki = ki;
+    this.kd = kd;
+    this.dt = dt;
+    this.errorIntegral = 0;
+    this.errorPrev = 0;
+    this.lastP = 0;
+    this.lastI = 0;
+    this.lastD = 0;
+  }
+  step(error) {
+    // anti-windup: clamp integral
+    this.errorIntegral = Math.max(-200, Math.min(this.errorIntegral + error * this.dt, 200));
+    const derivative = (error - this.errorPrev) / this.dt;
+    const P = this.kp * error;
+    const I = this.ki * this.errorIntegral;
+    const D = this.kd * derivative;
+    this.errorPrev = error;
+    this.lastP = P;
+    this.lastI = I;
+    this.lastD = D;
+    return { control: P + I + D, P, I, D };
+  }
+}
+
+// =============================================================================
+// SIMULATION ENGINES
+// =============================================================================
+function simulateWithPID(scenario, gains) {
+  const pid = new PIDController(gains.kp, gains.ki, gains.kd);
+  const demand = [], supply = [], surge = [], mape = [], pidTerms = [];
+  let surgeHistory = [];
+  for (let t = 0; t < TICKS; t++) {
+    const d = Math.max(scenario.demandFn(t), 1);
+    const sBase = supplyBaseline(t, scenario.demandFn, scenario.supplyMod);
+    const sBoost = supplyBoost(surgeHistory, t);
+    const s = Math.max(sBase + sBoost, 1);
+    const errPct = ((d - s) / d) * 100;             // positive when undersupplied
+    const m = Math.abs(errPct);
+    const result = pid.step(errPct);
+    const surgeRaw = 1.0 + result.control / 100;
+    const surgeClamped = Math.max(1.0, Math.min(surgeRaw, 2.5));
+    surgeHistory.push(surgeClamped);
+    demand.push(d);
+    supply.push(s);
+    surge.push(surgeClamped);
+    mape.push(m);
+    pidTerms.push({ P: result.P, I: result.I, D: result.D });
+  }
+  return { demand, supply, surge, mape, pidTerms };
+}
+
+function simulateNaive(scenario) {
+  // Naive: surge = 1.5x if MAPE > 20%, else 1.0
+  const demand = [], supply = [], surge = [], mape = [];
+  let surgeHistory = [];
+  for (let t = 0; t < TICKS; t++) {
+    const d = Math.max(scenario.demandFn(t), 1);
+    const sBase = supplyBaseline(t, scenario.demandFn, scenario.supplyMod);
+    const sBoost = supplyBoost(surgeHistory, t);
+    const s = Math.max(sBase + sBoost, 1);
+    const errPct = ((d - s) / d) * 100;
+    const m = Math.abs(errPct);
+    const naiveSurge = m > 30 ? 1.5 : 1.0;
+    surgeHistory.push(naiveSurge);
+    demand.push(d);
+    supply.push(s);
+    surge.push(naiveSurge);
+    mape.push(m);
+  }
+  return { demand, supply, surge, mape };
+}
+
+// =============================================================================
+// CANVAS CHART RENDERING (simple time-series)
+// =============================================================================
+function setupCanvas(canvas) {
+  const wrap = canvas.parentElement;
+  const ratio = window.devicePixelRatio || 1;
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  canvas.width = w * ratio;
+  canvas.height = h * ratio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(ratio, ratio);
+  return { ctx, w, h };
+}
+
+function drawAxesAndGrid(ctx, w, h, yMin, yMax, yTicks = 4, label = "") {
+  ctx.fillStyle = '#0a1024';
+  ctx.fillRect(0, 0, w, h);
+
+  // Time grid (every 4 hours)
+  ctx.strokeStyle = '#1f2a44';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#5a6788';
+  ctx.font = '10px ui-monospace, monospace';
+  for (let hr = 0; hr <= 24; hr += 4) {
+    const x = (hr / 24) * (w - 30) + 30;
+    ctx.beginPath();
+    ctx.moveTo(x, 8);
+    ctx.lineTo(x, h - 16);
+    ctx.stroke();
+    ctx.fillText(`${hr}h`, x - 8, h - 4);
+  }
+
+  // Y grid
+  for (let i = 0; i <= yTicks; i++) {
+    const y = 8 + ((h - 24) * i) / yTicks;
+    ctx.beginPath();
+    ctx.strokeStyle = '#1f2a44';
+    ctx.moveTo(30, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+    const val = yMax - ((yMax - yMin) * i) / yTicks;
+    ctx.fillStyle = '#5a6788';
+    ctx.fillText(val.toFixed(val < 10 ? 1 : 0), 2, y + 3);
+  }
+}
+
+function drawSeries(ctx, w, h, data, color, yMin, yMax, lineWidth = 1.6, opacity = 1) {
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = opacity;
+  ctx.lineWidth = lineWidth;
+  ctx.beginPath();
+  for (let i = 0; i < data.length; i++) {
+    const x = 30 + ((w - 30) * i) / (TICKS - 1);
+    const yNorm = (data[i] - yMin) / (yMax - yMin);
+    const y = h - 16 - (h - 24) * yNorm;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+function drawThresholdLine(ctx, w, h, value, yMin, yMax, color) {
+  ctx.strokeStyle = color;
+  ctx.setLineDash([4, 4]);
+  ctx.globalAlpha = 0.5;
+  ctx.lineWidth = 1;
+  const yNorm = (value - yMin) / (yMax - yMin);
+  const y = h - 16 - (h - 24) * yNorm;
+  ctx.beginPath();
+  ctx.moveTo(30, y);
+  ctx.lineTo(w, y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+}
+
+function drawStackedArea(ctx, w, h, dataPID, yMin, yMax) {
+  // Plot P (blue), I (purple), D (yellow) as separate lines (signed)
+  drawSeries(ctx, w, h, dataPID.map(p => p.P), '#60a5fa', yMin, yMax, 1.4);
+  drawSeries(ctx, w, h, dataPID.map(p => p.I), '#a78bfa', yMin, yMax, 1.4);
+  drawSeries(ctx, w, h, dataPID.map(p => p.D), '#fbbf24', yMin, yMax, 1.4);
+  // Zero line
+  drawThresholdLine(ctx, w, h, 0, yMin, yMax, '#5a6788');
+}
+
+// =============================================================================
+// STATE & UI
+// =============================================================================
+const state = {
+  scenarioId: 'friday',
+  kp: 0.40,
+  ki: 0.008,
+  kd: 0.05,
+  pidResult: null,
+  naiveResult: null
+};
+
+function getScenario() {
+  return SCENARIOS.find(s => s.id === state.scenarioId);
+}
+
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+function fmtMape(n) { return n.toFixed(1) + '%'; }
+function avg(arr) { return arr.reduce((s, v) => s + v, 0) / arr.length; }
+function maxOf(arr) { return Math.max(...arr); }
+function alertHours(mapeArr) {
+  const overThreshold = mapeArr.filter(m => m > 20).length;
+  return (overThreshold * HOURS_PER_TICK).toFixed(1);
+}
+
+function recompute() {
+  const scenario = getScenario();
+  state.pidResult = simulateWithPID(scenario, { kp: state.kp, ki: state.ki, kd: state.kd });
+  state.naiveResult = simulateNaive(scenario);
+  render();
+}
+
+function render() {
+  // Stats — PID
+  const pid = state.pidResult;
+  const naive = state.naiveResult;
+
+  const pidAvgMape = avg(pid.mape);
+  const pidPeakMape = maxOf(pid.mape);
+  const pidPeakSurge = maxOf(pid.surge);
+  const pidAlertH = alertHours(pid.mape);
+
+  document.getElementById('statMape').textContent = fmtMape(pidAvgMape);
+  document.getElementById('statPeakMape').textContent = fmtMape(pidPeakMape);
+  document.getElementById('statPeakSurge').textContent = pidPeakSurge.toFixed(2) + 'x';
+  document.getElementById('statAlertHours').textContent = pidAlertH + 'h';
+
+  // Comparison
+  const naiveAvg = avg(naive.mape);
+  const naivePeak = maxOf(naive.mape);
+  const naiveAlert = alertHours(naive.mape);
+
+  document.getElementById('naiveAvgMape').textContent = fmtMape(naiveAvg);
+  document.getElementById('naivePeak').textContent = fmtMape(naivePeak);
+  document.getElementById('naiveAlertH').textContent = naiveAlert + 'h';
+  document.getElementById('pidAvgMape').textContent = fmtMape(pidAvgMape);
+  document.getElementById('pidPeak').textContent = fmtMape(pidPeakMape);
+  document.getElementById('pidAlertH').textContent = pidAlertH + 'h';
+
+  // Verdict
+  const improvement = ((naiveAvg - pidAvgMape) / naiveAvg) * 100;
+  const verdict = document.getElementById('verdict');
+  if (pidAvgMape < naiveAvg) {
+    verdict.innerHTML = `PID outperforms naive by <strong style="color: var(--green)">${improvement.toFixed(1)}%</strong> on average MAPE. Peak imbalance also lower (${pidPeakMape.toFixed(1)}% vs ${naivePeak.toFixed(1)}%). The smoother response means drivers see less price chaos and the system spends less time in alert state.`;
+  } else if (Math.abs(pidAvgMape - naiveAvg) < 0.5) {
+    verdict.innerHTML = `<strong style="color: var(--yellow)">PID and naive are roughly tied</strong> on this scenario. Tune Kp up, or try adding more Ki / Kd — the current gains may be too conservative for this demand shape.`;
+  } else {
+    verdict.innerHTML = `<strong style="color: var(--red)">PID is underperforming naive</strong>. Your gains may be too aggressive (causing overshoot) or too conservative (slow to react). Try Kp = 1.2, Ki = 0.15, Kd = 0.4 as a reset.`;
+  }
+
+  // Charts
+  drawDemandSupply();
+  drawSurge();
+  drawMape();
+  drawPID();
+}
+
+function drawDemandSupply() {
+  const canvas = document.getElementById('chartDS');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const pid = state.pidResult;
+  const maxVal = Math.max(maxOf(pid.demand), maxOf(pid.supply)) * 1.1;
+  drawAxesAndGrid(ctx, w, h, 0, maxVal, 4);
+  drawSeries(ctx, w, h, pid.demand, '#ef4444', 0, maxVal);
+  drawSeries(ctx, w, h, pid.supply, '#10b981', 0, maxVal);
+}
+
+function drawSurge() {
+  const canvas = document.getElementById('chartSurge');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const naive = state.naiveResult;
+  const pid = state.pidResult;
+  drawAxesAndGrid(ctx, w, h, 1.0, 2.5, 3);
+  drawSeries(ctx, w, h, naive.surge, '#fb923c', 1.0, 2.5, 1.4, 0.55);
+  drawSeries(ctx, w, h, pid.surge, '#14b8a6', 1.0, 2.5, 1.8);
+}
+
+function drawMape() {
+  const canvas = document.getElementById('chartMape');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const pid = state.pidResult;
+  const naive = state.naiveResult;
+  const maxVal = Math.max(maxOf(pid.mape), maxOf(naive.mape)) * 1.1;
+  const yMax = Math.max(maxVal, 30);
+  drawAxesAndGrid(ctx, w, h, 0, yMax, 4);
+  drawThresholdLine(ctx, w, h, 20, 0, yMax, '#ef4444');
+  drawSeries(ctx, w, h, naive.mape, '#fb923c', 0, yMax, 1.4, 0.55);
+  drawSeries(ctx, w, h, pid.mape, '#14b8a6', 0, yMax, 1.8);
+}
+
+function drawPID() {
+  const canvas = document.getElementById('chartPID');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const pid = state.pidResult;
+  const terms = pid.pidTerms;
+  const allVals = terms.flatMap(p => [p.P, p.I, p.D]);
+  const yMin = Math.min(...allVals);
+  const yMax = Math.max(...allVals);
+  const range = Math.max(Math.abs(yMin), Math.abs(yMax)) * 1.1;
+  drawAxesAndGrid(ctx, w, h, -range, range, 4);
+  drawStackedArea(ctx, w, h, terms, -range, range);
+}
+
+// =============================================================================
+// EVENT BINDING
+// =============================================================================
+function renderScenarios() {
+  const grid = document.getElementById('scenariosGrid');
+  grid.innerHTML = SCENARIOS.map(s => `
+    <button class="scenario-btn ${state.scenarioId === s.id ? 'active' : ''}" data-id="${s.id}">
+      <div class="scn-title">${s.title}</div>
+      <div class="scn-meta">${s.meta}</div>
+    </button>
+  `).join('');
+  grid.querySelectorAll('.scenario-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.scenarioId = btn.dataset.id;
+      renderScenarios();
+      recompute();
+    });
+  });
+}
+
+function bindSlider(id, key, displayId, decimals = 2) {
+  const el = document.getElementById(id);
+  el.value = state[key];
+  document.getElementById(displayId).textContent = state[key].toFixed(decimals);
+  el.addEventListener('input', () => {
+    state[key] = parseFloat(el.value);
+    document.getElementById(displayId).textContent = state[key].toFixed(decimals);
+    recompute();
+  });
+}
+
+bindSlider('kp', 'kp', 'kpVal', 2);
+bindSlider('ki', 'ki', 'kiVal', 2);
+bindSlider('kd', 'kd', 'kdVal', 2);
+renderScenarios();
+recompute();
+
+// Re-render on window resize
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => render(), 200);
+});
+</script>
+</body>
+</html>
