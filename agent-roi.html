@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agent ROI Calculator — Fraud Ops Toolkit</title>
-<meta name="description" content="Evaluate workforce ROI in manual review operations. Built from a methodology run across 340 agents in 11 countries at Shopee.">
+<meta name="description" content="Evaluate workforce ROI in manual review operations. Generalized methodology for ops leaders deciding which queues to scale, optimize, or investigate.">
 <style>
   :root {
     --bg: #0b1220;
@@ -385,7 +385,7 @@
     <div class="brand">fraud-ops-toolkit · tool #1</div>
     <h1>Agent ROI Calculator</h1>
     <div class="tagline">
-      Evaluate workforce ROI in manual review operations. Built from a methodology I ran across <strong>340 agents in 11 countries</strong> at Shopee. Use it to decide which queues to scale, which to optimize, and which need root-cause investigation before another dollar gets spent.
+      Evaluate workforce ROI in manual review operations. A structured way to decide which queues to scale, which to optimize, and which need root-cause investigation before another dollar gets spent. Generalized from years of hands-on experience in <strong>Latin American fraud and marketplace operations</strong>.
     </div>
   </header>
 
@@ -530,9 +530,9 @@
   <div class="about">
     <h2>About this calculator</h2>
 
-    <p>At Shopee Brazil (2020–2022) I was the first hire in Fraud Prevention. The team grew to seven specialists running on roughly 1.5M daily transactions. Cutting chargebacks 60% took a lot of things — a CatBoost model with AUC 0.9883, contracts redesigned with payment processors, Cybersource Decision Manager integrated as a manual review layer — but the question that came up <strong>every quarter</strong> was simpler than any of those: <strong>which queues should we scale, and which are losing us money?</strong></p>
+    <p>Every operations leader running a manual review queue eventually faces the same question: <strong>which queues should we scale, and which are losing us money?</strong> Most teams answer it with intuition. The math to answer it properly isn't complex — what's useful is having a structure to do it consistently, every quarter, across markets and case types.</p>
 
-    <p>This calculator is the methodology I used to answer that, across 340 agents and 11 countries. Open-sourced for any ops leader making the same call.</p>
+    <p>This calculator codifies that structure. It's generalized from years of running fraud and marketplace operations across multiple geographies in Latin America. Open-source for any ops leader making the same call.</p>
 
     <p><strong>The formula</strong></p>
     <div class="formula">Agent ROI = (Orders reviewed × Accuracy × Avg savings/cancellation) ÷ Daily cost</div>

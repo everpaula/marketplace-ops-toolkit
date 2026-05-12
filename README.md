@@ -2,7 +2,7 @@
 
 > Practical tools for operations leaders running manual review queues — fraud, content moderation, customer service QA, anywhere humans decision flagged cases at scale.
 
-Open-sourced from methodologies I built and ran while leading Fraud Prevention at Shopee Brazil (2020–2022). Sanitized, generalized, and rebuilt as standalone tools any ops leader can use without buying a SaaS platform.
+Open-source methodologies for evaluating, scaling, and optimizing manual review operations. Drawn from years of hands-on work in fraud and marketplace operations across Latin America, sanitized and generalized so any ops leader can adapt them to their own context.
 
 ---
 
@@ -19,9 +19,9 @@ Evaluate workforce ROI in manual review operations. Helps you decide which queue
 - Classifies the queue into 3 tiers: Scale / Optimize / Root cause
 - Decomposes ROI against industry benchmarks to surface the weakest lever
 - Returns a specific recommendation tied to whichever lever is dragging
-- Pre-loaded with 6 sanitized scenarios from real multi-country fraud ops
+- Pre-loaded with 6 illustrative scenarios representing common ops patterns
 
-**Why this exists:** I ran this methodology across 340 agents in 11 countries at Shopee. Every quarter the same question came up — *which markets do we scale, and which are losing us money?* The math is simple once you frame it right. The mistake most teams make is scaling headcount linearly with volume, which is how fraud ops budgets explode and quality drops at the same time.
+**Why this exists:** Most teams scale manual review headcount linearly with volume, which is how ops budgets explode and quality drops at the same time. The math to evaluate workforce ROI is simple once you frame it right — what isn't simple is asking the question every quarter and using the answer to decide.
 
 **The formula:**
 
@@ -43,7 +43,7 @@ Agent ROI = (Orders reviewed × Accuracy × Avg savings per cancellation) ÷ Dai
 
 The same logic applies anywhere a manual review queue exists with measurable savings per intervention:
 
-- **Fraud operations** (original use case) — agents reviewing flagged transactions
+- **Fraud operations** — agents reviewing flagged transactions
 - **Content moderation** — reviewers actioning flagged user content
 - **Customer service quality assurance** — supervisors auditing agent calls/tickets
 - **KYC and compliance review** — analysts processing onboarding flags
@@ -58,8 +58,8 @@ If your team has a queue and the cost of letting bad stuff through is measurable
 
 Other tools planned for this toolkit:
 
-- **Tool #2 — BIN Monitoring Detection** *(Python notebook)* — open-source the BIN-attack early detection logic I built at Shopee BR after the BIN 651653 attack cost us 300K BRL in one week.
-- **Tool #3 — Chargeback Dispute SOP Template** *(markdown + decision tree)* — sanitized version of the 8-section BR Chargeback SOP I authored at Shopee.
+- **Tool #2 — BIN Monitoring Detection** *(Python notebook)* — early detection logic for BIN-level attack patterns using multi-day volume velocity and new-user clustering.
+- **Tool #3 — Chargeback Dispute Investigation Template** *(markdown + decision tree)* — generalized structure for chargeback investigation flow: portal verification, identity resolution, behavior criteria, action matrix.
 - **Tool #4 — Workforce Forecast Calculator** *(Jupyter notebook)* — volume forecast + complexity mix + shrinkage + ROI gating, end-to-end.
 
 If a particular tool would be useful for your team, open an issue and I'll prioritize it.
@@ -85,7 +85,7 @@ No build step. No dependencies. Single HTML file with everything inline. Drop th
 
 ## A note on the benchmarks
 
-The decomposition bars compare your inputs against rough industry averages from real fraud-ops data. They are **not** a competitive benchmark — they are a sanity check.
+The decomposition bars compare your inputs against generalized industry-level averages for fraud and review operations. They are **not** a competitive benchmark — they are a sanity check.
 
 If your orders-per-agent is 50 against a 250 benchmark, that's a signal to investigate tooling or process bottlenecks, not a verdict that your team is bad. Real benchmarks come from your own data over time. The decomposition is meant to tell you *where to look first*, not *how to score yourself*.
 
@@ -99,9 +99,9 @@ MIT. Use freely. If it helps you make a better decision, that's enough.
 
 ## About me
 
-I'm Everton Paula. I spent the last 12+ years building and running operations at hypergrowth marketplaces and consumer fintech across LATAM — Shopee, Rappi, inDrive. Most relevant to this toolkit: two years running Fraud Prevention at Shopee Brazil, hire one in the function, scaled the team to seven specialists, cut chargebacks 60% on roughly 1.5M daily transactions.
+I'm Everton Paula. I spent the last 12+ years building and running operations at hypergrowth marketplaces and consumer fintech in Latin America — fraud, marketplace ops, logistics, vendor management, workforce planning across multiple countries. This toolkit codifies the recurring patterns I've seen work, framed in a way any operations leader can adapt to their own environment.
 
-I'm currently based in Tampa, FL, and looking for Director / VP roles in fraud operations or operations leadership at US consumer fintech and marketplaces.
+Currently based in Tampa, FL, focused on Director / VP roles in operations and fraud operations at consumer fintech and marketplaces.
 
 - LinkedIn: [linkedin.com/in/evertonpaula](https://linkedin.com/in/evertonpaula)
 - GitHub: [github.com/everpaula](https://github.com/everpaula)
