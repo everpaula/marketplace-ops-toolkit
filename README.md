@@ -54,11 +54,42 @@ If your team has a queue and the cost of letting bad stuff through is measurable
 
 ---
 
+### Tool #2 — BIN Monitoring Detection
+
+**[→ Open the dashboard](./bin-monitor.html)** · [Python reference](./bin-monitor-reference.py)
+
+Detect BIN-level attack patterns before they hit chargeback. BIN attacks (where fraudsters generate card numbers within stolen BIN ranges and test them at scale) cause damage 30–90 days before chargebacks land. This tool catches them in real time.
+
+**What it does:**
+- Aggregates per-BIN activity across a 7-day window
+- Combines three independent signals: volume velocity, volume floor, new-user clustering
+- Classifies each BIN: Safe / Watch / Alert
+- Drill-down view shows day-by-day timeline for any BIN
+- Adjustable thresholds for tuning to your traffic baseline
+- Includes a Python reference implementation for adapting to your data pipeline
+
+**The detection rule:**
+
+```
+ALERT IF (volume velocity > X%) AND (3-day volume > floor) AND (new-user count > threshold)
+```
+
+**Status tiers:**
+
+| Tier | Logic | Action |
+|---|---|---|
+| **Alert** | All three signals cross | Pull human investigator. Tighten rules on this BIN range. |
+| **Watch** | Velocity elevated + one of (volume floor or new users) | Track daily, no ops response yet. |
+| **Safe** | Velocity normal or only one signal | No action. Stable large BINs land here even when above floor — that's intentional. |
+
+Why **AND** instead of OR? Volume velocity alone triggers on Black Friday. New-user count alone triggers on marketing campaigns. The intersection is where actual attacks separate from legitimate traffic.
+
+---
+
 ## Roadmap
 
 Other tools planned for this toolkit:
 
-- **Tool #2 — BIN Monitoring Detection** *(Python notebook)* — early detection logic for BIN-level attack patterns using multi-day volume velocity and new-user clustering.
 - **Tool #3 — Chargeback Dispute Investigation Template** *(markdown + decision tree)* — generalized structure for chargeback investigation flow: portal verification, identity resolution, behavior criteria, action matrix.
 - **Tool #4 — Workforce Forecast Calculator** *(Jupyter notebook)* — volume forecast + complexity mix + shrinkage + ROI gating, end-to-end.
 
