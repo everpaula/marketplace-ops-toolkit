@@ -8,18 +8,26 @@ Open-source methodologies for evaluating, scaling, and optimizing manual review 
 
 ## Tools
 
-### Tool #1 — Agent ROI Calculator
+### Tool #1 — Agent ROI Calculator (V2)
 
 **[→ Open the calculator](./agent-roi.html)**
 
 Evaluate workforce ROI in manual review operations. Helps you decide which queues to scale, which to optimize, and which need root-cause investigation before another dollar gets spent.
 
+**V2 adds two things V1 missed:**
+
+1. **False positive cost** — When an agent blocks a legitimate order, you don't just lose the savings, you lose the LTV of that customer. V2 takes FP rate + avg customer LTV as inputs and subtracts that cost from gross savings to give you net ROI.
+2. **Portfolio mode** — Most ops leaders don't run one queue, they run multiple. V2 portfolio mode lets you model up to 3 queues side by side and surfaces which queue gets the next marginal agent. Real decision isn't "is queue X profitable?" but "where do I put the next dollar?"
+
+Both features were raised as missing in V1 by [Ricardo Vieira-Gomes](https://www.linkedin.com/in/) (Co-Founder & Executive Director, ET Armadillo · AI Transformation in Operations) on the launch post. Both critiques were right and are now built in.
+
 **What it does:**
-- Calculates ROI per agent from 5 inputs (team size, daily cost, throughput, accuracy, avg savings)
-- Classifies the queue into 3 tiers: Scale / Optimize / Root cause
-- Decomposes ROI against industry benchmarks to surface the weakest lever
-- Returns a specific recommendation tied to whichever lever is dragging
-- Pre-loaded with 6 illustrative scenarios representing common ops patterns
+- 7 inputs: team size, daily cost, throughput, accuracy, avg savings, **FP rate (V2)**, **avg customer LTV (V2)**
+- Classifies the queue into 3 tiers: Scale / Optimize / Root cause (based on NET ROI after FP cost)
+- Decomposes ROI against industry benchmarks across 5 levers (V1 had 4)
+- Returns specific recommendation tied to whichever lever is dragging
+- Pre-loaded with 6 illustrative scenarios including a "FP-bleeding queue" that flips ROI negative
+- **Portfolio mode** lets you compare 3 queues + see marginal allocation recommendation
 
 **Why this exists:** Most teams scale manual review headcount linearly with volume, which is how ops budgets explode and quality drops at the same time. The math to evaluate workforce ROI is simple once you frame it right — what isn't simple is asking the question every quarter and using the answer to decide.
 
