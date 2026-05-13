@@ -12,6 +12,9 @@ Open-source methodologies for evaluating, scaling, and optimizing manual review 
 
 **[→ Open the calculator](./agent-roi.html)**
 
+![Agent ROI Calculator — Single queue mode](./images/agent-roi-single.png)
+![Agent ROI Calculator — Portfolio mode](./images/agent-roi-portfolio.png)
+
 Evaluate workforce ROI in manual review operations. Helps you decide which queues to scale, which to optimize, and which need root-cause investigation before another dollar gets spent.
 
 **V2 adds two things V1 missed:**
@@ -66,6 +69,8 @@ If your team has a queue and the cost of letting bad stuff through is measurable
 
 **[→ Open the dashboard](./bin-monitor.html)** · [Python reference](./bin-monitor-reference.py)
 
+![BIN Monitoring Detection dashboard](./images/bin-monitor.png)
+
 Detect BIN-level attack patterns before they hit chargeback. BIN attacks (where fraudsters generate card numbers within stolen BIN ranges and test them at scale) cause damage 30–90 days before chargebacks land. This tool catches them in real time.
 
 **What it does:**
@@ -97,6 +102,9 @@ Why **AND** instead of OR? Volume velocity alone triggers on Black Friday. New-u
 ### Tool #3 — Marketplace Surge Simulator (PID Control) — V2
 
 **[→ Open the simulator](./surge-pid.html)** · [Python reference](./surge-pid-reference.py)
+
+![Surge Simulator — City Aggregate mode (V1)](./images/surge-city-aggregate.png)
+![Surge Simulator — Polygon Map mode (V2)](./images/surge-polygon-map.png)
 
 Interactive simulator of surge pricing using **PID control theory**, with two modes:
 
@@ -140,6 +148,9 @@ The math is from control theory (Minorsky, 1922). The application to marketplace
 
 **[→ Open the wizard](./chargeback-sop.html)**
 
+![Chargeback Dispute Wizard — Question step](./images/chargeback-wizard.png)
+![Chargeback Dispute Wizard — Recommendation with evidence checklist](./images/chargeback-recommendation.png)
+
 Walk through a chargeback like a senior fraud analyst. Interactive decision tree wizard guides you from reason code to action recommendation in 4-6 questions, with the specific evidence package you need to fight (or accept).
 
 **Three components:**
@@ -154,6 +165,8 @@ The wizard maps to industry-standard chargeback investigation flow, generalized 
 ### Tool #5 — Workforce Forecast Calculator
 
 **[→ Open the calculator](./workforce-forecast.html)**
+
+![Workforce Forecast Calculator with multi-case-type breakdown and vendor split comparison](./images/workforce-forecast.png)
 
 How many agents do you actually need? Multi-case-type forecast based on **volume × complexity × productivity × shrinkage**. The math behind quarterly capacity planning, made explicit.
 
@@ -226,7 +239,7 @@ MIT. Use freely. If it helps you make a better decision, that's enough.
 
 I'm Everton Paula. I spent the last 12+ years building and running operations at hypergrowth marketplaces and consumer fintech in Latin America — fraud, marketplace ops, logistics, vendor management, workforce planning across multiple countries. This toolkit codifies the recurring patterns I've seen work, framed in a way any operations leader can adapt to their own environment.
 
-Currently based in Tampa, FL, focused on Director / VP roles in operations and fraud operations at consumer fintech and marketplaces.
+Currently based in Tampa, FL, focused on Director / Head roles in operations and fraud operations at consumer fintech and marketplaces.
 
 - LinkedIn: [linkedin.com/in/evertonpaula](https://linkedin.com/in/evertonpaula)
 - GitHub: [github.com/everpaula](https://github.com/everpaula)
