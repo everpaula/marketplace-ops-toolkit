@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workforce Forecast Calculator — Marketplace Ops Toolkit</title>
+<meta name="description" content="Forecast required headcount from volume, complexity mix, productivity, and shrinkage. Multi-case-type calculator with in-house vs vendor split comparison and three scenario presets.">
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-elev: #131c33;
+    --bg-card: #131c33;
+    --border: #1f2a44;
+    --border-bright: #2e3d5f;
+    --text: #e6ecf5;
+    --text-muted: #8a96b4;
+    --accent: #14b8a6;
+    --accent-soft: rgba(20, 184, 166, 0.1);
+    --green: #10b981;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+  .top-nav { margin-bottom: 1rem; }
+  .top-nav a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
+  .top-nav a:hover { color: var(--accent); }
+
+  header { margin-bottom: 1.5rem; }
+  .brand {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  header h1 {
+    font-size: 1.9rem;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  header .tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 760px;
+    line-height: 1.55;
+  }
+  header .tagline strong { color: var(--text); }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .card .sub {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  /* === SCENARIO PRESETS === */
+  .scenarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.7rem;
+  }
+  .scenario-btn {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .scenario-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .scenario-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .scenario-btn .scn-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 0.2rem;
+  }
+  .scenario-btn .scn-meta {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  /* === CASE TYPES === */
+  .case-type-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .case-type-row:last-child { border-bottom: none; }
+  .case-type-row.header {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    padding-bottom: 0.4rem;
+  }
+  .case-type-row input {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.4rem 0.6rem;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    width: 100%;
+  }
+  .case-type-row input:focus { outline: none; border-color: var(--accent); }
+  .case-type-row input[type="text"] { font-weight: 600; }
+  .case-type-row input[type="number"] { text-align: right; font-variant-numeric: tabular-nums; }
+  .remove-btn {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text-muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.15s ease;
+  }
+  .remove-btn:hover { border-color: var(--red); color: var(--red); }
+  .remove-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .add-btn {
+    background: var(--accent-soft);
+    border: 1px dashed var(--accent);
+    color: var(--accent);
+    padding: 0.6rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-top: 0.6rem;
+    transition: all 0.15s ease;
+    width: 100%;
+  }
+  .add-btn:hover { background: var(--accent); color: #042f2e; }
+
+  /* === SETTINGS GRID === */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.85rem;
+  }
+  .setting-cell {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+  }
+  .setting-cell label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+  .setting-cell label .hint {
+    color: var(--border-bright);
+    font-size: 0.7rem;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+  }
+  .setting-input {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .setting-input input {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.4rem 0.6rem;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .setting-input input:focus { outline: none; border-color: var(--accent); }
+  .setting-input .unit {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  /* === OUTPUT === */
+  .output-headline {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(99, 102, 241, 0.05));
+    border: 1px solid rgba(20, 184, 166, 0.3);
+    border-radius: 10px;
+    padding: 1.5rem 1.6rem;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .output-fte-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+  .output-fte-value {
+    color: var(--accent);
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .output-fte-meta {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-top: 0.6rem;
+  }
+
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.7rem;
+  }
+  .breakdown-cell {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+  }
+  .breakdown-cell .bk-label {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .breakdown-cell .bk-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .breakdown-cell .bk-value.accent { color: var(--accent); }
+
+  /* === PER-CASE-TYPE BREAKDOWN === */
+  .case-breakdown-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 0.6rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+    align-items: center;
+  }
+  .case-breakdown-row.header {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+  }
+  .case-breakdown-row .right { text-align: right; font-variant-numeric: tabular-nums; }
+  .case-breakdown-row .name { color: var(--accent); font-weight: 700; }
+
+  /* === SPLIT COMPARISON === */
+  .split-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.7rem;
+  }
+  @media (max-width: 760px) { .split-grid { grid-template-columns: 1fr; } }
+  .split-cell {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.95rem 1.1rem;
+    transition: border-color 0.15s ease;
+  }
+  .split-cell.recommended {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .split-cell .split-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.92rem;
+    margin-bottom: 0.35rem;
+  }
+  .split-cell .split-cost {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.4rem;
+  }
+  .split-cell .split-meta {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+  .split-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #042f2e;
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    margin-top: 0.3rem;
+  }
+
+  /* === ABOUT === */
+  .about p { margin-bottom: 0.85rem; color: var(--text); font-size: 0.94rem; line-height: 1.7; }
+  .about p strong { color: var(--accent); }
+  .about ul { margin: 0.5rem 0 1rem 1.4rem; color: var(--text); }
+  .about ul li { margin-bottom: 0.35rem; font-size: 0.93rem; }
+  .about .formula {
+    background: var(--bg);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.88rem;
+    color: var(--text);
+    margin: 0.5rem 0 1rem;
+    border-left: 3px solid var(--accent);
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top-nav">
+    <a href="./index.html">← marketplace-ops-toolkit</a>
+  </div>
+
+  <header>
+    <div class="brand">marketplace-ops-toolkit · tool #5</div>
+    <h1>Workforce Forecast Calculator</h1>
+    <div class="tagline">
+      How many agents do you actually need? Multi-case-type forecast based on <strong>volume × complexity × productivity × shrinkage</strong>. Compares 100% in-house vs vendor-split scenarios and recommends the most cost-efficient mix. The math behind quarterly capacity planning.
+    </div>
+  </header>
+
+  <!-- SCENARIO PRESETS -->
+  <div class="card">
+    <h2>Pick a scenario preset</h2>
+    <p class="sub">Pre-loaded patterns for common ops planning situations. Click to load, then customize.</p>
+    <div class="scenarios" id="scenariosGrid"></div>
+  </div>
+
+  <!-- CASE TYPES -->
+  <div class="card">
+    <h2>Case types</h2>
+    <p class="sub">Break the queue down by case complexity. Each case type has its own daily volume and average handle time.</p>
+
+    <div class="case-type-row header">
+      <div>Case type name</div>
+      <div style="text-align:right">Daily volume</div>
+      <div style="text-align:right">Avg handle time (min)</div>
+      <div style="text-align:right">Notes</div>
+      <div></div>
+    </div>
+    <div id="caseTypesList"></div>
+    <button class="add-btn" id="addCaseType">+ Add another case type</button>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="card">
+    <h2>Operating parameters</h2>
+    <p class="sub">Productivity assumptions, target service level, and team economics. Adjust to match your operation.</p>
+
+    <div class="settings-grid">
+      <div class="setting-cell">
+        <label>Productive hours per agent <span class="hint">8h shift minus breaks</span></label>
+        <div class="setting-input">
+          <input type="number" id="productiveHours" value="6.5" min="1" max="12" step="0.5">
+          <span class="unit">h/day</span>
+        </div>
+      </div>
+      <div class="setting-cell">
+        <label>Shrinkage <span class="hint">PTO, training, sickness</span></label>
+        <div class="setting-input">
+          <input type="number" id="shrinkage" value="28" min="0" max="50" step="1">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="setting-cell">
+        <label>Peak / average ratio <span class="hint">peak day vs avg day</span></label>
+        <div class="setting-input">
+          <input type="number" id="peakRatio" value="1.4" min="1" max="3" step="0.1">
+          <span class="unit">×</span>
+        </div>
+      </div>
+      <div class="setting-cell">
+        <label>Service level buffer <span class="hint">extra capacity for variance</span></label>
+        <div class="setting-input">
+          <input type="number" id="slBuffer" value="15" min="0" max="50" step="1">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="setting-cell">
+        <label>Daily cost (in-house agent) <span class="hint">fully loaded</span></label>
+        <div class="setting-input">
+          <span class="unit">$</span>
+          <input type="number" id="costInHouse" value="280" min="50" max="2000" step="10">
+        </div>
+      </div>
+      <div class="setting-cell">
+        <label>Daily cost (vendor agent) <span class="hint">BPO / outsourced</span></label>
+        <div class="setting-input">
+          <span class="unit">$</span>
+          <input type="number" id="costVendor" value="140" min="30" max="1500" step="10">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="card">
+    <h2>Required headcount</h2>
+    <p class="sub">The math: total case-minutes per day ÷ productive minutes per agent ÷ (1 − shrinkage) × peak ratio × (1 + service level buffer).</p>
+
+    <div class="output-headline">
+      <div class="output-fte-label">Total Headcount Needed</div>
+      <div class="output-fte-value" id="outputFTE">0</div>
+      <div class="output-fte-meta" id="outputMeta">Adjust inputs above to forecast.</div>
+    </div>
+
+    <div class="breakdown-grid">
+      <div class="breakdown-cell">
+        <div class="bk-label">Total case minutes/day</div>
+        <div class="bk-value" id="totalMinutes">0</div>
+      </div>
+      <div class="breakdown-cell">
+        <div class="bk-label">Productive minutes/agent</div>
+        <div class="bk-value" id="productiveMinutes">0</div>
+      </div>
+      <div class="breakdown-cell">
+        <div class="bk-label">Base FTE (no shrinkage, no peak)</div>
+        <div class="bk-value" id="baseFTE">0</div>
+      </div>
+      <div class="breakdown-cell">
+        <div class="bk-label">After shrinkage adjustment</div>
+        <div class="bk-value" id="afterShrinkage">0</div>
+      </div>
+      <div class="breakdown-cell">
+        <div class="bk-label">After peak coverage</div>
+        <div class="bk-value" id="afterPeak">0</div>
+      </div>
+      <div class="breakdown-cell">
+        <div class="bk-label">After service level buffer</div>
+        <div class="bk-value accent" id="finalFTE">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PER-CASE-TYPE BREAKDOWN -->
+  <div class="card">
+    <h2>Per case type breakdown</h2>
+    <p class="sub">How each case type contributes to the total. Useful for vendor split decisions — typically high-volume / lower-complexity cases go to vendors, gray-zone and high-stakes stay in-house.</p>
+
+    <div class="case-breakdown-row header">
+      <div>Case type</div>
+      <div class="right">Daily volume</div>
+      <div class="right">Daily minutes</div>
+      <div class="right">FTE share</div>
+    </div>
+    <div id="caseBreakdownList"></div>
+  </div>
+
+  <!-- IN-HOUSE VS VENDOR SPLIT -->
+  <div class="card">
+    <h2>In-house vs vendor split — cost comparison</h2>
+    <p class="sub">Three staffing models with annualized cost. The recommended option is starred — usually a hybrid because gray-zone cases need in-house judgment but high-volume cases are cheaper at the vendor.</p>
+
+    <div class="split-grid" id="splitGrid"></div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="card about">
+    <h2>How this calculator works</h2>
+
+    <p>The classic workforce forecasting question — "how many agents do we need?" — has a deceptively simple math at the core. The complication isn't the formula. It's that most teams pick numbers out of the air for the inputs and then defend the forecast politically rather than analytically.</p>
+
+    <p>This calculator forces explicit inputs across the five drivers that actually matter:</p>
+
+    <p><strong>The formula</strong></p>
+    <div class="formula">total_minutes  = Σ (volume_i × handle_time_i)        // sum across case types
+productive_min = productive_hours × 60                // per agent per day
+base_FTE       = total_minutes / productive_min
+after_shrink   = base_FTE / (1 − shrinkage)           // PTO, training, sickness
+after_peak     = after_shrink × peak_ratio            // peak vs avg day
+final_HC       = after_peak × (1 + sl_buffer)         // service level cushion</div>
+
+    <p><strong>What each input means</strong></p>
+    <ul>
+      <li><strong>Daily volume per case type</strong> — your forecasted demand. Different case types should be separate rows because they have different handle times. Aggregating to "total cases" hides the complexity mix that drives staffing.</li>
+      <li><strong>Avg handle time</strong> — minutes per case from open to close, including post-call wrap-up. Measure from your actual data, not the SLA target.</li>
+      <li><strong>Productive hours per agent</strong> — an 8-hour shift becomes ~6.5h after breaks, meetings, system time. This is the time an agent is actually available to take cases.</li>
+      <li><strong>Shrinkage</strong> — % of paid time agents aren't producing. Typical 25-30% for shift-based ops accounting for PTO, sick, training, attrition gaps.</li>
+      <li><strong>Peak / average ratio</strong> — your worst day vs average day. Staff for peak or your service level collapses on peak days. Typical 1.3-1.6 for steady-state operations, higher for event-driven ones.</li>
+      <li><strong>Service level buffer</strong> — extra capacity for forecast variance and ramp-up time on new hires. Typical 10-20%.</li>
+    </ul>
+
+    <p><strong>The vendor split decision</strong></p>
+    <p>For most operations, a hybrid in-house/vendor model is more cost-efficient than pure in-house, but only for the right case types. The general rule:</p>
+    <ul>
+      <li><strong>High-volume, low-complexity</strong> cases (clear approvals, clear declines, simple resolutions) → vendor handles end-to-end with defined SLA</li>
+      <li><strong>Gray-zone, judgment-heavy</strong> cases → in-house team owns</li>
+      <li><strong>High-stakes / regulatory escalation</strong> cases → in-house, often senior tier</li>
+    </ul>
+    <p>The split calculator above assumes 60% of total volume can go to vendor at the vendor cost rate, and 40% needs in-house. Adjust those assumptions to your operation — they vary a lot by industry, case type, and your vendor capabilities.</p>
+
+    <p><strong>What this calculator is NOT</strong></p>
+    <ul>
+      <li>It's not a substitute for an actual workforce management (WFM) system. Real WFM platforms (Verint, NICE, Calabrio) model intraday scheduling, skill-based routing, real-time adherence. This is the spreadsheet-level capacity calculation that feeds into WFM, not WFM itself.</li>
+      <li>It doesn't model attrition, hiring lead time, training time for new hires, or seasonality beyond the peak ratio. For multi-quarter planning, those matter.</li>
+      <li>It assumes linear productivity. In reality, agents get more efficient with tenure (and less efficient if overworked). Real-world variance is wider than the buffer accounts for.</li>
+    </ul>
+  </div>
+
+  <footer>
+    Open source · MIT License · Built by Everton Paula · <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank">View on GitHub</a>
+  </footer>
+
+</div>
+
+<script>
+// =============================================================================
+// SCENARIO PRESETS
+// =============================================================================
+const SCENARIOS = [
+  {
+    id: "steady",
+    title: "Steady-state team",
+    meta: "Established ops, normal volume",
+    settings: { productiveHours: 6.5, shrinkage: 28, peakRatio: 1.3, slBuffer: 10, costInHouse: 280, costVendor: 140 },
+    cases: [
+      { name: "Standard review", volume: 800, handleTime: 4, note: "auto-approve / clear decline" },
+      { name: "Manual investigation", volume: 200, handleTime: 12, note: "gray zone" },
+      { name: "Escalation", volume: 40, handleTime: 35, note: "high-stakes" }
+    ]
+  },
+  {
+    id: "hypergrowth",
+    title: "Hypergrowth ramp",
+    meta: "4x growth, complexity rising",
+    settings: { productiveHours: 6.5, shrinkage: 32, peakRatio: 1.6, slBuffer: 20, costInHouse: 320, costVendor: 150 },
+    cases: [
+      { name: "Standard review", volume: 3200, handleTime: 4, note: "high volume" },
+      { name: "Manual investigation", volume: 900, handleTime: 14, note: "complexity rising" },
+      { name: "Escalation", volume: 160, handleTime: 40, note: "growth pains" },
+      { name: "Onboarding KYC", volume: 600, handleTime: 8, note: "scale-related" }
+    ]
+  },
+  {
+    id: "peak_event",
+    title: "Peak event (Black Friday-style)",
+    meta: "Short-term surge, 7 days",
+    settings: { productiveHours: 6.5, shrinkage: 25, peakRatio: 2.2, slBuffer: 25, costInHouse: 320, costVendor: 160 },
+    cases: [
+      { name: "Standard review", volume: 5000, handleTime: 4, note: "surge volume" },
+      { name: "Manual investigation", volume: 800, handleTime: 10, note: "rules tightened" },
+      { name: "Customer support escalation", volume: 300, handleTime: 22, note: "complaint volume up" }
+    ]
+  },
+  {
+    id: "lean_startup",
+    title: "Lean startup ops",
+    meta: "Small team, broad case mix",
+    settings: { productiveHours: 7, shrinkage: 20, peakRatio: 1.4, slBuffer: 15, costInHouse: 250, costVendor: 120 },
+    cases: [
+      { name: "Triage", volume: 150, handleTime: 6, note: "single queue" },
+      { name: "Resolution", volume: 80, handleTime: 18, note: "all complexity" }
+    ]
+  }
+];
+
+// =============================================================================
+// STATE
+// =============================================================================
+const state = {
+  scenarioId: 'steady',
+  cases: [],
+  settings: {}
+};
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+const fmt1 = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
+const fmtMoney = n => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+// =============================================================================
+// SCENARIO LOAD
+// =============================================================================
+function loadScenario(id) {
+  const s = SCENARIOS.find(x => x.id === id);
+  if (!s) return;
+  state.scenarioId = id;
+  state.cases = JSON.parse(JSON.stringify(s.cases));
+  state.settings = { ...s.settings };
+  // Update inputs
+  Object.entries(state.settings).forEach(([k, v]) => {
+    const el = $(k);
+    if (el) el.value = v;
+  });
+  renderScenarios();
+  renderCaseTypes();
+  recompute();
+}
+
+// =============================================================================
+// SCENARIO RENDER
+// =============================================================================
+function renderScenarios() {
+  const grid = $('scenariosGrid');
+  grid.innerHTML = SCENARIOS.map(s => `
+    <button class="scenario-btn ${state.scenarioId === s.id ? 'active' : ''}" data-id="${s.id}">
+      <div class="scn-title">${s.title}</div>
+      <div class="scn-meta">${s.meta}</div>
+    </button>
+  `).join('');
+  grid.querySelectorAll('.scenario-btn').forEach(btn => {
+    btn.addEventListener('click', () => loadScenario(btn.dataset.id));
+  });
+}
+
+// =============================================================================
+// CASE TYPES RENDER + BIND
+// =============================================================================
+function renderCaseTypes() {
+  const list = $('caseTypesList');
+  list.innerHTML = state.cases.map((c, i) => `
+    <div class="case-type-row" data-i="${i}">
+      <input type="text" data-field="name" value="${c.name}" placeholder="Case type name">
+      <input type="number" data-field="volume" value="${c.volume}" min="0" step="10">
+      <input type="number" data-field="handleTime" value="${c.handleTime}" min="0" step="1">
+      <input type="text" data-field="note" value="${c.note || ''}" placeholder="optional note">
+      <button class="remove-btn" data-i="${i}" ${state.cases.length === 1 ? 'disabled' : ''}>×</button>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const i = parseInt(e.target.closest('.case-type-row').dataset.i);
+      const field = e.target.dataset.field;
+      if (field === 'volume' || field === 'handleTime') {
+        state.cases[i][field] = parseFloat(e.target.value) || 0;
+      } else {
+        state.cases[i][field] = e.target.value;
+      }
+      recompute();
+    });
+  });
+
+  list.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const i = parseInt(e.target.dataset.i);
+      if (state.cases.length > 1) {
+        state.cases.splice(i, 1);
+        renderCaseTypes();
+        recompute();
+      }
+    });
+  });
+}
+
+$('addCaseType').addEventListener('click', () => {
+  state.cases.push({ name: "New case type", volume: 100, handleTime: 5, note: "" });
+  renderCaseTypes();
+  recompute();
+});
+
+// =============================================================================
+// SETTINGS BIND
+// =============================================================================
+['productiveHours', 'shrinkage', 'peakRatio', 'slBuffer', 'costInHouse', 'costVendor'].forEach(key => {
+  $(key).addEventListener('input', e => {
+    state.settings[key] = parseFloat(e.target.value) || 0;
+    recompute();
+  });
+});
+
+// =============================================================================
+// CORE CALCULATION
+// =============================================================================
+function recompute() {
+  // Sum total case minutes
+  const totalMinutes = state.cases.reduce((s, c) => s + (c.volume * c.handleTime), 0);
+  const productiveMinutes = state.settings.productiveHours * 60;
+  const baseFTE = productiveMinutes > 0 ? totalMinutes / productiveMinutes : 0;
+  const shrinkFactor = 1 - (state.settings.shrinkage / 100);
+  const afterShrinkage = shrinkFactor > 0 ? baseFTE / shrinkFactor : 0;
+  const afterPeak = afterShrinkage * state.settings.peakRatio;
+  const finalFTE = afterPeak * (1 + state.settings.slBuffer / 100);
+
+  // Update outputs
+  $('outputFTE').textContent = Math.ceil(finalFTE);
+  $('totalMinutes').textContent = fmt(totalMinutes);
+  $('productiveMinutes').textContent = fmt(productiveMinutes);
+  $('baseFTE').textContent = fmt1(baseFTE);
+  $('afterShrinkage').textContent = fmt1(afterShrinkage);
+  $('afterPeak').textContent = fmt1(afterPeak);
+  $('finalFTE').textContent = Math.ceil(finalFTE);
+
+  // Annual cost in-house
+  const annualCostInHouse = Math.ceil(finalFTE) * state.settings.costInHouse * 365;
+  $('outputMeta').innerHTML = `Based on ${state.cases.length} case type${state.cases.length > 1 ? 's' : ''} totaling ${fmt(totalMinutes)} case-minutes/day · Annual fully-loaded cost (100% in-house): <strong>${fmtMoney(annualCostInHouse)}</strong>`;
+
+  // Per case type breakdown
+  renderCaseBreakdown(totalMinutes, finalFTE);
+
+  // Split comparison
+  renderSplitComparison(finalFTE);
+}
+
+function renderCaseBreakdown(totalMinutes, finalFTE) {
+  const list = $('caseBreakdownList');
+  list.innerHTML = state.cases.map(c => {
+    const caseMinutes = c.volume * c.handleTime;
+    const share = totalMinutes > 0 ? caseMinutes / totalMinutes : 0;
+    const fteShare = finalFTE * share;
+    return `
+      <div class="case-breakdown-row">
+        <div class="name">${c.name || '(unnamed)'}</div>
+        <div class="right">${fmt(c.volume)}</div>
+        <div class="right">${fmt(caseMinutes)}</div>
+        <div class="right">${fmt1(fteShare)} (${(share * 100).toFixed(0)}%)</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSplitComparison(finalFTE) {
+  const days = 365;
+  const inHouseCost = Math.ceil(finalFTE) * state.settings.costInHouse * days;
+
+  // Hybrid: 60% vendor, 40% in-house — typical industry split
+  const hybridVendor = Math.ceil(finalFTE * 0.6) * state.settings.costVendor * days;
+  const hybridInHouse = Math.ceil(finalFTE * 0.4) * state.settings.costInHouse * days;
+  const hybridTotal = hybridVendor + hybridInHouse;
+
+  const allVendorCost = Math.ceil(finalFTE) * state.settings.costVendor * days;
+
+  // Determine recommended (typically hybrid unless extreme case)
+  let recommended = 'hybrid';
+  if (state.cases.length === 1) recommended = 'vendor';  // simple cases, vendor handles
+  if (state.cases.some(c => c.handleTime > 25)) recommended = 'inhouse';  // high complexity, in-house
+
+  const cells = [
+    {
+      id: 'inhouse',
+      title: '100% in-house',
+      cost: inHouseCost,
+      meta: `${Math.ceil(finalFTE)} agents at $${state.settings.costInHouse}/day fully loaded. Maximum control over quality, minimum flexibility on volume swings.`
+    },
+    {
+      id: 'hybrid',
+      title: 'Hybrid (60% vendor / 40% in-house)',
+      cost: hybridTotal,
+      meta: `${Math.ceil(finalFTE * 0.6)} vendor + ${Math.ceil(finalFTE * 0.4)} in-house. Vendor handles high-volume / lower-complexity. In-house owns gray zone and escalations.`
+    },
+    {
+      id: 'vendor',
+      title: '100% vendor',
+      cost: allVendorCost,
+      meta: `${Math.ceil(finalFTE)} vendor agents at $${state.settings.costVendor}/day. Lowest cost. Loses depth on complex cases unless SLA is tight.`
+    }
+  ];
+
+  const grid = $('splitGrid');
+  grid.innerHTML = cells.map(c => `
+    <div class="split-cell ${c.id === recommended ? 'recommended' : ''}">
+      <div class="split-title">${c.title}</div>
+      <div class="split-cost">${fmtMoney(c.cost)}</div>
+      <div class="split-meta">${c.meta}</div>
+      ${c.id === recommended ? '<span class="split-badge">★ Recommended</span>' : ''}
+    </div>
+  `).join('');
+}
+
+// =============================================================================
+// INIT
+// =============================================================================
+loadScenario('steady');
+</script>
+</body>
+</html>

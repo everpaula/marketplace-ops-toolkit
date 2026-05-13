@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chargeback Dispute Investigation Template — Marketplace Ops Toolkit</title>
+<meta name="description" content="Interactive chargeback investigation wizard with decision tree, 8-section SOP structure, and pre-loaded sample cases. Generalized framework for any payments environment.">
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-elev: #131c33;
+    --bg-card: #131c33;
+    --border: #1f2a44;
+    --border-bright: #2e3d5f;
+    --text: #e6ecf5;
+    --text-muted: #8a96b4;
+    --accent: #14b8a6;
+    --accent-soft: rgba(20, 184, 166, 0.1);
+    --green: #10b981;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+
+  .top-nav { margin-bottom: 1rem; }
+  .top-nav a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
+  .top-nav a:hover { color: var(--accent); }
+
+  header { margin-bottom: 1.5rem; }
+  .brand {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  header h1 {
+    font-size: 1.9rem;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  header .tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 760px;
+    line-height: 1.55;
+  }
+  header .tagline strong { color: var(--text); }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+  .card .sub {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 1rem;
+  }
+
+  /* === WIZARD === */
+  .wizard-card {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.06), rgba(99, 102, 241, 0.04));
+    border: 1px solid rgba(20, 184, 166, 0.3);
+    border-radius: 12px;
+    padding: 1.75rem 1.8rem;
+    margin-bottom: 1.25rem;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+  }
+  .wizard-step {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .wizard-question {
+    color: var(--text);
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  .wizard-context {
+    color: var(--text-muted);
+    font-size: 0.93rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.55;
+  }
+  .wizard-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+    flex: 1;
+  }
+  .wizard-option {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.95rem 1.1rem;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: all 0.15s ease;
+    line-height: 1.4;
+  }
+  .wizard-option:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .wizard-option strong { color: var(--accent); font-weight: 700; }
+  .wizard-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .wizard-btn {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text-muted);
+    padding: 0.45rem 0.95rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    transition: all 0.15s ease;
+  }
+  .wizard-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .wizard-breadcrumb {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+  }
+
+  /* === RECOMMENDATION (terminal nodes) === */
+  .rec-card {
+    border-radius: 8px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.25rem;
+    border-left: 4px solid;
+  }
+  .rec-card.fight { border-left-color: var(--green); background: rgba(16, 185, 129, 0.06); }
+  .rec-card.accept { border-left-color: var(--red); background: rgba(239, 68, 68, 0.06); }
+  .rec-card.escalate { border-left-color: var(--yellow); background: rgba(251, 191, 36, 0.06); }
+  .rec-card.hold { border-left-color: var(--blue); background: rgba(96, 165, 250, 0.06); }
+  .rec-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 800;
+    margin-bottom: 0.3rem;
+  }
+  .rec-card.fight .rec-label { color: var(--green); }
+  .rec-card.accept .rec-label { color: var(--red); }
+  .rec-card.escalate .rec-label { color: var(--yellow); }
+  .rec-card.hold .rec-label { color: var(--blue); }
+  .rec-title {
+    color: var(--text);
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.01em;
+  }
+  .rec-reasoning {
+    color: var(--text);
+    font-size: 0.93rem;
+    line-height: 1.65;
+    margin-bottom: 1rem;
+  }
+  .rec-evidence {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--border);
+  }
+  .rec-evidence-title {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .rec-evidence ul { list-style: none; padding: 0; }
+  .rec-evidence ul li {
+    color: var(--text);
+    font-size: 0.88rem;
+    padding: 0.3rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+  }
+  .rec-evidence ul li::before {
+    content: "☐";
+    color: var(--accent);
+    position: absolute;
+    left: 0;
+  }
+
+  /* === 8-SECTION SOP STRUCTURE === */
+  .sop-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.7rem;
+  }
+  @media (max-width: 700px) { .sop-grid { grid-template-columns: 1fr; } }
+  .sop-section {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    transition: border-color 0.15s ease;
+  }
+  .sop-section:hover { border-color: var(--accent); }
+  .sop-num {
+    display: inline-block;
+    background: var(--accent);
+    color: #042f2e;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    margin-bottom: 0.4rem;
+  }
+  .sop-name {
+    color: var(--text);
+    font-size: 0.96rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+  .sop-desc {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  /* === SAMPLE CASES === */
+  .case-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.7rem;
+  }
+  .case-btn {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .case-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .case-btn .case-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 0.2rem;
+  }
+  .case-btn .case-meta {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  /* === ABOUT === */
+  .about p { margin-bottom: 0.85rem; color: var(--text); font-size: 0.94rem; line-height: 1.7; }
+  .about p strong { color: var(--accent); }
+  .about ul { margin: 0.5rem 0 1rem 1.4rem; color: var(--text); }
+  .about ul li { margin-bottom: 0.35rem; font-size: 0.93rem; }
+
+  footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top-nav">
+    <a href="./index.html">← marketplace-ops-toolkit</a>
+  </div>
+
+  <header>
+    <div class="brand">marketplace-ops-toolkit · tool #4</div>
+    <h1>Chargeback Dispute Investigation Template</h1>
+    <div class="tagline">
+      Walk through a chargeback like a senior fraud analyst. Interactive <strong>decision tree wizard</strong> guides you from reason code to action recommendation in 4-6 questions, with the evidence package you need to fight (or accept). Plus the <strong>8-section SOP structure</strong> any team can adapt to their own environment.
+    </div>
+  </header>
+
+  <!-- WIZARD -->
+  <div class="card">
+    <h2>Interactive investigation wizard</h2>
+    <p class="sub">A chargeback just landed in your queue. Walk through the questions a senior analyst asks before deciding to fight, accept, or escalate.</p>
+
+    <div class="wizard-card" id="wizardCard">
+      <!-- Content rendered dynamically -->
+    </div>
+  </div>
+
+  <!-- SAMPLE CASES -->
+  <div class="card">
+    <h2>Sample cases — pre-loaded scenarios</h2>
+    <p class="sub">Real-world patterns sanitized to representative shapes. Click any case to load it into the wizard and trace the investigation.</p>
+    <div class="case-list" id="caseList"></div>
+  </div>
+
+  <!-- 8 SECTIONS SOP -->
+  <div class="card">
+    <h2>The 8-section SOP structure</h2>
+    <p class="sub">A generalized chargeback investigation SOP that any team can adapt. Each section addresses one piece of the analyst's mental model. The wizard above maps to sections 1-7; section 8 covers documentation standards for whatever the team decides.</p>
+
+    <div class="sop-grid">
+      <div class="sop-section">
+        <div class="sop-num">1</div>
+        <div class="sop-name">Triage &amp; tagging</div>
+        <div class="sop-desc">Categorize the incoming chargeback by reason code, value tier, and product line. Apply standardized tags (e.g., "stolen card," "first-party," "non-delivery"). The tag drives downstream routing and the evidence template.</div>
+      </div>
+      <div class="sop-section">
+        <div class="sop-num">2</div>
+        <div class="sop-name">Identity verification</div>
+        <div class="sop-desc">Verify the cardholder identity claimed in the dispute matches the original purchaser. Pull the buyer profile, device fingerprint, and historical transaction pattern. Discrepancy here suggests stolen card; alignment suggests first-party fraud.</div>
+      </div>
+      <div class="sop-section">
+        <div class="sop-num">3</div>
+        <div class="sop-name">Address &amp; geo pattern check</div>
+        <div class="sop-desc">Look up the shipping/billing addresses against your fraud graph. Is this address linked to prior confirmed chargebacks? Is this a known fraud cluster (apartment complex, drop shipping forwarder, etc.)?</div>
+      </div>
+      <div class="sop-section">
+        <div class="sop-num">4</div>
+        <div class="sop-name">External identity lookup</div>
+        <div class="sop-desc">Cross-reference the buyer against external identity data (credit bureau, government ID registry, your KYC vendor). For high-value disputes, this validates whether the person actually exists and matches the claimed cardholder.</div>
+      </div>
+      <div class="sop-section">
+        <div class="sop-num">5</div>
+        <div class="sop-name">Identity matching matrix</div>
+        <div class="sop-desc">Score the match across multiple fields (name, address, phone, email, tax ID, billing address). Higher match scores favor approving the dispute or fighting it depending on which side the data points to. Below threshold → escalate.</div>
+      </div>
+      <div class="sop-section">
+        <div class="sop-num">6</div>
+        <div class="sop-name">Behavioral risk criteria</div>
+        <div class="sop-desc">Apply behavioral signals: account age vs card age, velocity over last 7/30 days, device count, shipping address changes, time-of-day pattern. Score against your model. Flag for escalation if behavioral signal contradicts identity signal.</div>
+      </div>
+      <div class="sop-section">
+        <div class="sop-num">7</div>
+        <div class="sop-name">Action decision matrix</div>
+        <div class="sop-desc">Combine identity score, behavioral score, value, and dispute type into a clear action: <strong>Fight</strong> (with evidence package), <strong>Accept</strong> (refund + ban if appropriate), <strong>Escalate</strong> (human analyst), or <strong>Hold</strong> (need more data first).</div>
+      </div>
+      <div class="sop-section">
+        <div class="sop-num">8</div>
+        <div class="sop-name">Documentation standards</div>
+        <div class="sop-desc">For every disposition, document: reasoning, evidence collected, action taken, follow-up flags. Standardized format enables QA, model retraining, and audit trail. Required regardless of decision direction.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="card about">
+    <h2>About this template</h2>
+
+    <p>Most chargeback teams use a mental model that lives in one analyst's head. New hires learn by shadowing for weeks. QA becomes about reconciling preferences rather than measuring against a standard. Disputes get fought when they shouldn't, accepted when they should be fought, and the team doesn't know where the inconsistency comes from.</p>
+
+    <p>The fix is a <strong>structured SOP</strong> that codifies the decision logic into a sequence of questions any analyst can walk through. The decisions still get made — but they get made consistently, and the reasoning leaves an audit trail.</p>
+
+    <p>This template is generalized from operational experience running fraud and dispute investigation in Latin American marketplace and consumer fintech environments. The 8 sections cover the analyst's mental model in order; the wizard above renders the first 7 as an interactive flow.</p>
+
+    <p><strong>What this template is</strong></p>
+    <ul>
+      <li>A starting point for building your own chargeback SOP</li>
+      <li>A training tool for new analysts (shadow the wizard for 100 cases, then start solo)</li>
+      <li>A way to align senior analysts on edge cases (run the same case through the wizard, compare reasoning)</li>
+      <li>A QA framework — every disposition can be traced back to the answers given at each step</li>
+    </ul>
+
+    <p><strong>What it's not</strong></p>
+    <ul>
+      <li>It's not a replacement for an automated rules engine or ML model. Those handle the high-volume clear-cut cases. This template covers the gray zone where humans need to make judgment calls.</li>
+      <li>It's not jurisdiction-specific. Reg E (US), PSD2 (EU), local equivalents — the regulatory framing layers on top of this. The investigation flow is universal; the action constraints are local.</li>
+      <li>It's not exhaustive. Real production SOPs run 20-40 pages and cover dozens of edge cases. This is the spine you build from, not the finished product.</li>
+    </ul>
+
+    <p><strong>Adapting it to your environment</strong></p>
+    <ul>
+      <li>Replace the reason codes in section 1 with the ones your payment processor uses</li>
+      <li>Section 3 (geo pattern): plug in your fraud graph / device fingerprinting tool of choice</li>
+      <li>Section 4 (external identity): your KYC vendor's API or credit bureau lookup</li>
+      <li>Section 5 (matching matrix): adapt the field weights to what your business actually cares about (high-value B2B may weight tax ID; consumer marketplace may weight device + behavior)</li>
+      <li>Section 7 (action matrix): your fight/accept ratios should reflect your industry chargeback win rates, dispute representment fees, and your appetite for risk</li>
+    </ul>
+  </div>
+
+  <footer>
+    Open source · MIT License · Built by Everton Paula · <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank">View on GitHub</a>
+  </footer>
+
+</div>
+
+<script>
+// =============================================================================
+// DECISION TREE — chargeback investigation flow
+// =============================================================================
+const TREE = {
+  start: {
+    step: "Step 0 of ~5",
+    question: "A chargeback just landed in your queue. Let's investigate.",
+    context: "This wizard walks you through the questions a senior analyst asks before deciding how to dispose of a chargeback. Most cases resolve in 4-6 questions. Click below to begin.",
+    options: [
+      { text: "Start investigation", goto: "q1_reason" }
+    ]
+  },
+
+  q1_reason: {
+    step: "Step 1 — Reason code",
+    question: "What's the reason code from the issuer?",
+    context: "Reason codes route the investigation. Different reason codes have different evidence burdens and different baseline win rates.",
+    options: [
+      { text: "Cardholder doesn't recognize the transaction (\"fraud\" or \"unauthorized\")", goto: "q2a_recognition" },
+      { text: "Goods or services not received", goto: "q2b_delivery" },
+      { text: "Goods or services not as described / defective", goto: "q2c_quality" },
+      { text: "Duplicate charge / processing error", goto: "rec_processing_error" },
+      { text: "Other / unclear", goto: "rec_escalate_unclear" }
+    ]
+  },
+
+  // === FRAUD / UNAUTHORIZED PATH ===
+  q2a_recognition: {
+    step: "Step 2 — Behavior pattern",
+    question: "Does the disputed transaction match the cardholder's normal behavior pattern?",
+    context: "Pull the buyer's last 90 days of activity. Compare the disputed transaction against normal merchant categories, time of day, geographic location, average ticket size, and device fingerprint.",
+    options: [
+      { text: "Yes — it fits their normal pattern (suggests they're disputing a real charge)", goto: "q3a_priors" },
+      { text: "No — it's clearly outside their behavior (suggests real fraud)", goto: "q3a_clear_fraud" },
+      { text: "Some signals match, others don't (mixed)", goto: "q3a_mixed" }
+    ]
+  },
+
+  q3a_priors: {
+    step: "Step 3 — Dispute history",
+    question: "Has this cardholder filed chargebacks before, especially in the last 6 months?",
+    context: "First-party fraud (also called \"friendly fraud\") often shows a pattern. Repeat disputers should be examined carefully — they may be exploiting the chargeback system.",
+    options: [
+      { text: "Yes — two or more prior disputes in last 6 months", goto: "rec_fight_pattern" },
+      { text: "One prior dispute, was legitimate", goto: "q4a_evidence" },
+      { text: "No prior disputes — this is their first", goto: "q4a_evidence" }
+    ]
+  },
+
+  q3a_clear_fraud: {
+    step: "Step 3 — Confirm fraud signal",
+    question: "Was the transaction shipped, and to which address?",
+    context: "If a real fraudster used the card, you want to confirm the goods didn't go to the legitimate cardholder. Address pattern is the strongest tell.",
+    options: [
+      { text: "Shipped to the cardholder's verified address on file", goto: "rec_fight_address_match" },
+      { text: "Shipped to a different / suspicious address", goto: "rec_accept_real_fraud" },
+      { text: "Digital good / not shipped", goto: "q4a_digital" }
+    ]
+  },
+
+  q3a_mixed: {
+    step: "Step 3 — Escalation criteria",
+    question: "What's the disputed transaction value?",
+    context: "Mixed signals need a human analyst. The value determines whether to invest investigation time or batch-accept.",
+    options: [
+      { text: "High value (above your investigation threshold)", goto: "rec_escalate_high_value" },
+      { text: "Low value (below threshold)", goto: "rec_accept_low_value" }
+    ]
+  },
+
+  q4a_evidence: {
+    step: "Step 4 — Evidence available",
+    question: "Do you have strong evidence the cardholder authorized the transaction?",
+    context: "Strong evidence includes: matching shipping address, signed delivery confirmation, IP address consistent with cardholder location, prior similar transactions accepted by same cardholder, and account activity post-purchase (login, refund request through merchant, etc.).",
+    options: [
+      { text: "Yes — multiple corroborating signals", goto: "rec_fight_strong_evidence" },
+      { text: "Partial — some signals but gaps", goto: "rec_fight_thin" },
+      { text: "Weak / circumstantial only", goto: "rec_accept_weak_evidence" }
+    ]
+  },
+
+  q4a_digital: {
+    step: "Step 4 — Digital good evidence",
+    question: "Is there post-purchase usage of the digital good or service?",
+    context: "Account access, content downloaded, service used after purchase — these are strong signals the legitimate cardholder benefited from the transaction even if they're now disputing it.",
+    options: [
+      { text: "Yes — clear usage post-purchase", goto: "rec_fight_digital_usage" },
+      { text: "No usage detected", goto: "rec_accept_digital_no_use" }
+    ]
+  },
+
+  // === NON-DELIVERY PATH ===
+  q2b_delivery: {
+    step: "Step 2 — Delivery confirmation",
+    question: "What's your delivery confirmation status?",
+    context: "Delivery disputes hinge on proof of delivery. Without it, your chance of winning the dispute drops sharply.",
+    options: [
+      { text: "Delivered with signature / proof of receipt", goto: "rec_fight_delivered" },
+      { text: "Delivered, no signature (courier confirmation only)", goto: "q3b_address" },
+      { text: "In transit / no delivery confirmation yet", goto: "rec_hold_intransit" },
+      { text: "Marked delivered but customer claims non-receipt", goto: "q3b_address" }
+    ]
+  },
+
+  q3b_address: {
+    step: "Step 3 — Address pattern",
+    question: "Was the package delivered to the address the cardholder requested?",
+    context: "Some disputes happen because customer changed mind on address mid-shipping, or because of theft from the doorstep. The shipping address matching the order is key evidence.",
+    options: [
+      { text: "Yes — same address as on order", goto: "rec_fight_address_delivered" },
+      { text: "Different address (customer requested change)", goto: "rec_escalate_address_change" },
+      { text: "Unclear / can't confirm", goto: "rec_escalate_unclear_delivery" }
+    ]
+  },
+
+  // === QUALITY PATH ===
+  q2c_quality: {
+    step: "Step 2 — Merchant attempt to resolve",
+    question: "Did the customer contact your customer service before filing the dispute?",
+    context: "Issuers strongly favor the merchant if the customer didn't give a chance to resolve before going to dispute. This is the single biggest factor in 'not as described' disputes.",
+    options: [
+      { text: "No — they went directly to dispute without contacting us", goto: "rec_fight_no_contact" },
+      { text: "Yes — and we offered resolution that they rejected", goto: "rec_fight_offered_resolution" },
+      { text: "Yes — but resolution was inadequate / we never responded", goto: "rec_accept_cs_failure" }
+    ]
+  },
+
+  // ====================
+  // TERMINAL RECOMMENDATIONS
+  // ====================
+  rec_fight_strong_evidence: {
+    type: "rec",
+    decision: "fight",
+    title: "Fight the chargeback",
+    reasoning: "Behavioral signal aligns with cardholder. Evidence is strong. Likely first-party fraud — cardholder authorized but is now disputing. Win rate on these cases is high (60-80% in most categories).",
+    evidence: [
+      "Order details and timestamp",
+      "Shipping address match to cardholder's verified address",
+      "Delivery confirmation (signature if possible)",
+      "IP address log showing purchase from cardholder's typical geography",
+      "Account login activity post-purchase",
+      "Communication trail (emails, support tickets) showing customer received and used the product",
+      "Prior similar transactions from this cardholder that were not disputed"
+    ]
+  },
+
+  rec_fight_pattern: {
+    type: "rec",
+    decision: "fight",
+    title: "Fight the chargeback — repeat disputer pattern",
+    reasoning: "Multiple disputes from the same cardholder in 6 months is a strong first-party fraud signal. Even with limited transaction-specific evidence, your case is bolstered by the pattern. Some issuers also flag repeat disputers internally.",
+    evidence: [
+      "Documented history of prior disputes from this cardholder",
+      "Order details for current dispute",
+      "Standard evidence package (delivery, IP, behavior)",
+      "Optionally: account closure / ban after this disposition to prevent further abuse"
+    ]
+  },
+
+  rec_fight_address_match: {
+    type: "rec",
+    decision: "fight",
+    title: "Fight the chargeback — address match",
+    reasoning: "Item shipped to the cardholder's verified address on file. This is a near-fatal signal for the fraud claim. Either the cardholder benefited from the purchase, or there's an internal household issue (e.g., family member used the card). Either way, the issuer typically rules in your favor.",
+    evidence: [
+      "Shipping address documented as cardholder's verified address",
+      "Delivery confirmation",
+      "Order details",
+      "Account history showing prior orders to same address"
+    ]
+  },
+
+  rec_fight_delivered: {
+    type: "rec",
+    decision: "fight",
+    title: "Fight the chargeback — delivery confirmed",
+    reasoning: "Signed proof of delivery is the strongest evidence in a non-delivery dispute. Win rate is very high (80%+).",
+    evidence: [
+      "Tracking number with delivered status",
+      "Signature on delivery (image if available)",
+      "Date/time of delivery",
+      "Address delivery was made to (should match order)"
+    ]
+  },
+
+  rec_fight_address_delivered: {
+    type: "rec",
+    decision: "fight",
+    title: "Fight the chargeback — delivered to requested address",
+    reasoning: "Package was delivered to the address the customer asked you to ship to. Even without a signature, the address match is a strong defense. Issuer will likely rule in your favor unless the customer can prove address tampering.",
+    evidence: [
+      "Tracking with delivered status",
+      "Shipping address on order matching the courier delivery address",
+      "Communication trail confirming address (order confirmation email)",
+      "Note: package theft from cardholder's doorstep is not your liability under most schemes"
+    ]
+  },
+
+  rec_fight_no_contact: {
+    type: "rec",
+    decision: "fight",
+    title: "Fight the chargeback — no merchant contact attempted",
+    reasoning: "The customer skipped the merchant resolution step. Card schemes require customers to attempt resolution before going to dispute. This is the single highest-leverage argument in 'not as described' disputes — and you can win most of these on procedural grounds.",
+    evidence: [
+      "No record of customer support contact",
+      "Standard refund/return policy displayed at checkout",
+      "Product description matching what was delivered",
+      "Order confirmation email with return instructions"
+    ]
+  },
+
+  rec_fight_offered_resolution: {
+    type: "rec",
+    decision: "fight",
+    title: "Fight the chargeback — resolution offered",
+    reasoning: "You attempted to resolve and the customer rejected it. This is strong evidence the customer is pursuing chargeback as their preferred remedy rather than a last resort. Schemes favor the merchant here.",
+    evidence: [
+      "Communication trail of resolution offer (email, chat transcript)",
+      "Customer's rejection or non-response",
+      "Standard policy applied (refund within return window, replacement, store credit)",
+      "Product description and delivery details"
+    ]
+  },
+
+  rec_fight_thin: {
+    type: "rec",
+    decision: "fight",
+    title: "Fight, but expect to lose some",
+    reasoning: "Evidence is partial. You have legs to stand on but the case is not airtight. Fight if the value justifies the representment fee and time. Track these as a cohort — your win rate here will tell you whether the threshold is calibrated right.",
+    evidence: [
+      "Whatever evidence you have, packaged with clear narrative",
+      "Acknowledge gaps in the package — issuers see through evidence stuffing",
+      "Track outcome and feed back into model"
+    ]
+  },
+
+  rec_fight_digital_usage: {
+    type: "rec",
+    decision: "fight",
+    title: "Fight the chargeback — digital service used",
+    reasoning: "The customer accessed/used the digital good after purchase. Hard for the issuer to side with them. Strong win position.",
+    evidence: [
+      "Login timestamps post-purchase",
+      "Content downloaded / service used (specific actions logged)",
+      "IP address of usage matching account",
+      "Purchase confirmation with clear terms of digital delivery"
+    ]
+  },
+
+  rec_accept_real_fraud: {
+    type: "rec",
+    decision: "accept",
+    title: "Accept the chargeback — real fraud detected",
+    reasoning: "Strong signals of unauthorized use. Shipping to a different/suspicious address means the legitimate cardholder didn't benefit. Fighting will likely lose AND triggers a chargeback ratio you don't want on your acquirer relationship.",
+    evidence: [
+      "Document the fraud disposition in your case management system",
+      "Add the shipping address to your fraud graph for future prevention",
+      "Flag the buyer account for ban",
+      "Feed pattern back to ML model for similar transactions"
+    ]
+  },
+
+  rec_accept_low_value: {
+    type: "rec",
+    decision: "accept",
+    title: "Accept the chargeback — low value, mixed signals",
+    reasoning: "Mixed evidence on a small-ticket dispute. Cost of fighting (analyst time + representment fee) likely exceeds the value recovered. Accept, log, move on. Track these as a cohort to detect emerging patterns.",
+    evidence: [
+      "Log the disposition with mixed-signal reasoning",
+      "If multiple low-value disputes from same buyer pile up, escalate the buyer pattern",
+      "Don't burn analyst cycles on cases where economics don't justify"
+    ]
+  },
+
+  rec_accept_weak_evidence: {
+    type: "rec",
+    decision: "accept",
+    title: "Accept the chargeback — evidence too thin",
+    reasoning: "You don't have enough to make a defensible case. Fighting loses with high probability and damages your chargeback ratio with your acquirer. Accept, refund, and review whether the dispute reveals something fixable in your fraud rules.",
+    evidence: [
+      "Document accepted disposition",
+      "Note evidence gaps in the case file",
+      "Review whether this dispute type should be sent to manual review earlier in the funnel"
+    ]
+  },
+
+  rec_accept_digital_no_use: {
+    type: "rec",
+    decision: "accept",
+    title: "Accept the chargeback — no digital usage",
+    reasoning: "No evidence the cardholder used the digital service. Fighting without usage evidence loses. Accept and consider whether your access logging is comprehensive enough — gaps here cost you future disputes.",
+    evidence: [
+      "Document the accepted disposition",
+      "Action item: review digital service access logging completeness",
+      "Consider tightening fraud rules upstream for similar digital purchases"
+    ]
+  },
+
+  rec_accept_cs_failure: {
+    type: "rec",
+    decision: "accept",
+    title: "Accept the chargeback — customer service didn't resolve",
+    reasoning: "The customer tried to resolve and you failed to respond or offered an inadequate fix. Fighting on procedural grounds won't work here — schemes will favor the customer. Accept and feed back to CS team as a process gap.",
+    evidence: [
+      "Document the disposition with CS gap as root cause",
+      "Action item: review CS response time SLAs and escalation paths",
+      "If this is a pattern, your CS team needs intervention before chargeback rate compounds"
+    ]
+  },
+
+  // === ESCALATIONS ===
+  rec_escalate_unclear: {
+    type: "rec",
+    decision: "escalate",
+    title: "Escalate to senior analyst",
+    reasoning: "Reason code is unclear or unusual. Senior analyst should review the underlying transaction details, the issuer's specific dispute reason, and any merchant-specific context before disposition.",
+    evidence: [
+      "Original chargeback notification from issuer",
+      "Transaction details (timestamp, amount, channel)",
+      "Customer history with your business",
+      "Any context from the issuer about why the reason code is non-standard"
+    ]
+  },
+
+  rec_escalate_high_value: {
+    type: "rec",
+    decision: "escalate",
+    title: "Escalate — high value with mixed signals",
+    reasoning: "Mixed evidence at high value requires a senior analyst. Investing 1-2 hours of investigation time may save the dispute. Don't auto-route this to a junior queue.",
+    evidence: [
+      "Full transaction package",
+      "Behavioral signal summary (what matches, what doesn't)",
+      "Cardholder history with your business",
+      "Senior analyst's expanded investigation scope (deeper identity check, external lookups)"
+    ]
+  },
+
+  rec_escalate_address_change: {
+    type: "rec",
+    decision: "escalate",
+    title: "Escalate — address change mid-order",
+    reasoning: "Address change after order placement is a fraud red flag but also happens legitimately. Senior analyst should verify whether the change was customer-requested through a verified channel (signed-in support, verified phone) or whether it could be account takeover.",
+    evidence: [
+      "Timestamp of address change",
+      "Channel through which change was requested",
+      "Whether account login/verification preceded the change",
+      "IP and device fingerprint of the change request",
+      "Original shipping address vs new address"
+    ]
+  },
+
+  rec_escalate_unclear_delivery: {
+    type: "rec",
+    decision: "escalate",
+    title: "Escalate — delivery status ambiguous",
+    reasoning: "When you can't confirm whether or where delivery happened, the case becomes investigative rather than procedural. Senior analyst should contact the carrier directly for delivery photos, GPS data, and timestamp verification before disposition.",
+    evidence: [
+      "Carrier tracking data (raw)",
+      "Any photos or geolocation from the delivery",
+      "Customer's claim about where they expected delivery",
+      "Address on order vs address the carrier delivered to"
+    ]
+  },
+
+  // === HOLD ===
+  rec_hold_intransit: {
+    type: "rec",
+    decision: "hold",
+    title: "Hold for more information",
+    reasoning: "The package is still in transit. The chargeback may be premature — sometimes customers file disputes anxious about late delivery, then withdraw once delivery confirms. Hold the chargeback in your queue, monitor delivery status, and re-evaluate when delivery completes (or fails).",
+    evidence: [
+      "Current tracking status",
+      "Expected delivery date",
+      "Customer's claim",
+      "Action: communicate proactively with customer via your CS team if appropriate (some win-backs are possible here)"
+    ]
+  },
+
+  // === PROCESSING ERROR ===
+  rec_processing_error: {
+    type: "rec",
+    decision: "accept",
+    title: "Accept — processing error / duplicate charge",
+    reasoning: "Duplicate charges or processing errors are operational issues, not fraud. Verify the duplicate (or processing issue) is real, accept the chargeback, and route the case to engineering or your payment processor for root cause.",
+    evidence: [
+      "Document the duplicate charge / error",
+      "Compare against original transaction record",
+      "Open a ticket with payment processor if it's a systemic issue",
+      "Refund the duplicate immediately to prevent additional disputes"
+    ]
+  }
+};
+
+// =============================================================================
+// WIZARD STATE
+// =============================================================================
+let wizardHistory = ['start'];
+const $ = id => document.getElementById(id);
+
+function renderWizard() {
+  const currentId = wizardHistory[wizardHistory.length - 1];
+  const node = TREE[currentId];
+  if (!node) return;
+
+  const wizard = $('wizardCard');
+
+  if (node.type === 'rec') {
+    // Terminal recommendation
+    wizard.innerHTML = `
+      <div class="rec-card ${node.decision}">
+        <div class="rec-label">Recommendation</div>
+        <div class="rec-title">${node.title}</div>
+        <div class="rec-reasoning">${node.reasoning}</div>
+        <div class="rec-evidence">
+          <div class="rec-evidence-title">Evidence checklist</div>
+          <ul>${node.evidence.map(e => `<li>${e}</li>`).join('')}</ul>
+        </div>
+      </div>
+      <div class="wizard-controls">
+        <button class="wizard-btn" id="wizardBack">← Back</button>
+        <button class="wizard-btn" id="wizardRestart">Start over</button>
+      </div>
+    `;
+  } else {
+    wizard.innerHTML = `
+      <div class="wizard-step">${node.step}</div>
+      <div class="wizard-question">${node.question}</div>
+      <div class="wizard-context">${node.context}</div>
+      <div class="wizard-options">
+        ${node.options.map((o, i) => `<button class="wizard-option" data-i="${i}">${o.text}</button>`).join('')}
+      </div>
+      <div class="wizard-controls">
+        <button class="wizard-btn" id="wizardBack" ${wizardHistory.length <= 1 ? 'style="visibility:hidden;"' : ''}>← Back</button>
+        <span class="wizard-breadcrumb">${wizardHistory.length} step${wizardHistory.length > 1 ? 's' : ''} in</span>
+      </div>
+    `;
+    wizard.querySelectorAll('.wizard-option').forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        wizardHistory.push(node.options[i].goto);
+        renderWizard();
+      });
+    });
+  }
+
+  const backBtn = $('wizardBack');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      if (wizardHistory.length > 1) {
+        wizardHistory.pop();
+        renderWizard();
+      }
+    });
+  }
+  const restartBtn = $('wizardRestart');
+  if (restartBtn) {
+    restartBtn.addEventListener('click', () => {
+      wizardHistory = ['start'];
+      renderWizard();
+    });
+  }
+
+  wizard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// =============================================================================
+// SAMPLE CASES
+// =============================================================================
+const SAMPLE_CASES = [
+  {
+    title: "Classic first-party fraud",
+    meta: "Friendly fraud — cardholder disputes a legit purchase",
+    path: ['start', 'q1_reason', 'q2a_recognition', 'q3a_priors', 'q4a_evidence']
+  },
+  {
+    title: "Real card theft",
+    meta: "Unauthorized use, shipped to a different address",
+    path: ['start', 'q1_reason', 'q2a_recognition', 'q3a_clear_fraud']
+  },
+  {
+    title: "Non-delivery dispute, signed delivery",
+    meta: "Customer claims item not received, but it was",
+    path: ['start', 'q1_reason', 'q2b_delivery']
+  },
+  {
+    title: "Quality dispute, no CS contact",
+    meta: "Customer disputed without trying to resolve first",
+    path: ['start', 'q1_reason', 'q2c_quality']
+  }
+];
+
+function renderSampleCases() {
+  const list = $('caseList');
+  list.innerHTML = SAMPLE_CASES.map((c, i) => `
+    <button class="case-btn" data-i="${i}">
+      <div class="case-title">${c.title}</div>
+      <div class="case-meta">${c.meta}</div>
+    </button>
+  `).join('');
+  list.querySelectorAll('.case-btn').forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      wizardHistory = [...SAMPLE_CASES[i].path];
+      renderWizard();
+    });
+  });
+}
+
+// =============================================================================
+// INIT
+// =============================================================================
+renderWizard();
+renderSampleCases();
+</script>
+</body>
+</html>

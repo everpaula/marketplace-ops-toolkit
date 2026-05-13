@@ -134,12 +134,58 @@ The math is from control theory (Minorsky, 1922). The application to marketplace
 
 ---
 
+---
+
+### Tool #4 — Chargeback Dispute Investigation Template
+
+**[→ Open the wizard](./chargeback-sop.html)**
+
+Walk through a chargeback like a senior fraud analyst. Interactive decision tree wizard guides you from reason code to action recommendation in 4-6 questions, with the specific evidence package you need to fight (or accept).
+
+**Three components:**
+- **Decision tree wizard** — 4 main paths (fraud/unauthorized, non-delivery, quality dispute, processing error) with 15+ terminal recommendations, each with evidence checklist
+- **8-section SOP structure** — generalized chargeback investigation SOP covering triage, identity verification, geo pattern, external lookup, identity matching, behavioral risk, action matrix, documentation
+- **Sample cases** — 4 pre-loaded scenarios (first-party fraud, real card theft, non-delivery, quality dispute) you can step through to see how the wizard handles them
+
+The wizard maps to industry-standard chargeback investigation flow, generalized so any team can adapt regardless of payment processor or geographic jurisdiction. Reg E (US), PSD2 (EU), local equivalents — the regulatory framing layers on top of the investigation flow.
+
+---
+
+### Tool #5 — Workforce Forecast Calculator
+
+**[→ Open the calculator](./workforce-forecast.html)**
+
+How many agents do you actually need? Multi-case-type forecast based on **volume × complexity × productivity × shrinkage**. The math behind quarterly capacity planning, made explicit.
+
+**The formula:**
+```
+total_minutes  = Σ (volume × handle_time)
+productive_min = productive_hours × 60
+base_FTE       = total_minutes / productive_min
+after_shrink   = base_FTE / (1 − shrinkage)
+after_peak     = after_shrink × peak_ratio
+final_HC       = after_peak × (1 + service_level_buffer)
+```
+
+**What it does:**
+- Multi-row case type input (different case types have different handle times)
+- 6 operating parameter inputs (productive hours, shrinkage, peak ratio, SL buffer, in-house cost, vendor cost)
+- Live recompute of required headcount across the full forecast chain
+- Per-case-type breakdown showing FTE share by complexity
+- 100% in-house vs hybrid vs 100% vendor cost comparison with annual figures and recommended split
+- 4 pre-loaded scenario presets: Steady-state, Hypergrowth ramp, Peak event (Black Friday-style), Lean startup
+
+Maps directly to the quarterly capacity planning conversations that happen in every ops function. Hand this to the team and the "how many agents do we hire?" debate becomes a math problem instead of a political one.
+
+---
+
 ## Roadmap
 
 Other tools planned for this toolkit:
 
-- **Tool #4 — Chargeback Dispute Investigation Template** *(markdown + decision tree)* — generalized structure for chargeback investigation flow: portal verification, identity resolution, behavior criteria, action matrix.
-- **Tool #5 — Workforce Forecast Calculator** *(Jupyter notebook)* — volume forecast + complexity mix + shrinkage + ROI gating, end-to-end.
+- **Tool #6 — BizOps Monthly Review Dashboard** *(coming)* — three-layer KPI scorecard with anomaly detection and decision-items tracker. Most universally-requested pattern across operations functions.
+- **Tool #7 — Vendor Performance Scorecard** *(coming)* — multi-dimensional vendor scoring with SLA tracking and contract renegotiation calculator.
+- **Tool #8 — Supply Onboarding Funnel Analyzer** *(coming)* — pipeline leakage analysis for driver/courier/provider acquisition.
 
 If a particular tool would be useful for your team, open an issue and I'll prioritize it.
 
