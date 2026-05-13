@@ -106,9 +106,9 @@ Why **AND** instead of OR? Volume velocity alone triggers on Black Friday. New-u
 ![Surge Simulator — City Aggregate mode (V1)](./images/surge-city-aggregate.png)
 ![Surge Simulator — Polygon Map mode (V2)](./images/surge-polygon-map.png)
 
-<video src="https://github.com/everpaula/marketplace-ops-toolkit/raw/main/images/surge-polygon-demo.mp4" controls width="720">
-  Your browser does not support the video tag. <a href="./images/surge-polygon-demo.mp4">Download the demo video</a>.
-</video>
+**▶ [Watch the polygon-map demo video](https://github.com/everpaula/marketplace-ops-toolkit/raw/main/images/surge-polygon-demo.mp4)** — 24-hour time scrubber animation showing how surge varies across zones throughout the day.
+
+[![Watch the demo](./images/surge-polygon-map.png)](https://github.com/everpaula/marketplace-ops-toolkit/raw/main/images/surge-polygon-demo.mp4)
 
 Interactive simulator of surge pricing using **PID control theory**, with two modes:
 
