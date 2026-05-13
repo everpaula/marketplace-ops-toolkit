@@ -1,4 +1,4 @@
-# Fraud Ops Toolkit
+# Marketplace Ops Toolkit
 
 > Practical tools for operations leaders running manual review queues — fraud, content moderation, customer service QA, anywhere humans decision flagged cases at scale.
 
@@ -135,8 +135,8 @@ If a particular tool would be useful for your team, open an issue and I'll prior
 
 ### Run locally
 ```bash
-git clone https://github.com/everpaula/fraud-ops-toolkit
-cd fraud-ops-toolkit
+git clone https://github.com/everpaula/marketplace-ops-toolkit
+cd marketplace-ops-toolkit
 # Open agent-roi.html in any modern browser
 ```
 
@@ -144,7 +144,7 @@ No build step. No dependencies. Single HTML file with everything inline. Drop th
 
 ### Or use the live version
 
-**[Live demo →](https://everpaula.github.io/fraud-ops-toolkit/)**
+**[Live demo →](https://everpaula.github.io/marketplace-ops-toolkit/)**
 
 ---
 

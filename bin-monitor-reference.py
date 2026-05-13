@@ -31,7 +31,7 @@ Synthetic dataset included at the bottom for offline testing. Replace
 
 License: MIT
 Author: Everton Paula
-Source: https://github.com/everpaula/fraud-ops-toolkit
+Source: https://github.com/everpaula/marketplace-ops-toolkit
 """
 
 from dataclasses import dataclass

@@ -22,7 +22,7 @@ and tune Kp / Ki / Kd against your actual traffic.
 
 License: MIT
 Author: Everton Paula
-Source: https://github.com/everpaula/fraud-ops-toolkit
+Source: https://github.com/everpaula/marketplace-ops-toolkit
 """
 
 from dataclasses import dataclass, field
