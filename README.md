@@ -94,11 +94,17 @@ Why **AND** instead of OR? Volume velocity alone triggers on Black Friday. New-u
 
 ---
 
-### Tool #3 — Marketplace Surge Simulator (PID Control)
+### Tool #3 — Marketplace Surge Simulator (PID Control) — V2
 
 **[→ Open the simulator](./surge-pid.html)** · [Python reference](./surge-pid-reference.py)
 
-Interactive simulator of surge pricing using **PID control theory**. Watch a marketplace controller respond to 5 realistic demand scenarios in real time, tune the gains, and compare against a naive threshold-based surge rule.
+Interactive simulator of surge pricing using **PID control theory**, with two modes:
+
+**City Aggregate mode (V1):** single PID over a city-wide demand/supply curve. Watch the controller respond to 5 realistic scenarios, tune Kp/Ki/Kd, compare against a naive threshold-based surge rule.
+
+**Polygon Map mode (V2 — new):** nine independent PID controllers running on a 3×3 city map. Each zone (Airport, Tech District, Stadium, Residential N/E, Downtown, Industrial, Shopping Mall, Suburbs) has its own demand profile and its own surge multiplier. The visualization shows how the same time of day looks wildly different across geography — Airport at 9pm hitting 2.5x surge while Suburbs sits at 1.0x, both at the same minute. A time scrubber lets you watch the heatmap evolve across 24 hours. The comparison panel quantifies how polygon-level PID outperforms a single city-level PID applied uniformly across all zones.
+
+**Why polygon-level matters:** production surge systems at ride-hail and delivery platforms (Uber's H3 hex framework, Lyft zones, DoorDash dispatch cells) operate at the polygon/cell level for one reason — city averages hide local imbalance. A 1.0x city surge can be the average of Downtown at 2.5x and Suburbs at 0.8x. Optimize the average, and Downtown riders wait too long while Suburb drivers sit idle. Optimize each zone, and both problems disappear.
 
 **What it does:**
 - Simulates 24 hours of marketplace activity (5-minute ticks) for 5 scenarios

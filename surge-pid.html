@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marketplace Surge Simulator (PID Control) — Marketplace Ops Toolkit</title>
-<meta name="description" content="Interactive simulator of surge pricing using PID control. Compare naive threshold-based surge vs PID-controlled surge across 5 demand scenarios. Tune Kp, Ki, Kd and watch MAPE respond in real time.">
+<title>Marketplace Surge Simulator (PID Control) V2 — Marketplace Ops Toolkit</title>
+<meta name="description" content="Interactive simulator of surge pricing using PID control. V2 adds polygon-level optimization — a 3×3 city map showing per-zone surge state, because city-average surge hides geographic disparity.">
 <style>
   :root {
     --bg: #0b1220;
@@ -40,7 +40,7 @@
   .top-nav a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
   .top-nav a:hover { color: var(--accent); }
 
-  header { margin-bottom: 2rem; }
+  header { margin-bottom: 1.5rem; }
   .brand {
     color: var(--accent);
     font-size: 0.8rem;
@@ -55,6 +55,18 @@
     margin-bottom: 0.6rem;
     letter-spacing: -0.01em;
   }
+  header .version-tag {
+    display: inline-block;
+    background: var(--purple);
+    color: #2e1065;
+    font-size: 0.68rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+    margin-left: 0.4rem;
+  }
   header .tagline {
     color: var(--text-muted);
     font-size: 1rem;
@@ -62,6 +74,46 @@
     line-height: 1.55;
   }
   header .tagline strong { color: var(--text); }
+
+  /* === MODE TOGGLE === */
+  .mode-toggle {
+    display: flex;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.3rem;
+    margin-bottom: 1.25rem;
+    gap: 0.3rem;
+  }
+  .mode-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 0.7rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+  }
+  .mode-btn:hover { color: var(--text); }
+  .mode-btn.active {
+    background: var(--accent);
+    color: #042f2e;
+  }
+  .mode-btn .v2-tag {
+    background: var(--purple);
+    color: #2e1065;
+    font-size: 0.6rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 2px;
+    margin-left: 0.3rem;
+    font-weight: 800;
+  }
+  .mode-section { display: none; }
+  .mode-section.active { display: block; }
 
   .card {
     background: var(--bg-card);
@@ -132,11 +184,6 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-  }
-  .slider-row label .hint {
-    color: var(--border-bright);
-    font-size: 0.72rem;
-    font-style: italic;
   }
   .slider-row label .value {
     color: var(--accent);
@@ -290,6 +337,245 @@
     line-height: 1.55;
   }
 
+  /* === POLYGON MAP (V2) === */
+  .polygon-explainer {
+    background: rgba(167, 139, 250, 0.08);
+    border-left: 3px solid var(--purple);
+    padding: 0.95rem 1.1rem;
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+  .polygon-explainer strong {
+    display: block;
+    color: var(--purple);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+    font-weight: 800;
+  }
+
+  .scrubber-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.4rem;
+    margin-bottom: 1.25rem;
+  }
+  .scrubber-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.6rem;
+  }
+  .scrubber-label {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+  }
+  .scrubber-time {
+    color: var(--accent);
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .scrubber-time .moment {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin-left: 0.4rem;
+  }
+  .scrubber-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .scrubber-play {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--accent);
+    padding: 0.45rem 0.85rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .scrubber-play:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .scrubber-input {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+
+  .polygon-map-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.25rem;
+  }
+  .polygon-map-card h2 {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .polygon-map-card .map-sub {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .polygon-svg-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.8rem;
+  }
+  .polygon-svg {
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    aspect-ratio: 6 / 5;
+  }
+  .polygon-rect {
+    transition: fill 0.2s ease, stroke 0.15s ease;
+    cursor: pointer;
+  }
+  .polygon-rect:hover { stroke: var(--accent); stroke-width: 2.5; }
+  .polygon-rect.selected { stroke: var(--accent); stroke-width: 3; }
+  .polygon-label {
+    fill: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    pointer-events: none;
+    text-anchor: middle;
+  }
+  .polygon-mape {
+    font-size: 18px;
+    font-weight: 800;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    pointer-events: none;
+    text-anchor: middle;
+  }
+  .polygon-surge {
+    fill: rgba(255,255,255,0.85);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    pointer-events: none;
+    text-anchor: middle;
+  }
+  .legend-row {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .legend-row .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+
+  /* Polygon detail panel */
+  .polygon-detail {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin-top: 1rem;
+  }
+  .polygon-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.7rem;
+  }
+  .polygon-detail-name {
+    color: var(--accent);
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+  .polygon-detail-status {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+  }
+  .polygon-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+  }
+  @media (max-width: 700px) { .polygon-detail-grid { grid-template-columns: repeat(2, 1fr); } }
+  .polygon-detail-stat {
+    text-align: center;
+    padding: 0.5rem;
+    background: var(--bg-card);
+    border-radius: 5px;
+  }
+  .polygon-detail-stat-label {
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.2rem;
+  }
+  .polygon-detail-stat-value {
+    color: var(--text);
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Polygon vs City comparison summary */
+  .polygon-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  .polygon-summary-cell {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+  }
+  .polygon-summary-cell .ps-label {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .polygon-summary-cell .ps-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .polygon-summary-cell .ps-value.positive { color: var(--green); }
+  .polygon-summary-cell .ps-value.alert { color: var(--red); }
+  .polygon-summary-cell .ps-value.accent { color: var(--accent); }
+
   /* === ABOUT === */
   .about p { margin-bottom: 0.85rem; color: var(--text); font-size: 0.94rem; line-height: 1.7; }
   .about p strong { color: var(--accent); }
@@ -341,125 +627,226 @@
 
   <header>
     <div class="brand">marketplace-ops-toolkit · tool #3</div>
-    <h1>Marketplace Surge Simulator (PID Control)</h1>
+    <h1>Marketplace Surge Simulator (PID Control) <span class="version-tag">V2</span></h1>
     <div class="tagline">
-      Surge pricing without overshoot. Pick a demand scenario, tune the <strong>P</strong>, <strong>I</strong>, <strong>D</strong> gains, and watch MAPE respond in real time. Compares naive threshold-based surge against a PID-controlled surge across 5 realistic marketplace scenarios.
+      Surge pricing without overshoot. <strong>V2 adds polygon-level optimization</strong> — a 3×3 city map showing per-zone surge state. Because a city-average surge of 1.0x can hide Downtown at 2.5x (alert) and Suburbs at 0.8x (oversupply) at the same hour. Optimization happens at the polygon, not the aggregate.
     </div>
   </header>
 
-  <!-- SCENARIOS -->
-  <div class="card">
-    <h2>Pick a scenario</h2>
-    <div class="scenarios" id="scenariosGrid"></div>
+  <!-- MODE TOGGLE -->
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-mode="city">City Aggregate</button>
+    <button class="mode-btn" data-mode="polygon">Polygon Map <span class="v2-tag">V2</span></button>
   </div>
 
-  <!-- CONTROLS + STATS -->
-  <div class="controls-grid">
+  <!-- ====================== -->
+  <!-- CITY AGGREGATE MODE    -->
+  <!-- ====================== -->
+  <div class="mode-section active" id="citySection">
+
+    <!-- SCENARIOS -->
     <div class="card">
-      <h2>PID tuning</h2>
-      <div class="slider-row">
-        <label>Kp (proportional) <span class="value" id="kpVal">0.40</span></label>
-        <input type="range" id="kp" min="0" max="2" step="0.02" value="0.40">
-        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Reacts to current error. Higher = more aggressive surge response now.</div>
+      <h2>Pick a scenario</h2>
+      <div class="scenarios" id="scenariosGrid"></div>
+    </div>
+
+    <!-- CONTROLS + STATS -->
+    <div class="controls-grid">
+      <div class="card">
+        <h2>PID tuning</h2>
+        <div class="slider-row">
+          <label>Kp (proportional) <span class="value" id="kpVal">0.40</span></label>
+          <input type="range" id="kp" min="0" max="2" step="0.02" value="0.40">
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Reacts to current error. Higher = more aggressive surge response now.</div>
+        </div>
+        <div class="slider-row">
+          <label>Ki (integral) <span class="value" id="kiVal">0.008</span></label>
+          <input type="range" id="ki" min="0" max="0.5" step="0.001" value="0.008">
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Accumulates error over time. Too high = oscillation in delayed systems.</div>
+        </div>
+        <div class="slider-row">
+          <label>Kd (derivative) <span class="value" id="kdVal">0.05</span></label>
+          <input type="range" id="kd" min="0" max="1" step="0.01" value="0.05">
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Reacts to rate of change. Higher = catches spikes. Too high = noisy.</div>
+        </div>
       </div>
-      <div class="slider-row">
-        <label>Ki (integral) <span class="value" id="kiVal">0.008</span></label>
-        <input type="range" id="ki" min="0" max="0.5" step="0.001" value="0.008">
-        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Accumulates error over time. Too high = oscillation in delayed systems.</div>
-      </div>
-      <div class="slider-row">
-        <label>Kd (derivative) <span class="value" id="kdVal">0.05</span></label>
-        <input type="range" id="kd" min="0" max="1" step="0.01" value="0.05">
-        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Reacts to rate of change. Higher = catches spikes. Too high = noisy.</div>
+
+      <div class="card">
+        <h2>PID performance (city aggregate)</h2>
+        <div class="stats-grid">
+          <div class="stat-cell good">
+            <div class="stat-label">Avg MAPE</div>
+            <div class="stat-value" id="statMape">0%</div>
+          </div>
+          <div class="stat-cell alert">
+            <div class="stat-label">Peak MAPE</div>
+            <div class="stat-value" id="statPeakMape">0%</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-label">Peak surge</div>
+            <div class="stat-value" id="statPeakSurge">1.00x</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-label">Hours in alert (&gt;20% MAPE)</div>
+            <div class="stat-value" id="statAlertHours">0h</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>PID performance</h2>
-      <div class="stats-grid">
-        <div class="stat-cell good">
-          <div class="stat-label">Avg MAPE</div>
-          <div class="stat-value" id="statMape">0%</div>
+    <!-- CHARTS -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Demand vs Supply (24h)</div>
+        <div class="chart-sub">How requests and available capacity move over the day.</div>
+        <div class="chart-canvas-wrap"><canvas id="chartDS"></canvas></div>
+        <div class="chart-legend">
+          <span><span class="legend-swatch" style="background: var(--red)"></span>Demand</span>
+          <span><span class="legend-swatch" style="background: var(--green)"></span>Supply</span>
         </div>
-        <div class="stat-cell alert">
-          <div class="stat-label">Peak MAPE</div>
-          <div class="stat-value" id="statPeakMape">0%</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Surge Multiplier (PID Output)</div>
+        <div class="chart-sub">What the PID controller asks the pricing system to do, clamped 1.0x–2.5x.</div>
+        <div class="chart-canvas-wrap"><canvas id="chartSurge"></canvas></div>
+        <div class="chart-legend">
+          <span><span class="legend-swatch" style="background: var(--accent)"></span>PID surge</span>
+          <span><span class="legend-swatch" style="background: var(--orange); opacity: 0.6"></span>Naive threshold (1.5x if MAPE&gt;30%)</span>
         </div>
-        <div class="stat-cell">
-          <div class="stat-label">Peak surge</div>
-          <div class="stat-value" id="statPeakSurge">1.00x</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">MAPE — Error Signal</div>
+        <div class="chart-sub">|demand − supply| / demand × 100. Lower is better. Red zone &gt; 20%.</div>
+        <div class="chart-canvas-wrap"><canvas id="chartMape"></canvas></div>
+        <div class="chart-legend">
+          <span><span class="legend-swatch" style="background: var(--accent)"></span>PID-controlled</span>
+          <span><span class="legend-swatch" style="background: var(--orange); opacity: 0.6"></span>Naive</span>
+          <span><span class="legend-swatch" style="background: var(--red); opacity: 0.4"></span>20% threshold</span>
         </div>
-        <div class="stat-cell">
-          <div class="stat-label">Hours in alert (&gt;20% MAPE)</div>
-          <div class="stat-value" id="statAlertHours">0h</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">PID Term Contribution</div>
+        <div class="chart-sub">Which term (P, I, or D) is driving the surge response at each moment.</div>
+        <div class="chart-canvas-wrap"><canvas id="chartPID"></canvas></div>
+        <div class="chart-legend">
+          <span><span class="legend-swatch" style="background: var(--blue)"></span>P · proportional</span>
+          <span><span class="legend-swatch" style="background: var(--purple)"></span>I · integral</span>
+          <span><span class="legend-swatch" style="background: var(--yellow)"></span>D · derivative</span>
         </div>
       </div>
     </div>
+
+    <!-- COMPARISON -->
+    <div class="comparison">
+      <h2>PID vs Naive — same scenario, head to head</h2>
+      <div class="comparison-grid">
+        <div class="comparison-result naive">
+          <h3>Naive (threshold 1.5x if MAPE &gt; 30%)</h3>
+          <div class="big-num" id="naiveAvgMape">0%</div>
+          <div class="meta">avg MAPE · peak <span id="naivePeak">0%</span> · <span id="naiveAlertH">0h</span> in alert</div>
+        </div>
+        <div class="comparison-result pid">
+          <h3>PID (your current tuning)</h3>
+          <div class="big-num" id="pidAvgMape">0%</div>
+          <div class="meta">avg MAPE · peak <span id="pidPeak">0%</span> · <span id="pidAlertH">0h</span> in alert</div>
+        </div>
+      </div>
+      <div class="comparison-verdict" id="verdict">Pick a scenario to compare.</div>
+    </div>
+
   </div>
 
-  <!-- CHARTS -->
-  <div class="chart-grid">
+  <!-- ====================== -->
+  <!-- POLYGON MAP MODE (V2)  -->
+  <!-- ====================== -->
+  <div class="mode-section" id="polygonSection">
 
-    <div class="chart-card">
-      <div class="chart-title">Demand vs Supply (24h)</div>
-      <div class="chart-sub">How requests and available capacity move over the day.</div>
-      <div class="chart-canvas-wrap"><canvas id="chartDS"></canvas></div>
-      <div class="chart-legend">
-        <span><span class="legend-swatch" style="background: var(--red)"></span>Demand</span>
-        <span><span class="legend-swatch" style="background: var(--green)"></span>Supply</span>
+    <div class="polygon-explainer">
+      <strong>Why polygon-level matters</strong>
+      Real marketplaces aren't one supply-demand curve per city. They're many curves, one per geographic zone. Downtown spikes at rush hour, the airport spikes at flight time, the stadium spikes during events, suburbs barely move. A city-average surge of 1.0x can mean Downtown is at 2.5x (alert) and Suburbs is at 0.8x (oversupply) in the same minute. <strong>The aggregate hides the truth.</strong> Production marketplace platforms run surge at the polygon (or hex cell) level for exactly this reason. This V2 view runs nine independent PID controllers — one per zone — and visualizes how the same time of day looks wildly different across geography.
+    </div>
+
+    <!-- SCRUBBER -->
+    <div class="scrubber-card">
+      <div class="scrubber-header">
+        <div class="scrubber-label">Time of day</div>
+        <div class="scrubber-time"><span id="scrubTime">00:00</span><span class="moment" id="scrubMoment"></span></div>
+      </div>
+      <div class="scrubber-controls">
+        <button class="scrubber-play" id="playBtn">▶ Play 24h</button>
+        <input type="range" class="scrubber-input" id="scrubber" min="0" max="287" value="0" step="1">
       </div>
     </div>
 
-    <div class="chart-card">
-      <div class="chart-title">Surge Multiplier (PID Output)</div>
-      <div class="chart-sub">What the PID controller asks the pricing system to do, clamped 1.0x–2.5x.</div>
-      <div class="chart-canvas-wrap"><canvas id="chartSurge"></canvas></div>
-      <div class="chart-legend">
-        <span><span class="legend-swatch" style="background: var(--accent)"></span>PID surge</span>
-        <span><span class="legend-swatch" style="background: var(--orange); opacity: 0.6"></span>Naive threshold (1.5x if MAPE&gt;30%)</span>
+    <!-- POLYGON MAP -->
+    <div class="polygon-map-card">
+      <h2>City zones — current state</h2>
+      <div class="map-sub">Each polygon is a zone running its own PID surge controller. Color shows current MAPE status. Click any zone to see its detail. Drag the time scrubber above to see how the city evolves across 24h.</div>
+      <div class="polygon-svg-wrap">
+        <svg class="polygon-svg" id="polygonSvg" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="legend-row">
+        <span><span class="legend-swatch" style="background: var(--green)"></span>MAPE &lt; 15% — balanced</span>
+        <span><span class="legend-swatch" style="background: var(--yellow)"></span>15-30% — watch</span>
+        <span><span class="legend-swatch" style="background: var(--red)"></span>&gt; 30% — alert</span>
+      </div>
+
+      <div class="polygon-detail" id="polygonDetail">
+        <div class="polygon-detail-header">
+          <div class="polygon-detail-name" id="pdName">Click a zone</div>
+          <div class="polygon-detail-status" id="pdStatus" style="display:none;"></div>
+        </div>
+        <div class="polygon-detail-grid">
+          <div class="polygon-detail-stat">
+            <div class="polygon-detail-stat-label">Demand</div>
+            <div class="polygon-detail-stat-value" id="pdDemand">—</div>
+          </div>
+          <div class="polygon-detail-stat">
+            <div class="polygon-detail-stat-label">Supply</div>
+            <div class="polygon-detail-stat-value" id="pdSupply">—</div>
+          </div>
+          <div class="polygon-detail-stat">
+            <div class="polygon-detail-stat-label">MAPE</div>
+            <div class="polygon-detail-stat-value" id="pdMape">—</div>
+          </div>
+          <div class="polygon-detail-stat">
+            <div class="polygon-detail-stat-label">Surge</div>
+            <div class="polygon-detail-stat-value" id="pdSurge">—</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="chart-card">
-      <div class="chart-title">MAPE — Error Signal</div>
-      <div class="chart-sub">|demand − supply| / demand × 100. Lower is better. Red zone &gt; 20%.</div>
-      <div class="chart-canvas-wrap"><canvas id="chartMape"></canvas></div>
-      <div class="chart-legend">
-        <span><span class="legend-swatch" style="background: var(--accent)"></span>PID-controlled</span>
-        <span><span class="legend-swatch" style="background: var(--orange); opacity: 0.6"></span>Naive</span>
-        <span><span class="legend-swatch" style="background: var(--red); opacity: 0.4"></span>20% threshold</span>
+    <!-- POLYGON SUMMARY -->
+    <div class="polygon-map-card">
+      <h2>Polygon-level vs City-level — head to head (24h)</h2>
+      <div class="map-sub">Same demand and supply data. Two approaches: a single city-wide PID controller vs nine polygon-level PID controllers. Polygon-level optimizes each zone independently and produces lower aggregate MAPE because it doesn't average away local imbalance.</div>
+
+      <div class="polygon-summary-grid">
+        <div class="polygon-summary-cell">
+          <div class="ps-label">City-level PID · avg MAPE</div>
+          <div class="ps-value alert" id="cityAvgMape">0%</div>
+        </div>
+        <div class="polygon-summary-cell">
+          <div class="ps-label">Polygon-level PID · avg MAPE</div>
+          <div class="ps-value positive" id="polyAvgMape">0%</div>
+        </div>
+        <div class="polygon-summary-cell">
+          <div class="ps-label">Improvement (relative)</div>
+          <div class="ps-value accent" id="polyImprovement">0%</div>
+        </div>
+        <div class="polygon-summary-cell">
+          <div class="ps-label">Worst polygon at this moment</div>
+          <div class="ps-value alert" id="worstPolygon">—</div>
+        </div>
       </div>
+
+      <div class="comparison-verdict" id="polyVerdict">Drag the scrubber to see how the city evolves and how polygon-level PID outperforms.</div>
     </div>
 
-    <div class="chart-card">
-      <div class="chart-title">PID Term Contribution</div>
-      <div class="chart-sub">Which term (P, I, or D) is driving the surge response at each moment.</div>
-      <div class="chart-canvas-wrap"><canvas id="chartPID"></canvas></div>
-      <div class="chart-legend">
-        <span><span class="legend-swatch" style="background: var(--blue)"></span>P · proportional</span>
-        <span><span class="legend-swatch" style="background: var(--purple)"></span>I · integral</span>
-        <span><span class="legend-swatch" style="background: var(--yellow)"></span>D · derivative</span>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- COMPARISON -->
-  <div class="comparison">
-    <h2>PID vs Naive — same scenario, head to head</h2>
-    <div class="comparison-grid">
-      <div class="comparison-result naive">
-        <h3>Naive (threshold 1.5x if MAPE &gt; 30%)</h3>
-        <div class="big-num" id="naiveAvgMape">0%</div>
-        <div class="meta">avg MAPE · peak <span id="naivePeak">0%</span> · <span id="naiveAlertH">0h</span> in alert</div>
-      </div>
-      <div class="comparison-result pid">
-        <h3>PID (your current tuning)</h3>
-        <div class="big-num" id="pidAvgMape">0%</div>
-        <div class="meta">avg MAPE · peak <span id="pidPeak">0%</span> · <span id="pidAlertH">0h</span> in alert</div>
-      </div>
-    </div>
-    <div class="comparison-verdict" id="verdict">Pick a scenario to compare.</div>
   </div>
 
   <!-- ABOUT -->
@@ -475,47 +862,59 @@
 P_term    = Kp × error[t]                       // react now
 I_term    = Ki × Σ error × dt                   // remember
 D_term    = Kd × (error[t] − error[t−1]) / dt   // anticipate
-surge[t]  = clamp(1.0 + (P + I + D) / 100, 1.0, 3.0)</div>
+surge[t]  = clamp(1.0 + (P + I + D) / 100, 1.0, 2.5)</div>
 
     <p><strong>What each term does</strong></p>
     <ul>
-      <li><strong>P (proportional)</strong> reacts to current error. Big mismatch right now? Big surge right now. Used alone, it overshoots and oscillates around the target — like turning a steering wheel too hard.</li>
-      <li><strong>I (integral)</strong> accumulates error over time. If imbalance persists for hours, I keeps pressing the surge up. It corrects for steady-state bias the P term can't reach, but too much I creates oscillation.</li>
-      <li><strong>D (derivative)</strong> reacts to how fast error is changing. If MAPE is rising rapidly, D anticipates the spike before P fully reacts. It catches sudden surges (airport, weather event) but is sensitive to noise.</li>
+      <li><strong>P (proportional)</strong> reacts to current error. Big mismatch right now? Big surge right now. Used alone, it overshoots and oscillates around the target.</li>
+      <li><strong>I (integral)</strong> accumulates error over time. If imbalance persists, I keeps pressing the surge up. Too much I creates oscillation.</li>
+      <li><strong>D (derivative)</strong> reacts to how fast error is changing. Catches sudden surges (airport, weather event) but is sensitive to noise.</li>
     </ul>
 
-    <p><strong>Tuning trade-offs</strong></p>
+    <p>Why <strong>AND</strong> instead of OR? Each signal alone is too noisy. Volume velocity alone triggers on Black Friday. New-user count alone triggers on marketing campaigns. The intersection — all three crossing simultaneously — is the fingerprint of an attack.</p>
+
+    <p><strong>The status tiers</strong></p>
     <ul>
-      <li>The defaults loaded here (Kp=0.4, Ki=0.008, Kd=0.05) are conservative — they outperform the naive 30%-threshold rule on 4 of the 5 scenarios. Storm Event is the hard case where neither approach excels (combined demand spike + supply scarcity).</li>
-      <li>For systems with delayed supply response (drivers take time to come online), smaller gains are stabler. Aggressive Kp causes overshoot. Ki accumulates fast when error persists — keep it small.</li>
-      <li>Increase Kp until you see overshoot in the surge chart, then back off ~20%.</li>
-      <li>Add Kd for sharp spikes (Airport Burst). Avoid Kd if your demand signal is noisy.</li>
-      <li>Field rule: when in doubt, smaller gains. Aggressive PID makes drivers' lives unpredictable, riders' prices erratic, and ops teams confused.</li>
+      <li><strong>Alert</strong> — all three signals cross. Pull a human investigator now.</li>
+      <li><strong>Watch</strong> — velocity is elevated AND one of (volume floor or new-user count). Early stage or ambiguous pattern. Track daily, no ops response yet.</li>
+      <li><strong>Safe</strong> — velocity normal or only one signal crossing. Stable large BINs with no velocity change land here even if they exceed the floor — that's intentional. The point is detecting <strong>change</strong>, not flagging size.</li>
+    </ul>
+
+    <h2 style="margin-top: 1.5rem;">V2 — Polygon-level optimization</h2>
+
+    <p>V1 ran a single PID controller over the city aggregate. V2 adds a second view: <strong>nine independent PID controllers</strong>, one per geographic zone. Real production surge systems (Uber's H3 hexes, Lyft's zones, DoorDash's dispatch cells) operate at this level for one reason — city averages hide local imbalance.</p>
+
+    <p>A 1.0x city surge can be the average of Downtown at 2.5x and Suburbs at 0.8x. Optimize the average, and Downtown riders wait too long while suburb drivers sit idle. Optimize each zone, and both problems disappear at the cost of slightly more complex control architecture.</p>
+
+    <p><strong>How the comparison works</strong></p>
+    <ul>
+      <li><strong>City-level PID</strong> takes the sum of all polygon demand and the sum of all polygon supply, runs one PID controller, and broadcasts the same surge multiplier to every zone. Simple but lossy.</li>
+      <li><strong>Polygon-level PID</strong> runs an independent controller per zone. Each zone gets its own surge based on its local imbalance. The aggregate MAPE drops because no zone is being penalized by an averaged signal.</li>
     </ul>
 
     <p><strong>What this simulator is NOT</strong></p>
     <ul>
-      <li>It's not a production-ready surge engine. Real implementations account for many more variables (geographic clusters, driver utilization, ETA targets, regulatory caps, two-sided NPS impact).</li>
-      <li>It's not any specific platform's proprietary algorithm. Production systems at ride-hail and delivery companies are far more complex (geographic clusters, ETA targets, regulatory caps). This is the canonical PID pattern applied to a simplified marketplace model.</li>
+      <li>It's not a production-ready surge engine. Real implementations account for many more variables (cross-zone supply rebalancing, ETA targets, regulatory caps, two-sided NPS impact, weather signals).</li>
+      <li>It's not any specific platform's proprietary algorithm. Production systems at ride-hail and delivery companies are far more complex. This is the canonical PID pattern applied to a simplified marketplace model with industry-standard polygon-level decomposition.</li>
       <li>It's not a substitute for ML-based surge. Modern systems often combine PID-style feedback with predictive ML on top.</li>
     </ul>
 
     <p><strong>What this simulator IS</strong></p>
     <ul>
       <li>A teaching tool for ops leaders studying the control-theory side of pricing</li>
-      <li>A starting point for implementing PID surge in your own data pipeline</li>
-      <li>A way to build intuition for why naive threshold rules underperform</li>
+      <li>A starting point for implementing polygon-level surge in your own data pipeline</li>
+      <li>A way to build intuition for why naive threshold rules and city-level averaging both underperform</li>
       <li>A reference implementation you can read in 200 lines of Python</li>
     </ul>
 
     <p><strong>Reference implementation</strong></p>
-    <p>The Python reference of the same logic, with synthetic scenarios and configurable PID gains, is available as <a class="code-link" href="./surge-pid-reference.py" target="_blank">surge-pid-reference.py</a>. Use it as a starting point for adapting the model to your data pipeline.</p>
+    <p>The Python reference of the (V1) city-level logic is available as <a class="code-link" href="./surge-pid-reference.py" target="_blank">surge-pid-reference.py</a>. Polygon-level extension is straightforward: wrap the existing PIDController in a loop over zones, each with its own demand_fn and PID state.</p>
 
     <p><strong>Reading list</strong></p>
     <ul>
       <li>Minorsky, N. (1922). "Directional stability of automatically steered bodies" — original PID paper</li>
       <li>Åström &amp; Hägglund, <em>PID Controllers: Theory, Design, and Tuning</em> (1995) — practical PID tuning</li>
-      <li>Ziegler &amp; Nichols (1942) — classical tuning methods, still useful as starting point</li>
+      <li>Uber Engineering, "H3: Uber's Hexagonal Hierarchical Spatial Index" — polygon-based geospatial framework</li>
     </ul>
   </div>
 
@@ -527,68 +926,50 @@ surge[t]  = clamp(1.0 + (P + I + D) / 100, 1.0, 3.0)</div>
 
 <script>
 // =============================================================================
-// SCENARIOS — Demand profiles over 24h (288 ticks of 5min each)
+// SHARED CONSTANTS
 // =============================================================================
-const TICKS = 288;                  // 24h × 12 ticks/h (5 min each)
+const TICKS = 288;
 const HOURS_PER_TICK = 24 / TICKS;
+const SUPPLY_BASELINE_RATIO = 0.82;
+const SURGE_SUPPLY_GAIN = 0.50;
+const SURGE_RESPONSE_DELAY = 3;
+const SURGE_MIN = 1.0;
+const SURGE_MAX = 2.5;
 
+// =============================================================================
+// CITY-LEVEL SCENARIOS (V1 retained)
+// =============================================================================
 function demandQuietTuesday(t) {
-  // Mild lunch + dinner peaks
   const h = t * HOURS_PER_TICK;
-  const lunch = 30 * Math.exp(-Math.pow((h - 12) / 1.5, 2));
-  const dinner = 35 * Math.exp(-Math.pow((h - 18.5) / 1.8, 2));
-  const morning = 10 * Math.exp(-Math.pow((h - 8) / 1.5, 2));
-  return 40 + lunch + dinner + morning + (Math.sin(t * 0.4) * 3);
+  return 40 + 30 * Math.exp(-Math.pow((h - 12) / 1.5, 2)) + 35 * Math.exp(-Math.pow((h - 18.5) / 1.8, 2)) + 10 * Math.exp(-Math.pow((h - 8) / 1.5, 2)) + Math.sin(t * 0.4) * 3;
 }
-
 function demandFridayRush(t) {
-  // Big evening spike 18-22
   const h = t * HOURS_PER_TICK;
-  const evening = 95 * Math.exp(-Math.pow((h - 20) / 2.5, 2));
-  const lunch = 20 * Math.exp(-Math.pow((h - 12.5) / 1.3, 2));
-  return 35 + lunch + evening + (Math.sin(t * 0.3) * 3);
+  return 35 + 20 * Math.exp(-Math.pow((h - 12.5) / 1.3, 2)) + 95 * Math.exp(-Math.pow((h - 20) / 2.5, 2)) + Math.sin(t * 0.3) * 3;
 }
-
 function demandAirportBurst(t) {
-  // Sharp spike at 21:00 (flight wave)
   const h = t * HOURS_PER_TICK;
-  const burst = 110 * Math.exp(-Math.pow((h - 21) / 0.6, 2));
-  const baseline = 35 + 12 * Math.exp(-Math.pow((h - 17) / 4, 2));
-  return baseline + burst + (Math.sin(t * 0.5) * 2);
+  return 35 + 12 * Math.exp(-Math.pow((h - 17) / 4, 2)) + 110 * Math.exp(-Math.pow((h - 21) / 0.6, 2)) + Math.sin(t * 0.5) * 2;
 }
-
 function demandStormEvent(t) {
-  // Demand spike + supply drop starting 16:00
   const h = t * HOURS_PER_TICK;
-  const storm = h >= 16 && h <= 20 ? 70 * Math.exp(-Math.pow((h - 18) / 1.8, 2)) : 0;
-  const morning = 15 * Math.exp(-Math.pow((h - 8) / 2, 2));
-  return 40 + morning + storm + (Math.sin(t * 0.3) * 2);
+  const storm = (h >= 16 && h <= 20) ? 70 * Math.exp(-Math.pow((h - 18) / 1.8, 2)) : 0;
+  return 40 + 15 * Math.exp(-Math.pow((h - 8) / 2, 2)) + storm + Math.sin(t * 0.3) * 2;
 }
-
 function demandHolidayWave(t) {
-  // Sustained high demand 11-21
   const h = t * HOURS_PER_TICK;
   if (h < 9 || h > 23) return 30 + Math.sin(t * 0.4) * 3;
-  const wave = 65 * Math.exp(-Math.pow((h - 16) / 6, 2));
-  return 35 + wave + Math.sin(t * 0.5) * 4;
+  return 35 + 65 * Math.exp(-Math.pow((h - 16) / 6, 2)) + Math.sin(t * 0.5) * 4;
 }
 
-// Supply response: baseline tracks demand with delay, surge attracts more supply with longer delay
-const SUPPLY_BASELINE_RATIO = 0.82;     // base supply runs ~82% of demand
-const SURGE_SUPPLY_GAIN = 0.50;          // (multiplied by 30 below) % extra supply per 1.0 above 1.0x surge
-const SURGE_RESPONSE_DELAY = 3;          // ticks (15 min) for drivers to respond
-
 function supplyBaseline(t, demandFn, modifier = 1) {
-  // Slight lag (1 tick) so supply doesn't perfectly anticipate
   const prev = demandFn(Math.max(t - 1, 0));
   return prev * SUPPLY_BASELINE_RATIO * modifier + (Math.sin(t * 0.7) * 2);
 }
-
 function supplyBoost(surgeHistory, t) {
-  // Drivers respond to surge with delay (SURGE_RESPONSE_DELAY ticks)
   const lookback = Math.max(t - SURGE_RESPONSE_DELAY, 0);
   const recentSurge = surgeHistory[lookback] || 1.0;
-  return Math.max(0, (recentSurge - 1.0)) * SURGE_SUPPLY_GAIN * 30; // base supply unit
+  return Math.max(0, (recentSurge - 1.0)) * SURGE_SUPPLY_GAIN * 30;
 }
 
 const SCENARIOS = [
@@ -600,37 +981,28 @@ const SCENARIOS = [
 ];
 
 // =============================================================================
-// PID CONTROLLER
+// PID CONTROLLER (shared)
 // =============================================================================
 class PIDController {
   constructor(kp, ki, kd, dt = HOURS_PER_TICK) {
-    this.kp = kp;
-    this.ki = ki;
-    this.kd = kd;
-    this.dt = dt;
-    this.errorIntegral = 0;
-    this.errorPrev = 0;
-    this.lastP = 0;
-    this.lastI = 0;
-    this.lastD = 0;
+    this.kp = kp; this.ki = ki; this.kd = kd; this.dt = dt;
+    this.errorIntegral = 0; this.errorPrev = 0;
+    this.lastP = 0; this.lastI = 0; this.lastD = 0;
   }
   step(error) {
-    // anti-windup: clamp integral
     this.errorIntegral = Math.max(-200, Math.min(this.errorIntegral + error * this.dt, 200));
     const derivative = (error - this.errorPrev) / this.dt;
     const P = this.kp * error;
     const I = this.ki * this.errorIntegral;
     const D = this.kd * derivative;
     this.errorPrev = error;
-    this.lastP = P;
-    this.lastI = I;
-    this.lastD = D;
+    this.lastP = P; this.lastI = I; this.lastD = D;
     return { control: P + I + D, P, I, D };
   }
 }
 
 // =============================================================================
-// SIMULATION ENGINES
+// CITY-LEVEL SIMULATION (V1 retained)
 // =============================================================================
 function simulateWithPID(scenario, gains) {
   const pid = new PIDController(gains.kp, gains.ki, gains.kd);
@@ -638,92 +1010,304 @@ function simulateWithPID(scenario, gains) {
   let surgeHistory = [];
   for (let t = 0; t < TICKS; t++) {
     const d = Math.max(scenario.demandFn(t), 1);
-    const sBase = supplyBaseline(t, scenario.demandFn, scenario.supplyMod);
-    const sBoost = supplyBoost(surgeHistory, t);
-    const s = Math.max(sBase + sBoost, 1);
-    const errPct = ((d - s) / d) * 100;             // positive when undersupplied
-    const m = Math.abs(errPct);
+    const s = Math.max(supplyBaseline(t, scenario.demandFn, scenario.supplyMod) + supplyBoost(surgeHistory, t), 1);
+    const errPct = ((d - s) / d) * 100;
     const result = pid.step(errPct);
-    const surgeRaw = 1.0 + result.control / 100;
-    const surgeClamped = Math.max(1.0, Math.min(surgeRaw, 2.5));
+    const surgeClamped = Math.max(1.0, Math.min(1.0 + result.control / 100, 2.5));
     surgeHistory.push(surgeClamped);
-    demand.push(d);
-    supply.push(s);
-    surge.push(surgeClamped);
-    mape.push(m);
+    demand.push(d); supply.push(s); surge.push(surgeClamped);
+    mape.push(Math.abs(errPct));
     pidTerms.push({ P: result.P, I: result.I, D: result.D });
   }
   return { demand, supply, surge, mape, pidTerms };
 }
 
 function simulateNaive(scenario) {
-  // Naive: surge = 1.5x if MAPE > 20%, else 1.0
   const demand = [], supply = [], surge = [], mape = [];
   let surgeHistory = [];
   for (let t = 0; t < TICKS; t++) {
     const d = Math.max(scenario.demandFn(t), 1);
-    const sBase = supplyBaseline(t, scenario.demandFn, scenario.supplyMod);
-    const sBoost = supplyBoost(surgeHistory, t);
-    const s = Math.max(sBase + sBoost, 1);
+    const s = Math.max(supplyBaseline(t, scenario.demandFn, scenario.supplyMod) + supplyBoost(surgeHistory, t), 1);
     const errPct = ((d - s) / d) * 100;
     const m = Math.abs(errPct);
     const naiveSurge = m > 30 ? 1.5 : 1.0;
     surgeHistory.push(naiveSurge);
-    demand.push(d);
-    supply.push(s);
-    surge.push(naiveSurge);
-    mape.push(m);
+    demand.push(d); supply.push(s); surge.push(naiveSurge); mape.push(m);
   }
   return { demand, supply, surge, mape };
 }
 
 // =============================================================================
-// CANVAS CHART RENDERING (simple time-series)
+// V2 — POLYGON DEMAND PROFILES (9 zones, 3×3 city)
+// =============================================================================
+// Zone position: row (0=top, 2=bottom), col (0=left, 2=right)
+// Each zone has a distinct demand profile based on its archetype
+function polygonAirport(t) {
+  const h = t * HOURS_PER_TICK;
+  return 25 + 60 * Math.exp(-Math.pow((h - 21) / 0.8, 2)) + 20 * Math.exp(-Math.pow((h - 8) / 1.5, 2)) + Math.sin(t * 0.5) * 2;
+}
+function polygonTechDistrict(t) {
+  const h = t * HOURS_PER_TICK;
+  return 20 + 35 * Math.exp(-Math.pow((h - 12.5) / 1.2, 2)) + 30 * Math.exp(-Math.pow((h - 19) / 1.5, 2)) + (h >= 9 && h <= 18 ? 15 : 0) + Math.sin(t * 0.4) * 2;
+}
+function polygonStadium(t) {
+  const h = t * HOURS_PER_TICK;
+  return 10 + 70 * Math.exp(-Math.pow((h - 20) / 1.4, 2)) + Math.sin(t * 0.6) * 2;
+}
+function polygonResidentialN(t) {
+  const h = t * HOURS_PER_TICK;
+  return 18 + 40 * Math.exp(-Math.pow((h - 8) / 1.5, 2)) + 45 * Math.exp(-Math.pow((h - 18.5) / 2, 2)) + Math.sin(t * 0.3) * 2;
+}
+function polygonDowntown(t) {
+  const h = t * HOURS_PER_TICK;
+  return 30 + 35 * Math.exp(-Math.pow((h - 12) / 4, 2)) + 60 * Math.exp(-Math.pow((h - 18) / 1.6, 2)) + 20 * Math.exp(-Math.pow((h - 22) / 2, 2)) + Math.sin(t * 0.3) * 2;
+}
+function polygonResidentialE(t) {
+  const h = t * HOURS_PER_TICK;
+  return 16 + 38 * Math.exp(-Math.pow((h - 7.5) / 1.5, 2)) + 42 * Math.exp(-Math.pow((h - 19) / 2, 2)) + Math.sin(t * 0.3) * 2;
+}
+function polygonIndustrial(t) {
+  const h = t * HOURS_PER_TICK;
+  return (h >= 6 && h <= 17) ? (15 + 25 * Math.exp(-Math.pow((h - 9) / 2.5, 2)) + Math.sin(t * 0.4) * 2) : 5 + Math.sin(t * 0.4) * 1;
+}
+function polygonShoppingMall(t) {
+  const h = t * HOURS_PER_TICK;
+  return 12 + 40 * Math.exp(-Math.pow((h - 13) / 2, 2)) + 55 * Math.exp(-Math.pow((h - 17.5) / 2, 2)) + Math.sin(t * 0.4) * 2;
+}
+function polygonSuburbs(t) {
+  const h = t * HOURS_PER_TICK;
+  return 10 + 18 * Math.exp(-Math.pow((h - 7.5) / 1.8, 2)) + 22 * Math.exp(-Math.pow((h - 18.5) / 2.2, 2)) + Math.sin(t * 0.3) * 1.5;
+}
+
+const POLYGONS = [
+  { id: "airport",     name: "Airport",       row: 0, col: 0, demandFn: polygonAirport,     supplyMod: 1.00 },
+  { id: "tech",        name: "Tech District", row: 0, col: 1, demandFn: polygonTechDistrict, supplyMod: 1.00 },
+  { id: "stadium",     name: "Stadium",       row: 0, col: 2, demandFn: polygonStadium,     supplyMod: 0.90 },
+  { id: "resN",        name: "Residential N", row: 1, col: 0, demandFn: polygonResidentialN, supplyMod: 0.95 },
+  { id: "downtown",    name: "Downtown",      row: 1, col: 1, demandFn: polygonDowntown,    supplyMod: 1.00 },
+  { id: "resE",        name: "Residential E", row: 1, col: 2, demandFn: polygonResidentialE, supplyMod: 0.95 },
+  { id: "industrial",  name: "Industrial",    row: 2, col: 0, demandFn: polygonIndustrial,  supplyMod: 1.05 },
+  { id: "mall",        name: "Shopping Mall", row: 2, col: 1, demandFn: polygonShoppingMall, supplyMod: 1.00 },
+  { id: "suburbs",     name: "Suburbs",       row: 2, col: 2, demandFn: polygonSuburbs,     supplyMod: 1.05 }
+];
+
+// =============================================================================
+// V2 — POLYGON-LEVEL SIMULATION (9 independent PIDs)
+// =============================================================================
+function simulatePolygons(gains) {
+  // For each polygon, run an independent PID over 24h
+  const results = POLYGONS.map(p => {
+    const pid = new PIDController(gains.kp, gains.ki, gains.kd);
+    const demand = [], supply = [], surge = [], mape = [];
+    let surgeHistory = [];
+    for (let t = 0; t < TICKS; t++) {
+      const d = Math.max(p.demandFn(t), 1);
+      const s = Math.max(supplyBaseline(t, p.demandFn, p.supplyMod) + supplyBoost(surgeHistory, t), 1);
+      const errPct = ((d - s) / d) * 100;
+      const result = pid.step(errPct);
+      const surgeClamped = Math.max(1.0, Math.min(1.0 + result.control / 100, 2.5));
+      surgeHistory.push(surgeClamped);
+      demand.push(d); supply.push(s); surge.push(surgeClamped);
+      mape.push(Math.abs(errPct));
+    }
+    return { polygon: p, demand, supply, surge, mape };
+  });
+  return results;
+}
+
+function simulateCityFromPolygons(gains) {
+  // City-level PID gets the AGGREGATE demand and supply from polygons,
+  // runs ONE PID, and broadcasts the same surge to all zones.
+  // This is the comparison baseline — "what if you only run city-level surge?"
+  const pid = new PIDController(gains.kp, gains.ki, gains.kd);
+  // First pass: aggregate baseline demand/supply with the city-level surge feedback
+  const aggDemand = [], aggSupply = [], citySurge = [], cityMape = [];
+  let surgeHistory = [];
+
+  for (let t = 0; t < TICKS; t++) {
+    let totalD = 0, totalS = 0;
+    POLYGONS.forEach(p => {
+      const d = Math.max(p.demandFn(t), 1);
+      const sBase = supplyBaseline(t, p.demandFn, p.supplyMod);
+      // Same supply boost across all polygons since surge is uniform city-level
+      const sBoost = supplyBoost(surgeHistory, t);
+      totalD += d;
+      totalS += Math.max(sBase + sBoost, 1);
+    });
+    const errPct = ((totalD - totalS) / totalD) * 100;
+    const result = pid.step(errPct);
+    const surgeClamped = Math.max(1.0, Math.min(1.0 + result.control / 100, 2.5));
+    surgeHistory.push(surgeClamped);
+    aggDemand.push(totalD); aggSupply.push(totalS); citySurge.push(surgeClamped);
+    cityMape.push(Math.abs(errPct));
+  }
+
+  // Second pass: compute per-polygon MAPE under the SHARED city surge
+  // (this shows that the same surge applied uniformly leaves local imbalance)
+  const perPolygonMapeUnderCity = POLYGONS.map(p => {
+    const mape = [];
+    let surgeHist = [];
+    for (let t = 0; t < TICKS; t++) {
+      surgeHist.push(citySurge[t]);
+      const d = Math.max(p.demandFn(t), 1);
+      const sBase = supplyBaseline(t, p.demandFn, p.supplyMod);
+      const sBoost = supplyBoost(surgeHist, t);
+      const s = Math.max(sBase + sBoost, 1);
+      mape.push(Math.abs(((d - s) / d) * 100));
+    }
+    return mape;
+  });
+
+  return { aggDemand, aggSupply, citySurge, cityMape, perPolygonMapeUnderCity };
+}
+
+// =============================================================================
+// STATE
+// =============================================================================
+const state = {
+  mode: 'city',           // 'city' or 'polygon'
+  scenarioId: 'friday',
+  kp: 0.40, ki: 0.008, kd: 0.05,
+  pidResult: null,
+  naiveResult: null,
+  polygonResults: null,
+  cityComparisonResult: null,
+  scrubTick: 144,         // start at midday
+  selectedPolygonId: null,
+  isPlaying: false,
+  playInterval: null
+};
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
+const fmtPct = n => (n >= 0 ? '+' : '') + n.toFixed(0) + '%';
+const fmtPctAbs = n => n.toFixed(1) + '%';
+const avg = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
+const maxOf = arr => Math.max(...arr);
+
+function alertHours(mapeArr) {
+  return (mapeArr.filter(m => m > 20).length * HOURS_PER_TICK).toFixed(1);
+}
+
+function tickToTimeString(t) {
+  const totalMin = t * 5;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+}
+
+function tickToMoment(t) {
+  const h = t * HOURS_PER_TICK;
+  if (h < 6) return "Early morning";
+  if (h < 9) return "Morning";
+  if (h < 12) return "Late morning";
+  if (h < 14) return "Lunchtime";
+  if (h < 17) return "Afternoon";
+  if (h < 20) return "Evening rush";
+  if (h < 22) return "Night";
+  return "Late night";
+}
+
+function getMapeTier(m) {
+  if (m < 15) return 'green';
+  if (m < 30) return 'yellow';
+  return 'red';
+}
+
+function tierColor(tier) {
+  return tier === 'green' ? '#10b981' : tier === 'yellow' ? '#fbbf24' : '#ef4444';
+}
+
+// =============================================================================
+// CITY MODE RECOMPUTE + RENDER (V1 retained)
+// =============================================================================
+function getScenario() { return SCENARIOS.find(s => s.id === state.scenarioId); }
+
+function recomputeCity() {
+  const scenario = getScenario();
+  state.pidResult = simulateWithPID(scenario, { kp: state.kp, ki: state.ki, kd: state.kd });
+  state.naiveResult = simulateNaive(scenario);
+  renderCityMode();
+}
+
+function renderCityMode() {
+  const pid = state.pidResult;
+  const naive = state.naiveResult;
+  const pidAvgMape = avg(pid.mape);
+  const pidPeakMape = maxOf(pid.mape);
+  const pidPeakSurge = maxOf(pid.surge);
+  const pidAlertH = alertHours(pid.mape);
+
+  $('statMape').textContent = fmtPctAbs(pidAvgMape);
+  $('statPeakMape').textContent = fmtPctAbs(pidPeakMape);
+  $('statPeakSurge').textContent = pidPeakSurge.toFixed(2) + 'x';
+  $('statAlertHours').textContent = pidAlertH + 'h';
+
+  const naiveAvg = avg(naive.mape);
+  const naivePeak = maxOf(naive.mape);
+  const naiveAlert = alertHours(naive.mape);
+
+  $('naiveAvgMape').textContent = fmtPctAbs(naiveAvg);
+  $('naivePeak').textContent = fmtPctAbs(naivePeak);
+  $('naiveAlertH').textContent = naiveAlert + 'h';
+  $('pidAvgMape').textContent = fmtPctAbs(pidAvgMape);
+  $('pidPeak').textContent = fmtPctAbs(pidPeakMape);
+  $('pidAlertH').textContent = pidAlertH + 'h';
+
+  const improvement = ((naiveAvg - pidAvgMape) / naiveAvg) * 100;
+  const verdict = $('verdict');
+  if (pidAvgMape < naiveAvg) {
+    verdict.innerHTML = `PID outperforms naive by <strong style="color: var(--green)">${improvement.toFixed(1)}%</strong> on average MAPE. Peak imbalance also lower (${pidPeakMape.toFixed(1)}% vs ${naivePeak.toFixed(1)}%).`;
+  } else if (Math.abs(pidAvgMape - naiveAvg) < 0.5) {
+    verdict.innerHTML = `<strong style="color: var(--yellow)">PID and naive are roughly tied</strong>. Tune Kp up or add Ki/Kd.`;
+  } else {
+    verdict.innerHTML = `<strong style="color: var(--red)">PID underperforming naive</strong>. Try Kp=0.4, Ki=0.008, Kd=0.05 as reset.`;
+  }
+
+  drawCityCharts();
+}
+
+function drawCityCharts() {
+  drawDemandSupply(); drawSurge(); drawMape(); drawPID();
+}
+
+// =============================================================================
+// CANVAS CHARTS (V1 retained)
 // =============================================================================
 function setupCanvas(canvas) {
   const wrap = canvas.parentElement;
   const ratio = window.devicePixelRatio || 1;
-  const w = wrap.clientWidth;
-  const h = wrap.clientHeight;
-  canvas.width = w * ratio;
-  canvas.height = h * ratio;
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  canvas.width = w * ratio; canvas.height = h * ratio;
   const ctx = canvas.getContext('2d');
   ctx.scale(ratio, ratio);
   return { ctx, w, h };
 }
-
-function drawAxesAndGrid(ctx, w, h, yMin, yMax, yTicks = 4, label = "") {
+function drawAxesAndGrid(ctx, w, h, yMin, yMax, yTicks = 4) {
   ctx.fillStyle = '#0a1024';
   ctx.fillRect(0, 0, w, h);
-
-  // Time grid (every 4 hours)
   ctx.strokeStyle = '#1f2a44';
   ctx.lineWidth = 1;
   ctx.fillStyle = '#5a6788';
   ctx.font = '10px ui-monospace, monospace';
   for (let hr = 0; hr <= 24; hr += 4) {
     const x = (hr / 24) * (w - 30) + 30;
-    ctx.beginPath();
-    ctx.moveTo(x, 8);
-    ctx.lineTo(x, h - 16);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, 8); ctx.lineTo(x, h - 16); ctx.stroke();
     ctx.fillText(`${hr}h`, x - 8, h - 4);
   }
-
-  // Y grid
   for (let i = 0; i <= yTicks; i++) {
     const y = 8 + ((h - 24) * i) / yTicks;
     ctx.beginPath();
     ctx.strokeStyle = '#1f2a44';
-    ctx.moveTo(30, y);
-    ctx.lineTo(w, y);
-    ctx.stroke();
+    ctx.moveTo(30, y); ctx.lineTo(w, y); ctx.stroke();
     const val = yMax - ((yMax - yMin) * i) / yTicks;
     ctx.fillStyle = '#5a6788';
     ctx.fillText(val.toFixed(val < 10 ? 1 : 0), 2, y + 3);
   }
 }
-
 function drawSeries(ctx, w, h, data, color, yMin, yMax, lineWidth = 1.6, opacity = 1) {
   ctx.strokeStyle = color;
   ctx.globalAlpha = opacity;
@@ -733,13 +1317,11 @@ function drawSeries(ctx, w, h, data, color, yMin, yMax, lineWidth = 1.6, opacity
     const x = 30 + ((w - 30) * i) / (TICKS - 1);
     const yNorm = (data[i] - yMin) / (yMax - yMin);
     const y = h - 16 - (h - 24) * yNorm;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   }
   ctx.stroke();
   ctx.globalAlpha = 1;
 }
-
 function drawThresholdLine(ctx, w, h, value, yMin, yMax, color) {
   ctx.strokeStyle = color;
   ctx.setLineDash([4, 4]);
@@ -747,151 +1329,236 @@ function drawThresholdLine(ctx, w, h, value, yMin, yMax, color) {
   ctx.lineWidth = 1;
   const yNorm = (value - yMin) / (yMax - yMin);
   const y = h - 16 - (h - 24) * yNorm;
-  ctx.beginPath();
-  ctx.moveTo(30, y);
-  ctx.lineTo(w, y);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.globalAlpha = 1;
+  ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(w, y); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
 }
-
-function drawStackedArea(ctx, w, h, dataPID, yMin, yMax) {
-  // Plot P (blue), I (purple), D (yellow) as separate lines (signed)
-  drawSeries(ctx, w, h, dataPID.map(p => p.P), '#60a5fa', yMin, yMax, 1.4);
-  drawSeries(ctx, w, h, dataPID.map(p => p.I), '#a78bfa', yMin, yMax, 1.4);
-  drawSeries(ctx, w, h, dataPID.map(p => p.D), '#fbbf24', yMin, yMax, 1.4);
-  // Zero line
-  drawThresholdLine(ctx, w, h, 0, yMin, yMax, '#5a6788');
-}
-
-// =============================================================================
-// STATE & UI
-// =============================================================================
-const state = {
-  scenarioId: 'friday',
-  kp: 0.40,
-  ki: 0.008,
-  kd: 0.05,
-  pidResult: null,
-  naiveResult: null
-};
-
-function getScenario() {
-  return SCENARIOS.find(s => s.id === state.scenarioId);
-}
-
-function fmtPct(n) { return n.toFixed(1) + '%'; }
-function fmtMape(n) { return n.toFixed(1) + '%'; }
-function avg(arr) { return arr.reduce((s, v) => s + v, 0) / arr.length; }
-function maxOf(arr) { return Math.max(...arr); }
-function alertHours(mapeArr) {
-  const overThreshold = mapeArr.filter(m => m > 20).length;
-  return (overThreshold * HOURS_PER_TICK).toFixed(1);
-}
-
-function recompute() {
-  const scenario = getScenario();
-  state.pidResult = simulateWithPID(scenario, { kp: state.kp, ki: state.ki, kd: state.kd });
-  state.naiveResult = simulateNaive(scenario);
-  render();
-}
-
-function render() {
-  // Stats — PID
-  const pid = state.pidResult;
-  const naive = state.naiveResult;
-
-  const pidAvgMape = avg(pid.mape);
-  const pidPeakMape = maxOf(pid.mape);
-  const pidPeakSurge = maxOf(pid.surge);
-  const pidAlertH = alertHours(pid.mape);
-
-  document.getElementById('statMape').textContent = fmtMape(pidAvgMape);
-  document.getElementById('statPeakMape').textContent = fmtMape(pidPeakMape);
-  document.getElementById('statPeakSurge').textContent = pidPeakSurge.toFixed(2) + 'x';
-  document.getElementById('statAlertHours').textContent = pidAlertH + 'h';
-
-  // Comparison
-  const naiveAvg = avg(naive.mape);
-  const naivePeak = maxOf(naive.mape);
-  const naiveAlert = alertHours(naive.mape);
-
-  document.getElementById('naiveAvgMape').textContent = fmtMape(naiveAvg);
-  document.getElementById('naivePeak').textContent = fmtMape(naivePeak);
-  document.getElementById('naiveAlertH').textContent = naiveAlert + 'h';
-  document.getElementById('pidAvgMape').textContent = fmtMape(pidAvgMape);
-  document.getElementById('pidPeak').textContent = fmtMape(pidPeakMape);
-  document.getElementById('pidAlertH').textContent = pidAlertH + 'h';
-
-  // Verdict
-  const improvement = ((naiveAvg - pidAvgMape) / naiveAvg) * 100;
-  const verdict = document.getElementById('verdict');
-  if (pidAvgMape < naiveAvg) {
-    verdict.innerHTML = `PID outperforms naive by <strong style="color: var(--green)">${improvement.toFixed(1)}%</strong> on average MAPE. Peak imbalance also lower (${pidPeakMape.toFixed(1)}% vs ${naivePeak.toFixed(1)}%). The smoother response means drivers see less price chaos and the system spends less time in alert state.`;
-  } else if (Math.abs(pidAvgMape - naiveAvg) < 0.5) {
-    verdict.innerHTML = `<strong style="color: var(--yellow)">PID and naive are roughly tied</strong> on this scenario. Tune Kp up, or try adding more Ki / Kd — the current gains may be too conservative for this demand shape.`;
-  } else {
-    verdict.innerHTML = `<strong style="color: var(--red)">PID is underperforming naive</strong>. Your gains may be too aggressive (causing overshoot) or too conservative (slow to react). Try Kp = 1.2, Ki = 0.15, Kd = 0.4 as a reset.`;
-  }
-
-  // Charts
-  drawDemandSupply();
-  drawSurge();
-  drawMape();
-  drawPID();
-}
-
 function drawDemandSupply() {
-  const canvas = document.getElementById('chartDS');
-  const { ctx, w, h } = setupCanvas(canvas);
+  const { ctx, w, h } = setupCanvas($('chartDS'));
   const pid = state.pidResult;
   const maxVal = Math.max(maxOf(pid.demand), maxOf(pid.supply)) * 1.1;
   drawAxesAndGrid(ctx, w, h, 0, maxVal, 4);
   drawSeries(ctx, w, h, pid.demand, '#ef4444', 0, maxVal);
   drawSeries(ctx, w, h, pid.supply, '#10b981', 0, maxVal);
 }
-
 function drawSurge() {
-  const canvas = document.getElementById('chartSurge');
-  const { ctx, w, h } = setupCanvas(canvas);
-  const naive = state.naiveResult;
-  const pid = state.pidResult;
+  const { ctx, w, h } = setupCanvas($('chartSurge'));
   drawAxesAndGrid(ctx, w, h, 1.0, 2.5, 3);
-  drawSeries(ctx, w, h, naive.surge, '#fb923c', 1.0, 2.5, 1.4, 0.55);
-  drawSeries(ctx, w, h, pid.surge, '#14b8a6', 1.0, 2.5, 1.8);
+  drawSeries(ctx, w, h, state.naiveResult.surge, '#fb923c', 1.0, 2.5, 1.4, 0.55);
+  drawSeries(ctx, w, h, state.pidResult.surge, '#14b8a6', 1.0, 2.5, 1.8);
 }
-
 function drawMape() {
-  const canvas = document.getElementById('chartMape');
-  const { ctx, w, h } = setupCanvas(canvas);
-  const pid = state.pidResult;
-  const naive = state.naiveResult;
-  const maxVal = Math.max(maxOf(pid.mape), maxOf(naive.mape)) * 1.1;
+  const { ctx, w, h } = setupCanvas($('chartMape'));
+  const maxVal = Math.max(maxOf(state.pidResult.mape), maxOf(state.naiveResult.mape)) * 1.1;
   const yMax = Math.max(maxVal, 30);
   drawAxesAndGrid(ctx, w, h, 0, yMax, 4);
   drawThresholdLine(ctx, w, h, 20, 0, yMax, '#ef4444');
-  drawSeries(ctx, w, h, naive.mape, '#fb923c', 0, yMax, 1.4, 0.55);
-  drawSeries(ctx, w, h, pid.mape, '#14b8a6', 0, yMax, 1.8);
+  drawSeries(ctx, w, h, state.naiveResult.mape, '#fb923c', 0, yMax, 1.4, 0.55);
+  drawSeries(ctx, w, h, state.pidResult.mape, '#14b8a6', 0, yMax, 1.8);
 }
-
 function drawPID() {
-  const canvas = document.getElementById('chartPID');
-  const { ctx, w, h } = setupCanvas(canvas);
-  const pid = state.pidResult;
-  const terms = pid.pidTerms;
+  const { ctx, w, h } = setupCanvas($('chartPID'));
+  const terms = state.pidResult.pidTerms;
   const allVals = terms.flatMap(p => [p.P, p.I, p.D]);
-  const yMin = Math.min(...allVals);
-  const yMax = Math.max(...allVals);
-  const range = Math.max(Math.abs(yMin), Math.abs(yMax)) * 1.1;
+  const range = Math.max(Math.abs(Math.min(...allVals)), Math.abs(Math.max(...allVals))) * 1.1;
   drawAxesAndGrid(ctx, w, h, -range, range, 4);
-  drawStackedArea(ctx, w, h, terms, -range, range);
+  drawSeries(ctx, w, h, terms.map(p => p.P), '#60a5fa', -range, range, 1.4);
+  drawSeries(ctx, w, h, terms.map(p => p.I), '#a78bfa', -range, range, 1.4);
+  drawSeries(ctx, w, h, terms.map(p => p.D), '#fbbf24', -range, range, 1.4);
+  drawThresholdLine(ctx, w, h, 0, -range, range, '#5a6788');
 }
 
 // =============================================================================
-// EVENT BINDING
+// V2 — POLYGON MODE RECOMPUTE + RENDER
+// =============================================================================
+function recomputePolygon() {
+  const gains = { kp: state.kp, ki: state.ki, kd: state.kd };
+  state.polygonResults = simulatePolygons(gains);
+  state.cityComparisonResult = simulateCityFromPolygons(gains);
+  renderPolygonSummary();
+  renderPolygonMap();
+}
+
+function renderPolygonSummary() {
+  const poly = state.polygonResults;
+  const city = state.cityComparisonResult;
+
+  // Aggregate MAPE over time:
+  // Polygon-level: average across polygons (each with its own PID)
+  // City-level: same time series but per-polygon MAPE UNDER the shared city surge
+  let polyTotalMape = 0, polyCount = 0;
+  poly.forEach(r => {
+    r.mape.forEach(m => { polyTotalMape += m; polyCount++; });
+  });
+  const polyAvg = polyTotalMape / polyCount;
+
+  let cityTotalMape = 0, cityCount = 0;
+  city.perPolygonMapeUnderCity.forEach(arr => {
+    arr.forEach(m => { cityTotalMape += m; cityCount++; });
+  });
+  const cityAvg = cityTotalMape / cityCount;
+
+  const improvement = ((cityAvg - polyAvg) / cityAvg) * 100;
+
+  $('cityAvgMape').textContent = fmtPctAbs(cityAvg);
+  $('polyAvgMape').textContent = fmtPctAbs(polyAvg);
+  $('polyImprovement').textContent = improvement.toFixed(1) + '%';
+
+  // Worst polygon at current scrub tick (under polygon-level PID)
+  let worstName = '—', worstMape = 0;
+  poly.forEach(r => {
+    if (r.mape[state.scrubTick] > worstMape) {
+      worstMape = r.mape[state.scrubTick];
+      worstName = r.polygon.name;
+    }
+  });
+  $('worstPolygon').textContent = `${worstName} (${fmtPctAbs(worstMape)})`;
+
+  // Verdict
+  const verdict = $('polyVerdict');
+  if (improvement > 5) {
+    verdict.innerHTML = `Polygon-level PID reduces average MAPE by <strong style="color: var(--green)">${improvement.toFixed(1)}%</strong> compared to running one city-level PID. The improvement comes from <strong>not averaging away local imbalance</strong> — when Airport spikes at 9pm, the city-level controller raises a moderate surge across all zones (over-surging Suburbs, under-surging Airport). Polygon-level surges Airport hard and leaves Suburbs alone.`;
+  } else if (improvement > 0) {
+    verdict.innerHTML = `Polygon-level PID is <strong style="color: var(--yellow)">marginally better</strong> (${improvement.toFixed(1)}%). With more variation in demand patterns across zones, the gap widens. Try different gains or note that the current setup has relatively uniform demand profiles.`;
+  } else {
+    verdict.innerHTML = `<strong style="color: var(--red)">Polygon-level is slightly worse</strong> than city-level here — likely because polygon-level PID gains aren't tuned for the noisier per-zone signal. Real production systems tune gains per zone (Airport needs different Kp than Suburbs).`;
+  }
+}
+
+function renderPolygonMap() {
+  const svg = $('polygonSvg');
+  svg.innerHTML = '';
+
+  // Grid layout: 3 rows × 3 cols
+  // SVG viewBox 600×500. Cells with padding.
+  const padding = 16;
+  const cellW = (600 - padding * 4) / 3;   // 3 cells + 4 paddings
+  const cellH = (500 - padding * 4) / 3;
+
+  state.polygonResults.forEach(r => {
+    const p = r.polygon;
+    const x = padding + p.col * (cellW + padding);
+    const y = padding + p.row * (cellH + padding);
+    const mapeNow = r.mape[state.scrubTick];
+    const surgeNow = r.surge[state.scrubTick];
+    const tier = getMapeTier(mapeNow);
+    const fillColor = tierColor(tier);
+    const fillOpacity = 0.22 + Math.min(mapeNow / 50, 0.6);
+
+    // Rect
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("class", "polygon-rect" + (state.selectedPolygonId === p.id ? " selected" : ""));
+    rect.setAttribute("x", x);
+    rect.setAttribute("y", y);
+    rect.setAttribute("width", cellW);
+    rect.setAttribute("height", cellH);
+    rect.setAttribute("rx", 8);
+    rect.setAttribute("fill", fillColor);
+    rect.setAttribute("fill-opacity", fillOpacity.toFixed(2));
+    rect.setAttribute("stroke", state.selectedPolygonId === p.id ? "#14b8a6" : "#2e3d5f");
+    rect.setAttribute("stroke-width", state.selectedPolygonId === p.id ? 3 : 1);
+    rect.setAttribute("data-id", p.id);
+    rect.addEventListener('click', () => selectPolygon(p.id));
+    svg.appendChild(rect);
+
+    // Name label
+    const nameLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    nameLabel.setAttribute("class", "polygon-label");
+    nameLabel.setAttribute("x", x + cellW / 2);
+    nameLabel.setAttribute("y", y + 22);
+    nameLabel.textContent = p.name;
+    svg.appendChild(nameLabel);
+
+    // MAPE big number
+    const mapeLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    mapeLabel.setAttribute("class", "polygon-mape");
+    mapeLabel.setAttribute("x", x + cellW / 2);
+    mapeLabel.setAttribute("y", y + cellH / 2 + 6);
+    mapeLabel.setAttribute("fill", fillColor);
+    mapeLabel.textContent = mapeNow.toFixed(0) + '%';
+    svg.appendChild(mapeLabel);
+
+    // Surge label
+    const surgeLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    surgeLabel.setAttribute("class", "polygon-surge");
+    surgeLabel.setAttribute("x", x + cellW / 2);
+    surgeLabel.setAttribute("y", y + cellH - 12);
+    surgeLabel.textContent = 'surge ' + surgeNow.toFixed(2) + 'x';
+    svg.appendChild(surgeLabel);
+  });
+
+  renderPolygonDetail();
+}
+
+function renderPolygonDetail() {
+  if (!state.selectedPolygonId) {
+    $('pdName').textContent = 'Click a zone for detail';
+    $('pdStatus').style.display = 'none';
+    $('pdDemand').textContent = '—';
+    $('pdSupply').textContent = '—';
+    $('pdMape').textContent = '—';
+    $('pdSurge').textContent = '—';
+    return;
+  }
+  const r = state.polygonResults.find(x => x.polygon.id === state.selectedPolygonId);
+  if (!r) return;
+
+  const d = r.demand[state.scrubTick];
+  const s = r.supply[state.scrubTick];
+  const m = r.mape[state.scrubTick];
+  const surge = r.surge[state.scrubTick];
+  const tier = getMapeTier(m);
+
+  $('pdName').textContent = r.polygon.name;
+  const statusEl = $('pdStatus');
+  statusEl.textContent = tier === 'green' ? 'Balanced' : tier === 'yellow' ? 'Watch' : 'Alert';
+  statusEl.style.display = 'inline-block';
+  statusEl.style.background = tierColor(tier);
+  statusEl.style.color = tier === 'yellow' ? '#422a05' : tier === 'red' ? '#fff' : '#062e23';
+
+  $('pdDemand').textContent = fmt(d);
+  $('pdSupply').textContent = fmt(s);
+  $('pdMape').textContent = fmtPctAbs(m);
+  $('pdSurge').textContent = surge.toFixed(2) + 'x';
+}
+
+function selectPolygon(id) {
+  state.selectedPolygonId = id;
+  renderPolygonMap();
+}
+
+function updateScrubber() {
+  $('scrubTime').textContent = tickToTimeString(state.scrubTick);
+  $('scrubMoment').textContent = '· ' + tickToMoment(state.scrubTick);
+  if (state.polygonResults) {
+    renderPolygonMap();
+    renderPolygonSummary();
+  }
+}
+
+// =============================================================================
+// PLAY/PAUSE animation
+// =============================================================================
+function togglePlay() {
+  if (state.isPlaying) {
+    clearInterval(state.playInterval);
+    state.isPlaying = false;
+    $('playBtn').textContent = '▶ Play 24h';
+  } else {
+    state.isPlaying = true;
+    $('playBtn').textContent = '⏸ Pause';
+    state.playInterval = setInterval(() => {
+      state.scrubTick = (state.scrubTick + 1) % TICKS;
+      $('scrubber').value = state.scrubTick;
+      updateScrubber();
+    }, 80);
+  }
+}
+
+// =============================================================================
+// SCENARIOS RENDER (City mode)
 // =============================================================================
 function renderScenarios() {
-  const grid = document.getElementById('scenariosGrid');
+  const grid = $('scenariosGrid');
   grid.innerHTML = SCENARIOS.map(s => `
     <button class="scenario-btn ${state.scenarioId === s.id ? 'active' : ''}" data-id="${s.id}">
       <div class="scn-title">${s.title}</div>
@@ -902,33 +1569,64 @@ function renderScenarios() {
     btn.addEventListener('click', () => {
       state.scenarioId = btn.dataset.id;
       renderScenarios();
-      recompute();
+      recomputeCity();
     });
   });
 }
 
+// =============================================================================
+// EVENT BINDING
+// =============================================================================
 function bindSlider(id, key, displayId, decimals = 2) {
-  const el = document.getElementById(id);
+  const el = $(id);
   el.value = state[key];
-  document.getElementById(displayId).textContent = state[key].toFixed(decimals);
+  $(displayId).textContent = state[key].toFixed(decimals);
   el.addEventListener('input', () => {
     state[key] = parseFloat(el.value);
-    document.getElementById(displayId).textContent = state[key].toFixed(decimals);
-    recompute();
+    $(displayId).textContent = state[key].toFixed(decimals);
+    recomputeCity();
+    if (state.mode === 'polygon') recomputePolygon();
   });
 }
 
 bindSlider('kp', 'kp', 'kpVal', 2);
-bindSlider('ki', 'ki', 'kiVal', 2);
+bindSlider('ki', 'ki', 'kiVal', 3);
 bindSlider('kd', 'kd', 'kdVal', 2);
-renderScenarios();
-recompute();
 
-// Re-render on window resize
-let resizeTimer;
+// Mode toggle
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.mode-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode;
+    $(btn.dataset.mode + 'Section').classList.add('active');
+    if (state.mode === 'polygon') {
+      if (!state.polygonResults) recomputePolygon();
+      else { renderPolygonMap(); renderPolygonSummary(); }
+      updateScrubber();
+    } else {
+      drawCityCharts();
+    }
+  });
+});
+
+// Scrubber
+$('scrubber').addEventListener('input', e => {
+  state.scrubTick = parseInt(e.target.value);
+  updateScrubber();
+});
+
+// Play button
+$('playBtn').addEventListener('click', togglePlay);
+
+// Init
+renderScenarios();
+recomputeCity();
+updateScrubber();
+
 window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => render(), 200);
+  if (state.mode === 'city') drawCityCharts();
 });
 </script>
 </body>
