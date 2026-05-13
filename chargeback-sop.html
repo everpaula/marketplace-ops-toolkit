@@ -436,9 +436,7 @@
 </div>
 
 <script>
-// =============================================================================
 // DECISION TREE — chargeback investigation flow
-// =============================================================================
 const TREE = {
   start: {
     step: "Step 0 of ~5",
@@ -563,9 +561,7 @@ const TREE = {
     ]
   },
 
-  // ====================
   // TERMINAL RECOMMENDATIONS
-  // ====================
   rec_fight_strong_evidence: {
     type: "rec",
     decision: "fight",
@@ -829,9 +825,7 @@ const TREE = {
   }
 };
 
-// =============================================================================
 // WIZARD STATE
-// =============================================================================
 let wizardHistory = ['start'];
 const $ = id => document.getElementById(id);
 
@@ -900,9 +894,7 @@ function renderWizard() {
   wizard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// =============================================================================
 // SAMPLE CASES
-// =============================================================================
 const SAMPLE_CASES = [
   {
     title: "Classic first-party fraud",
@@ -942,9 +934,7 @@ function renderSampleCases() {
   });
 }
 
-// =============================================================================
 // INIT
-// =============================================================================
 renderWizard();
 renderSampleCases();
 </script>

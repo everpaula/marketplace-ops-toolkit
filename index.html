@@ -53,14 +53,31 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 1.5rem;
-    transition: all 0.2s ease;
+    transition: border-color 0.15s ease, background 0.15s ease;
     text-decoration: none;
     color: var(--text);
     display: block;
   }
   .tool-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-1px);
+    border-color: var(--border-bright);
+    background: #18223d;
+  }
+  .tool-card:hover .tool-title {
+    color: var(--accent);
+  }
+  .tool-title { transition: color 0.15s ease; }
+  .v2-tag {
+    display: inline-block;
+    background: var(--border-bright);
+    color: var(--text-muted);
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.68rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+    vertical-align: 2px;
+    letter-spacing: 0;
+    font-weight: 500;
   }
   .tool-card.coming-soon {
     opacity: 0.5;
@@ -142,7 +159,7 @@
 
     <a href="./agent-roi.html" class="tool-card">
       <div class="tool-num">Tool #1</div>
-      <div class="tool-title">Agent ROI Calculator <span style="background:#a78bfa;color:#2e1065;font-size:0.62rem;padding:0.1rem 0.35rem;border-radius:3px;font-weight:800;letter-spacing:0.05em;margin-left:0.3rem;vertical-align:middle;">V2</span></div>
+      <div class="tool-title">Agent ROI Calculator <span class="v2-tag">v2</span></div>
       <div class="tool-desc">
         Decide which manual review queues to scale, which to optimize, and which need root-cause investigation. <strong>V2 adds false positive cost (LTV impact of blocking legit orders) and portfolio mode (allocate the next marginal agent across multiple queues).</strong>
       </div>
@@ -160,7 +177,7 @@
 
     <a href="./surge-pid.html" class="tool-card">
       <div class="tool-num">Tool #3</div>
-      <div class="tool-title">Marketplace Surge Simulator (PID Control) <span style="background:#a78bfa;color:#2e1065;font-size:0.62rem;padding:0.1rem 0.35rem;border-radius:3px;font-weight:800;letter-spacing:0.05em;margin-left:0.3rem;vertical-align:middle;">V2</span></div>
+      <div class="tool-title">Marketplace Surge Simulator (PID Control) <span class="v2-tag">v2</span></div>
       <div class="tool-desc">
         Surge pricing using PID control. <strong>V2 adds polygon-level optimization</strong> — a 3×3 city map (Airport, Downtown, Stadium, Residential, Industrial, Suburbs, etc.) showing per-zone surge state with a time scrubber across 24h. Nine independent PIDs (one per zone) vs a single city-level PID, because city-average surge hides geographic disparity.
       </div>

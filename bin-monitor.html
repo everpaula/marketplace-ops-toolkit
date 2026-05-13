@@ -537,10 +537,8 @@
 </div>
 
 <script>
-// =========================================================================
 // Mock BIN dataset — 30 BINs with realistic patterns
 // Each BIN has: bin code, issuer label, 7-day volume timeline, new users by day, CBK rate
-// =========================================================================
 const MOCK_BINS = [
   // === NORMAL OPERATIONS ===
   { bin: "411111", issuer: "Visa · Major US Issuer",         pattern: "normal" },
@@ -675,9 +673,7 @@ function computeAggregates(timeline) {
   };
 }
 
-// =========================================================================
 // State
-// =========================================================================
 const state = {
   velThreshold: 30,
   volThreshold: 10000,
@@ -707,9 +703,7 @@ function recomputeAll() {
   });
 }
 
-// =========================================================================
 // Render
-// =========================================================================
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US', { maximumFractionDigits: 0 });
 const fmtMoney = n => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -833,9 +827,7 @@ function renderAll() {
   renderDrilldown();
 }
 
-// =========================================================================
 // Input binding
-// =========================================================================
 function bindInput(inputId, rangeId, stateKey) {
   const input = $(inputId);
   const range = $(rangeId);

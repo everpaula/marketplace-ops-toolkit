@@ -59,16 +59,34 @@
   }
   header .version-tag {
     display: inline-block;
-    background: var(--purple);
-    color: #2e1065;
-    font-size: 0.68rem;
-    padding: 0.15rem 0.5rem;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text-muted);
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.7rem;
+    padding: 0.1rem 0.45rem;
     border-radius: 3px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    vertical-align: middle;
-    margin-left: 0.4rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    vertical-align: 4px;
+    margin-left: 0.5rem;
   }
+  .v2-tag {
+    display: inline-block;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text-muted);
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.62rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    vertical-align: 1px;
+  }
+  .mode-btn .v2-tag { border-color: currentColor; opacity: 0.6; }
+  .mode-btn.active .v2-tag { opacity: 0.85; }
   header .tagline {
     color: var(--text-muted);
     font-size: 1rem;
@@ -136,15 +154,18 @@
   }
   .card h2 .v2-badge {
     display: inline-block;
-    background: var(--purple);
-    color: #2e1065;
-    font-size: 0.6rem;
-    padding: 0.1rem 0.35rem;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text-muted);
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.62rem;
+    padding: 0.05rem 0.35rem;
     border-radius: 3px;
-    margin-left: 0.4rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    vertical-align: middle;
+    margin-left: 0.5rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    vertical-align: 2px;
+    text-transform: none;
   }
 
   /* === INPUT === */
@@ -211,13 +232,17 @@
     border-top: 1px solid var(--border);
   }
   .input-group-label .v2-tag {
-    background: var(--purple);
-    color: #2e1065;
+    background: transparent;
+    border: 1px solid var(--purple);
+    color: var(--purple);
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
     font-size: 0.6rem;
-    padding: 0.05rem 0.3rem;
-    border-radius: 2px;
-    margin-left: 0.3rem;
-    font-weight: 800;
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    opacity: 0.75;
   }
 
   /* === OUTPUT === */
@@ -650,14 +675,12 @@
   </header>
 
   <!-- MODE TOGGLE -->
-  <div class="mode-toggle">
-    <button class="mode-btn active" data-mode="single">Single Queue</button>
-    <button class="mode-btn" data-mode="portfolio">Portfolio Mode <span style="background:var(--purple);color:#2e1065;font-size:0.6rem;padding:0.1rem 0.3rem;border-radius:2px;font-weight:800;margin-left:0.2rem;">V2</span></button>
+  <div class="mode-toggle" role="tablist" aria-label="Calculator mode">
+    <button class="mode-btn active" data-mode="single" role="tab" aria-selected="true">Single Queue</button>
+    <button class="mode-btn" data-mode="portfolio" role="tab" aria-selected="false">Portfolio Mode <span class="v2-tag">v2</span></button>
   </div>
 
-  <!-- ====================== -->
-  <!-- SINGLE QUEUE MODE      -->
-  <!-- ====================== -->
+  <!-- SINGLE QUEUE MODE -->
   <div class="mode-section active" id="singleSection">
 
     <div class="grid-main">
@@ -734,7 +757,7 @@
       <div class="card">
         <h2>Output</h2>
 
-        <div class="roi-headline">
+        <div class="roi-headline" aria-live="polite" aria-atomic="true">
           <div class="roi-value" id="roiValue">3.33</div>
           <div class="roi-x">x net ROI</div>
         </div>
@@ -823,9 +846,7 @@
 
   </div>
 
-  <!-- ====================== -->
-  <!-- PORTFOLIO MODE         -->
-  <!-- ====================== -->
+  <!-- PORTFOLIO MODE -->
   <div class="mode-section" id="portfolioSection">
 
     <div class="card">
@@ -918,9 +939,7 @@ net ROI         = net savings ÷ daily cost</div>
 </div>
 
 <script>
-// =========================================================================
 // Benchmarks
-// =========================================================================
 const BENCH = {
   ordersPerAgent: 250,
   accuracy: 15,
@@ -929,9 +948,7 @@ const BENCH = {
   dailyCost: 30
 };
 
-// =========================================================================
 // Scenarios — illustrative (now with FP rate + LTV)
-// =========================================================================
 const SCENARIOS = [
   {
     title: "High-ROI Mature Market",
@@ -965,9 +982,7 @@ const SCENARIOS = [
   }
 ];
 
-// =========================================================================
 // Portfolio defaults — 3 illustrative queues
-// =========================================================================
 const PORTFOLIO_DEFAULTS = [
   {
     name: "Payments fraud",
@@ -1001,9 +1016,7 @@ const PORTFOLIO_DEFAULTS = [
   }
 ];
 
-// =========================================================================
 // State
-// =========================================================================
 let state = {
   numAgents: 10,
   dailyCost: 45,
@@ -1016,17 +1029,13 @@ let state = {
 
 let portfolio = JSON.parse(JSON.stringify(PORTFOLIO_DEFAULTS));
 
-// =========================================================================
 // Helpers
-// =========================================================================
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 const fmtSign = n => (n >= 0 ? '+' : '') + fmt(n);
 const fmt0 = n => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-// =========================================================================
 // Core calculation (V2: with FP cost)
-// =========================================================================
 function calculateQueue(q) {
   const truePos = q.ordersPerAgent * (q.accuracy / 100);
   const falsePos = q.ordersPerAgent * (q.fpRate / 100);
@@ -1044,9 +1053,7 @@ function getTier(netRoi) {
   return 'red';
 }
 
-// =========================================================================
 // Single mode rendering
-// =========================================================================
 function renderSingle() {
   const r = calculateQueue(state);
 
@@ -1135,9 +1142,7 @@ function renderDecomposition() {
   }
 }
 
-// =========================================================================
 // Portfolio mode rendering
-// =========================================================================
 function renderPortfolio() {
   const grid = $('portfolioGrid');
   grid.innerHTML = portfolio.map((q, i) => `
@@ -1245,9 +1250,7 @@ function updatePortfolioOutputs() {
   }
 }
 
-// =========================================================================
 // Input binding (single mode)
-// =========================================================================
 function bindInput(inputId, rangeId, stateKey) {
   const input = $(inputId);
   const range = $(rangeId);
@@ -1269,22 +1272,21 @@ bindInput('avgSavings', 'avgSavingsRange', 'avgSavings');
 bindInput('fpRate', 'fpRateRange', 'fpRate');
 bindInput('avgLTV', 'avgLTVRange', 'avgLTV');
 
-// =========================================================================
 // Mode toggle
-// =========================================================================
 document.querySelectorAll('.mode-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.mode-btn').forEach(b => {
+      const isActive = b === btn;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-selected', isActive);
+    });
     document.querySelectorAll('.mode-section').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
     $(btn.dataset.mode + 'Section').classList.add('active');
     if (btn.dataset.mode === 'portfolio') renderPortfolio();
   });
 });
 
-// =========================================================================
 // Scenarios
-// =========================================================================
 function renderScenarios() {
   const grid = $('scenarioGrid');
   grid.innerHTML = SCENARIOS.map((s, i) => `

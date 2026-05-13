@@ -57,15 +57,17 @@
   }
   header .version-tag {
     display: inline-block;
-    background: var(--purple);
-    color: #2e1065;
-    font-size: 0.68rem;
-    padding: 0.15rem 0.5rem;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text-muted);
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.7rem;
+    padding: 0.1rem 0.45rem;
     border-radius: 3px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    vertical-align: middle;
-    margin-left: 0.4rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    vertical-align: 4px;
+    margin-left: 0.5rem;
   }
   header .tagline {
     color: var(--text-muted);
@@ -104,14 +106,19 @@
     color: #042f2e;
   }
   .mode-btn .v2-tag {
-    background: var(--purple);
-    color: #2e1065;
-    font-size: 0.6rem;
-    padding: 0.1rem 0.3rem;
-    border-radius: 2px;
-    margin-left: 0.3rem;
-    font-weight: 800;
+    background: transparent;
+    border: 1px solid currentColor;
+    opacity: 0.55;
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.62rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    vertical-align: 1px;
   }
+  .mode-btn.active .v2-tag { opacity: 0.8; }
   .mode-section { display: none; }
   .mode-section.active { display: block; }
 
@@ -633,15 +640,12 @@
     </div>
   </header>
 
-  <!-- MODE TOGGLE -->
-  <div class="mode-toggle">
-    <button class="mode-btn active" data-mode="city">City Aggregate</button>
-    <button class="mode-btn" data-mode="polygon">Polygon Map <span class="v2-tag">V2</span></button>
+  <div class="mode-toggle" role="tablist" aria-label="Simulation mode">
+    <button class="mode-btn active" data-mode="city" role="tab" aria-selected="true">City Aggregate</button>
+    <button class="mode-btn" data-mode="polygon" role="tab" aria-selected="false">Polygon Map <span class="v2-tag">v2</span></button>
   </div>
 
-  <!-- ====================== -->
-  <!-- CITY AGGREGATE MODE    -->
-  <!-- ====================== -->
+  <!-- CITY AGGREGATE MODE -->
   <div class="mode-section active" id="citySection">
 
     <!-- SCENARIOS -->
@@ -759,9 +763,7 @@
 
   </div>
 
-  <!-- ====================== -->
-  <!-- POLYGON MAP MODE (V2)  -->
-  <!-- ====================== -->
+  <!-- POLYGON MAP MODE (V2) -->
   <div class="mode-section" id="polygonSection">
 
     <div class="polygon-explainer">
@@ -925,9 +927,7 @@ surge[t]  = clamp(1.0 + (P + I + D) / 100, 1.0, 2.5)</div>
 </div>
 
 <script>
-// =============================================================================
 // SHARED CONSTANTS
-// =============================================================================
 const TICKS = 288;
 const HOURS_PER_TICK = 24 / TICKS;
 const SUPPLY_BASELINE_RATIO = 0.82;
@@ -936,9 +936,7 @@ const SURGE_RESPONSE_DELAY = 3;
 const SURGE_MIN = 1.0;
 const SURGE_MAX = 2.5;
 
-// =============================================================================
 // CITY-LEVEL SCENARIOS (V1 retained)
-// =============================================================================
 function demandQuietTuesday(t) {
   const h = t * HOURS_PER_TICK;
   return 40 + 30 * Math.exp(-Math.pow((h - 12) / 1.5, 2)) + 35 * Math.exp(-Math.pow((h - 18.5) / 1.8, 2)) + 10 * Math.exp(-Math.pow((h - 8) / 1.5, 2)) + Math.sin(t * 0.4) * 3;
@@ -980,9 +978,7 @@ const SCENARIOS = [
   { id: "holiday", title: "Holiday Wave",  meta: "Sustained 11am-9pm",         demandFn: demandHolidayWave,  supplyMod: 1.0 }
 ];
 
-// =============================================================================
 // PID CONTROLLER (shared)
-// =============================================================================
 class PIDController {
   constructor(kp, ki, kd, dt = HOURS_PER_TICK) {
     this.kp = kp; this.ki = ki; this.kd = kd; this.dt = dt;
@@ -1001,9 +997,7 @@ class PIDController {
   }
 }
 
-// =============================================================================
 // CITY-LEVEL SIMULATION (V1 retained)
-// =============================================================================
 function simulateWithPID(scenario, gains) {
   const pid = new PIDController(gains.kp, gains.ki, gains.kd);
   const demand = [], supply = [], surge = [], mape = [], pidTerms = [];
@@ -1037,9 +1031,7 @@ function simulateNaive(scenario) {
   return { demand, supply, surge, mape };
 }
 
-// =============================================================================
 // V2 — POLYGON DEMAND PROFILES (9 zones, 3×3 city)
-// =============================================================================
 // Zone position: row (0=top, 2=bottom), col (0=left, 2=right)
 // Each zone has a distinct demand profile based on its archetype
 function polygonAirport(t) {
@@ -1091,9 +1083,7 @@ const POLYGONS = [
   { id: "suburbs",     name: "Suburbs",       row: 2, col: 2, demandFn: polygonSuburbs,     supplyMod: 1.05 }
 ];
 
-// =============================================================================
 // V2 — POLYGON-LEVEL SIMULATION (9 independent PIDs)
-// =============================================================================
 function simulatePolygons(gains) {
   // For each polygon, run an independent PID over 24h
   const results = POLYGONS.map(p => {
@@ -1161,9 +1151,7 @@ function simulateCityFromPolygons(gains) {
   return { aggDemand, aggSupply, citySurge, cityMape, perPolygonMapeUnderCity };
 }
 
-// =============================================================================
 // STATE
-// =============================================================================
 const state = {
   mode: 'city',           // 'city' or 'polygon'
   scenarioId: 'friday',
@@ -1178,9 +1166,7 @@ const state = {
   playInterval: null
 };
 
-// =============================================================================
 // HELPERS
-// =============================================================================
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
 const fmtPct = n => (n >= 0 ? '+' : '') + n.toFixed(0) + '%';
@@ -1221,9 +1207,7 @@ function tierColor(tier) {
   return tier === 'green' ? '#10b981' : tier === 'yellow' ? '#fbbf24' : '#ef4444';
 }
 
-// =============================================================================
 // CITY MODE RECOMPUTE + RENDER (V1 retained)
-// =============================================================================
 function getScenario() { return SCENARIOS.find(s => s.id === state.scenarioId); }
 
 function recomputeCity() {
@@ -1274,9 +1258,7 @@ function drawCityCharts() {
   drawDemandSupply(); drawSurge(); drawMape(); drawPID();
 }
 
-// =============================================================================
 // CANVAS CHARTS (V1 retained)
-// =============================================================================
 function setupCanvas(canvas) {
   const wrap = canvas.parentElement;
   const ratio = window.devicePixelRatio || 1;
@@ -1367,9 +1349,7 @@ function drawPID() {
   drawThresholdLine(ctx, w, h, 0, -range, range, '#5a6788');
 }
 
-// =============================================================================
 // V2 — POLYGON MODE RECOMPUTE + RENDER
-// =============================================================================
 function recomputePolygon() {
   const gains = { kp: state.kp, ki: state.ki, kd: state.kd };
   state.polygonResults = simulatePolygons(gains);
@@ -1535,9 +1515,7 @@ function updateScrubber() {
   }
 }
 
-// =============================================================================
 // PLAY/PAUSE animation
-// =============================================================================
 function togglePlay() {
   if (state.isPlaying) {
     clearInterval(state.playInterval);
@@ -1554,9 +1532,7 @@ function togglePlay() {
   }
 }
 
-// =============================================================================
 // SCENARIOS RENDER (City mode)
-// =============================================================================
 function renderScenarios() {
   const grid = $('scenariosGrid');
   grid.innerHTML = SCENARIOS.map(s => `
@@ -1574,9 +1550,7 @@ function renderScenarios() {
   });
 }
 
-// =============================================================================
 // EVENT BINDING
-// =============================================================================
 function bindSlider(id, key, displayId, decimals = 2) {
   const el = $(id);
   el.value = state[key];
@@ -1596,9 +1570,12 @@ bindSlider('kd', 'kd', 'kdVal', 2);
 // Mode toggle
 document.querySelectorAll('.mode-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.mode-btn').forEach(b => {
+      const isActive = b === btn;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-selected', isActive);
+    });
     document.querySelectorAll('.mode-section').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
     state.mode = btn.dataset.mode;
     $(btn.dataset.mode + 'Section').classList.add('active');
     if (state.mode === 'polygon') {

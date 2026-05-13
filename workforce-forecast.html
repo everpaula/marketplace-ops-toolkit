@@ -586,9 +586,7 @@ final_HC       = after_peak × (1 + sl_buffer)         // service level cushion<
 </div>
 
 <script>
-// =============================================================================
 // SCENARIO PRESETS
-// =============================================================================
 const SCENARIOS = [
   {
     id: "steady",
@@ -636,26 +634,20 @@ const SCENARIOS = [
   }
 ];
 
-// =============================================================================
 // STATE
-// =============================================================================
 const state = {
   scenarioId: 'steady',
   cases: [],
   settings: {}
 };
 
-// =============================================================================
 // HELPERS
-// =============================================================================
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US', { maximumFractionDigits: 0 });
 const fmt1 = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
 const fmtMoney = n => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
-// =============================================================================
 // SCENARIO LOAD
-// =============================================================================
 function loadScenario(id) {
   const s = SCENARIOS.find(x => x.id === id);
   if (!s) return;
@@ -672,9 +664,7 @@ function loadScenario(id) {
   recompute();
 }
 
-// =============================================================================
 // SCENARIO RENDER
-// =============================================================================
 function renderScenarios() {
   const grid = $('scenariosGrid');
   grid.innerHTML = SCENARIOS.map(s => `
@@ -688,9 +678,7 @@ function renderScenarios() {
   });
 }
 
-// =============================================================================
 // CASE TYPES RENDER + BIND
-// =============================================================================
 function renderCaseTypes() {
   const list = $('caseTypesList');
   list.innerHTML = state.cases.map((c, i) => `
@@ -734,9 +722,7 @@ $('addCaseType').addEventListener('click', () => {
   recompute();
 });
 
-// =============================================================================
 // SETTINGS BIND
-// =============================================================================
 ['productiveHours', 'shrinkage', 'peakRatio', 'slBuffer', 'costInHouse', 'costVendor'].forEach(key => {
   $(key).addEventListener('input', e => {
     state.settings[key] = parseFloat(e.target.value) || 0;
@@ -744,9 +730,7 @@ $('addCaseType').addEventListener('click', () => {
   });
 });
 
-// =============================================================================
 // CORE CALCULATION
-// =============================================================================
 function recompute() {
   // Sum total case minutes
   const totalMinutes = state.cases.reduce((s, c) => s + (c.volume * c.handleTime), 0);
@@ -842,9 +826,7 @@ function renderSplitComparison(finalFTE) {
   `).join('');
 }
 
-// =============================================================================
 // INIT
-// =============================================================================
 loadScenario('steady');
 </script>
 </body>
