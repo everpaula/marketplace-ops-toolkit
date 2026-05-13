@@ -106,6 +106,10 @@ Why **AND** instead of OR? Volume velocity alone triggers on Black Friday. New-u
 ![Surge Simulator — City Aggregate mode (V1)](./images/surge-city-aggregate.png)
 ![Surge Simulator — Polygon Map mode (V2)](./images/surge-polygon-map.png)
 
+<video src="https://github.com/everpaula/marketplace-ops-toolkit/raw/main/images/surge-polygon-demo.mp4" controls width="720">
+  Your browser does not support the video tag. <a href="./images/surge-polygon-demo.mp4">Download the demo video</a>.
+</video>
+
 Interactive simulator of surge pricing using **PID control theory**, with two modes:
 
 **City Aggregate mode (V1):** single PID over a city-wide demand/supply curve. Watch the controller respond to 5 realistic scenarios, tune Kp/Ki/Kd, compare against a naive threshold-based surge rule.
