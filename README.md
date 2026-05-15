@@ -193,13 +193,58 @@ Maps directly to the quarterly capacity planning conversations that happen in ev
 
 ---
 
+### Tool #6: Logistics Supply Forecaster
+
+**[→ Open the forecaster](./logistics-supply.html)**
+
+Translate a marketplace forecast into required resources. Two personas (3PL last-mile and Fulfillment warehouse), two granularities (Daily 14-day horizon and Hourly+Zone intraday), side-by-side operational and financial output, plus sensitivity analysis at +/- 15% and +/- 30% forecast error.
+
+**Why this exists:** logistics operators receive forecasts from marketplaces (Mercado Livre, Shopee, Amazon, Magalu, and others) and have to turn that into actual capacity decisions. How many couriers? How many vehicles? How many sort lines? How many pickers and packers? What is the cost if the forecast is wrong by 15%? Most teams answer those questions by gut feel. The math is straightforward once you frame it right.
+
+**Two personas in one tool:**
+
+- **3PL / last-mile:** couriers, vehicles, sortation throughput, dock capacity, first-attempt delivery, SLA penalty exposure
+- **Fulfillment / warehouse:** pickers, packers, receivers, dock doors, pick zones, damage/rework volume
+
+**Two granularities:**
+
+- **Daily** (D+1 to D+14): per-day package forecast for weekly capacity planning
+- **Hourly + Zone:** 12 two-hour buckets across 6 hubs (3PL) or single warehouse with inbound/outbound split (Fulfillment) for intraday capacity planning
+
+**What it produces:**
+
+- Operational panel: headcount peaks and averages, vehicle counts, sortation hours, dock utilization with tier coloring
+- Financial panel: total cost over horizon, cost per package, annualized projection, cost breakdown by labor / fleet / facility / SLA penalty
+- Sensitivity card: 5 rows showing total cost at -30%, -15%, base, +15%, +30% forecast error, with bar visualization and delta percent
+- SLA hit probability at +15% upside (the bad case ops planners actually face)
+- Two canvas charts: resource utilization across shift and cost stack waterfall
+
+**The core formula:**
+
+```
+arrivals    = forecast × induction_rate
+demand      = arrivals × handle_time / available_min_per_resource
+resources   = ceil(demand / (1 - shrinkage) × (1 + peak_buffer))
+cost        = Σ (resources × unit_cost)
+sensitivity = cost(forecast × (1 + delta)) for delta in [-0.30, -0.15, 0, +0.15, +0.30]
+```
+
+**Pre-loaded scenarios (4):** Brazil 3PL Black Friday week, US Fulfillment Q2 steady-state, Shopee intraday surge across 6 São Paulo hubs, DTC peak ramp single-day fulfillment.
+
+This is the math that gets argued about every quarter at operations leadership meetings, codified so the answer is the same whether you have 12 years of experience or 12 weeks.
+
+---
+
 ## Roadmap
 
-Other tools planned for this toolkit:
+Other tools planned for this toolkit (inspired by community feedback, especially from Ricardo Vieira-Gomes):
 
-- **Tool #6 — BizOps Monthly Review Dashboard** *(coming)* — three-layer KPI scorecard with anomaly detection and decision-items tracker. Most universally-requested pattern across operations functions.
-- **Tool #7 — Vendor Performance Scorecard** *(coming)* — multi-dimensional vendor scoring with SLA tracking and contract renegotiation calculator.
-- **Tool #8 — Supply Onboarding Funnel Analyzer** *(coming)* — pipeline leakage analysis for driver/courier/provider acquisition.
+- **Tool #7: Queue Operations Command Center** *(coming)*. Combines queue prioritization (which case first based on risk × aging × value) and backlog health monitoring (how long before SLA breach, how many agents needed to recover) into one connected tool.
+- **Tool #8: Escalation Decision Calculator** *(coming)*. When does it make sense to escalate vs close at agent level? Cost-benefit of the escalation layer.
+- **Tool #9: QA Sampling Optimizer** *(coming)*. How many cases to audit per agent for statistically meaningful accuracy without over-sampling.
+- **Tool #10: Shift Handoff Impact Analyzer** *(coming)*. Quantifies the hidden cost of handoffs across shifts and the real productivity loss.
+- **Tool #11: BizOps Monthly Review Dashboard** *(coming)*. Three-layer KPI scorecard with anomaly detection and decision-items tracker.
+- **Tool #12: Vendor Performance Scorecard** *(coming)*. Multi-dimensional vendor scoring with SLA tracking and contract renegotiation calculator.
 
 If a particular tool would be useful for your team, open an issue and I'll prioritize it.
 
