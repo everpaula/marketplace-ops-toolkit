@@ -459,6 +459,367 @@
     font-size: 0.85rem;
     margin-top: 0.4rem;
   }
+  .output-headline.three { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 820px) { .output-headline.three { grid-template-columns: 1fr; gap: 1rem; } }
+  .anchor-block.occupation .anchor-value { color: var(--green); }
+  .anchor-block.occupation[data-tier="watch"] .anchor-value { color: var(--yellow); }
+  .anchor-block.occupation[data-tier="alert"] .anchor-value { color: var(--red); }
+  .anchor-block.occupation .anchor-value::after {
+    content: "%";
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-left: 0.1rem;
+    opacity: 0.7;
+  }
+
+  .chart-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+  .occupation-trend {
+    display: grid;
+    grid-template-columns: repeat(14, 1fr);
+    gap: 4px;
+    height: 140px;
+    align-items: end;
+    position: relative;
+    padding: 0 0.6rem 22px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .occupation-trend::before {
+    content: "";
+    position: absolute;
+    left: 0.6rem; right: 0.6rem;
+    bottom: calc(22px + (140px - 22px) * var(--threshold, 0.8));
+    border-top: 1px dashed rgba(239, 68, 68, 0.5);
+    pointer-events: none;
+  }
+  .occ-bar {
+    position: relative;
+    background: var(--green);
+    border-radius: 3px 3px 0 0;
+    min-height: 3px;
+    height: calc(var(--pct) * 1%);
+    cursor: pointer;
+    outline: none;
+    border: 0;
+    padding: 0;
+  }
+  .occ-bar[data-tier="watch"] { background: var(--yellow); }
+  .occ-bar[data-tier="alert"] { background: var(--red); }
+  .occ-bar:hover, .occ-bar:focus-visible {
+    filter: brightness(1.15);
+    box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.4);
+  }
+  .occ-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .occ-bar .occ-tip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    translate: -50% 0;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease;
+    z-index: 2;
+    color: var(--text);
+  }
+  .occ-bar:hover .occ-tip, .occ-bar:focus-visible .occ-tip { opacity: 1; }
+  .occ-bar .occ-day-label {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    text-align: center;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .occ-threshold {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+  .occ-threshold input[type="number"] {
+    width: 56px;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.25rem 0.4rem;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .occ-threshold input[type="number"]:focus { outline: none; border-color: var(--red); }
+  .occ-threshold .occ-reset {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .occ-threshold .occ-reset:hover { color: var(--text); border-color: var(--border-bright); }
+  .occ-threshold .occ-reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .origin-mix .om-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
+  }
+  .origin-mix .om-total {
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.22rem 0.55rem;
+    border-radius: 4px;
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--green);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    font-variant-numeric: tabular-nums;
+  }
+  .origin-mix .om-total[data-state="invalid"] {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--red);
+    border-color: rgba(239, 68, 68, 0.5);
+  }
+  .origin-mix .om-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+  }
+  .origin-mix .om-label {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+  .origin-mix .om-label small {
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--border-bright);
+    font-weight: 400;
+    font-style: italic;
+    margin-left: 0.4rem;
+  }
+  .origin-mix .om-value {
+    font-size: 1rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+  }
+  .origin-mix .om-slider {
+    grid-column: 1 / -1;
+    width: 100%;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right,
+      var(--accent) 0%, var(--accent) var(--fill, 40%),
+      var(--border-bright) var(--fill, 40%), var(--border-bright) 100%);
+    outline: none;
+  }
+  .origin-mix .om-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .origin-mix .om-slider:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.4);
+  }
+  .origin-mix .om-slider::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+  }
+  .origin-mix .om-foot {
+    margin-top: 1rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-style: italic;
+  }
+
+  .levers-card { position: relative; }
+  .levers-card .lever-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1.2rem;
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.22rem 0.55rem;
+    border-radius: 3px;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--red);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    display: none;
+  }
+  .levers-card[data-action="recommended"] .lever-badge { display: inline-block; }
+  .levers-card[data-action="recommended"] { border-color: rgba(239, 68, 68, 0.3); }
+  .lever-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+    margin-top: 0.6rem;
+  }
+  @media (max-width: 820px) {
+    .lever-grid { grid-template-columns: 1fr; }
+    .levers-card .lever-badge {
+      position: static;
+      display: inline-block;
+      margin-bottom: 0.5rem;
+    }
+  }
+  .lever-panel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+  }
+  .lever-panel h3 {
+    color: var(--accent);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 800;
+    margin-bottom: 0.2rem;
+  }
+  .lever-panel .lever-sub {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-bottom: 0.8rem;
+  }
+  .lever-panel .lever-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.35rem;
+  }
+  .lever-panel .lever-row .lever-name {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+  .lever-panel .lever-row .lever-input-value {
+    color: var(--accent);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .lever-panel input[type="range"] {
+    width: 100%;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right,
+      var(--accent) 0%, var(--accent) var(--fill, 0%),
+      var(--border-bright) var(--fill, 0%), var(--border-bright) 100%);
+    outline: none;
+    margin-bottom: 0.9rem;
+  }
+  .lever-panel input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+  }
+  .lever-panel input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+  }
+  .lever-panel input[type="range"]:focus-visible {
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.3);
+    border-radius: 3px;
+  }
+  .lever-out {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--border);
+  }
+  .lever-out .lo-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.84rem;
+  }
+  .lever-out .lo-row .lo-label {
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+  .lever-out .lo-row .lo-val {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .lever-out .lo-row .lo-val .lo-delta {
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-left: 0.35rem;
+  }
+  .lever-out .lo-row .lo-val[data-tier="good"]  { color: var(--green); }
+  .lever-out .lo-row .lo-val[data-tier="watch"] { color: var(--yellow); }
+  .lever-out .lo-row .lo-val[data-tier="alert"] { color: var(--red); }
+  .lever-out .lo-row .lo-val .lo-delta[data-direction="down"] { color: var(--green); }
+  .lever-out .lo-row .lo-val .lo-delta[data-direction="up"]   { color: var(--red); }
+  .lever-out .lo-row .lo-val .lo-delta[data-direction="flat"] { color: var(--text-muted); }
+  .lever-panel .lever-foot {
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    font-style: italic;
+    margin-top: 0.7rem;
+  }
 
   .dual-panel-grid {
     display: grid;
@@ -781,6 +1142,35 @@
     <div id="forecastInputArea"></div>
   </div>
 
+  <div class="card origin-mix" id="originMixCard" style="display:none">
+    <div class="om-header">
+      <div>
+        <h2>Origin mix <span class="card-context-tag">3PL &middot; DAILY</span></h2>
+        <p class="sub">Decompose total volume into Line haul, Seller direct, and FBS. The cascade is volume-agnostic, but the defer lever can only push the negotiable origins (Seller + FBS).</p>
+      </div>
+      <span class="om-total" id="originMixTotal" role="status" aria-live="polite" data-state="valid">Sum: 100%</span>
+    </div>
+    <div class="om-row">
+      <span class="om-label">Line haul <small>cross-dock from other hubs</small></span>
+      <span class="om-value" id="omv_line">40%</span>
+      <input type="range" class="om-slider" id="om_line" min="0" max="100" step="1" value="40"
+             role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="40" aria-label="Line haul share of forecast">
+    </div>
+    <div class="om-row">
+      <span class="om-label">Seller direct <small>FBM equivalent</small></span>
+      <span class="om-value" id="omv_seller">35%</span>
+      <input type="range" class="om-slider" id="om_seller" min="0" max="100" step="1" value="35"
+             role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="35" aria-label="Seller direct share of forecast">
+    </div>
+    <div class="om-row">
+      <span class="om-label">FBS <small>fulfilled by marketplace</small></span>
+      <span class="om-value" id="omv_fbs">25%</span>
+      <input type="range" class="om-slider" id="om_fbs" min="0" max="100" step="1" value="25"
+             role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25" aria-label="FBS share of forecast">
+    </div>
+    <div class="om-foot">Sliders auto-rebalance to keep the sum at 100%. Move one, the other two redistribute proportionally.</div>
+  </div>
+
   <div class="card">
     <h2>Operating parameters <span class="card-context-tag" id="opParamsTag">3PL</span></h2>
     <p class="sub">Productivity and capacity per resource. Defaults reflect typical LATAM marketplace 3PL benchmarks; calibrate to your operation.</p>
@@ -796,7 +1186,7 @@
   <div class="card">
     <h2>Result</h2>
     <p class="sub">Anchor numbers for forecast and cost. Detailed breakdowns below.</p>
-    <div class="output-headline" aria-live="polite">
+    <div class="output-headline" id="outputHeadline">
       <div class="anchor-block operational">
         <div class="anchor-label">Required supply</div>
         <div class="anchor-value" id="anchorOperational">0</div>
@@ -806,6 +1196,11 @@
         <div class="anchor-label">Total cost horizon</div>
         <div class="anchor-value" id="anchorFinancial">$0</div>
         <div class="anchor-sub" id="anchorFinancialSub">Labor + fleet + facility + SLA penalty.</div>
+      </div>
+      <div class="anchor-block occupation" id="anchorOccupationBlock" data-tier="good" aria-live="polite" aria-atomic="true" aria-label="Storage occupation peak" style="display:none">
+        <div class="anchor-label">Storage occupation peak</div>
+        <div class="anchor-value" id="anchorOccupation">0</div>
+        <div class="anchor-sub" id="anchorOccupationSub">Backlog vs hold capacity, day-over-day cascade.</div>
       </div>
     </div>
 
@@ -845,9 +1240,25 @@
     </div>
   </div>
 
+  <div class="chart-card" id="occupationTrendCard" style="display:none">
+    <div class="chart-title-row">
+      <div>
+        <div class="chart-title">Storage occupation over horizon</div>
+        <div class="chart-sub">14 days of backlog vs storage capacity. Bars tier on the alert threshold (configurable).</div>
+      </div>
+      <span class="occ-threshold">
+        Alert at
+        <input type="number" id="alertThresholdInput" min="50" max="95" step="1" value="80" aria-label="Occupation alert threshold percentage">
+        %
+        <button class="occ-reset" type="button" id="alertThresholdReset" aria-label="Reset alert threshold to 80 percent">reset</button>
+      </span>
+    </div>
+    <div class="occupation-trend" id="occupationTrendStrip" style="--threshold: 0.8"></div>
+  </div>
+
   <div class="card">
     <h2>Sensitivity</h2>
-    <p class="sub">If the forecast is off by +/- 15% or +/- 30%, what does total cost do? The asymmetry on the upside reveals where capacity bottlenecks compound. The SLA hit probability stresses the plan at the +15% upside case, the most common bad outcome ops planners actually face.</p>
+    <p class="sub">If the forecast is off by +/- 15% or +/- 30%, what does total cost do? The asymmetry on the upside reveals where capacity bottlenecks compound. The SLA hit probability stresses the plan at the +15% upside case, the most common bad outcome ops planners actually face. Each scenario re-runs the day-over-day cascade, so upside cases compound non-linearly.</p>
     <div id="sensitivityList"></div>
     <div class="sla-block">
       <div class="sla-header">
@@ -859,18 +1270,64 @@
     </div>
   </div>
 
+  <div class="card levers-card" id="leversCard" aria-labelledby="leversTitle" data-action="standard" style="display:none">
+    <span class="lever-badge" role="status" aria-live="polite">peak above threshold</span>
+    <h2 id="leversTitle">Operational levers</h2>
+    <p class="sub">Two moves you can pull when the baseline projects above the alert threshold: boost processing capacity (overtime, extra lines, weekend shifts) or negotiate with origins to push volume forward one day. Both run a full cascade re-compute and report the new occupation peak.</p>
+    <div class="lever-grid">
+      <div class="lever-panel" id="leverPanel_boost">
+        <h3>Boost processing capacity</h3>
+        <div class="lever-sub">Increase daily throughput via overtime or extra lines. Costed at 1.5x base unit cost.</div>
+        <div class="lever-row">
+          <span class="lever-name">Boost</span>
+          <span class="lever-input-value" id="leverVal_boost">+0%</span>
+        </div>
+        <input type="range" id="lever_boost" min="0" max="50" step="1" value="0"
+               role="slider" aria-valuemin="0" aria-valuemax="50" aria-valuenow="0" aria-label="Processing capacity boost percentage">
+        <div class="lever-out" id="leverOut_boost" aria-live="polite"></div>
+        <div class="lever-foot">Applies to all 14 days. Overtime cost is a directional estimate.</div>
+      </div>
+      <div class="lever-panel" id="leverPanel_defer">
+        <h3>Negotiate origin defer (Seller + FBS)</h3>
+        <div class="lever-sub">Push a share of negotiable volume to the next day. Smooths the peak, may move SLA risk forward.</div>
+        <div class="lever-row">
+          <span class="lever-name">Defer</span>
+          <span class="lever-input-value" id="leverVal_defer">+0%</span>
+        </div>
+        <input type="range" id="lever_defer" min="0" max="40" step="1" value="0"
+               role="slider" aria-valuemin="0" aria-valuemax="40" aria-valuenow="0" aria-label="Negotiable origin defer percentage">
+        <div class="lever-out" id="leverOut_defer" aria-live="polite"></div>
+        <div class="lever-foot">Last-day deferred volume is discarded for visualization purposes.</div>
+      </div>
+    </div>
+  </div>
+
   <div class="card about">
     <h2>How this forecaster works</h2>
 
     <p>"How much capacity do we need next week?" is the question logistics ops gets every Monday. The answer depends on the same five drivers across very different operations: <strong>forecast volume, productivity per resource, shrinkage (PTO + sickness), peak buffer (variance protection), and shift length</strong>. This tool runs the math for two distinct personas and lets you check how the answer changes under realistic forecast error.</p>
 
+    <p><strong>V2 update (2026-05-15)</strong>: rebuilt around operator feedback from a former Shopee BR logistics ops lead who runs hub occupation analysis as a daily workflow. Five upgrades: (1) day-over-day backlog cascade (today's overflow is tomorrow's effective inbound), (2) two-layer capacity model (processing throughput vs storage holdability), (3) storage occupation percent as a primary headline anchor with configurable alert threshold, (4) origin mix decomposition (Line haul / Seller / FBS) for Persona A, (5) operational levers card (boost capacity + negotiate origin defer) that activates when baseline peak crosses the alert.</p>
+
+    <p><strong>Day-over-day cascade</strong></p>
+    <div class="formula">day[0].inboundEffective = forecast[0]
+day[0].backlog          = max(0, inboundEffective - processingCapacity)
+day[0].occupation       = backlog / storageCapacity
+
+for d in 1..horizon:
+  day[d].inboundEffective = forecast[d] + day[d-1].backlog
+  day[d].backlog          = max(0, inboundEffective - processingCapacity)
+  day[d].occupation       = backlog / storageCapacity</div>
+    <p>Storage breach is a soft signal. Occupation can exceed 100% and is shown in red; the model does not cap it. Persona B uses the same cascade as a directional model, treating inbound + outbound as the total processable load.</p>
+
     <p><strong>Persona A &middot; 3PL last-mile</strong></p>
-    <div class="formula">arrivals_d    = forecast_d * inductionRate / 100
+    <div class="formula">processed_d   = min(inboundEffective_d, processingCapacity)
+arrivals_d    = processed_d * inductionRate / 100
 stops_d       = arrivals_d / pkgPerStop
 couriers_d    = ceil(stops_d * shiftMin / routeStops / shiftMin
                 / (1 - shrinkage) * (1 + peakBuffer))
 vehicles_d    = ceil(arrivals_d / vehicleCapacity * (1 + peakBuffer))
-sort_hrs_d    = arrivals_d / sortThroughputPerHour
+sort_hrs_d    = processed_d / sortThroughputPerHour
 dock_util_d   = arrivals_d / (sortLines * sortThroughput * shiftH)</div>
 
     <p><strong>Persona B &middot; Fulfillment warehouse</strong></p>
@@ -916,6 +1373,9 @@ const SENSITIVITY_DELTAS = [-0.30, -0.15, 0, 0.15, 0.30];
 const HUBS_A = ['Tatuape', 'Pinheiros', 'Santo Andre', 'Guarulhos', 'Osasco', 'Sao Bernardo'];
 // Fraction of overflow packages assumed to actually miss SLA. Conservative heuristic.
 const DOCK_OVERFLOW_SLA_RATE = 0.05;
+const DEFAULT_ALERT_THRESHOLD = 80;
+const OVERTIME_COST_MULTIPLIER = 1.5;
+const OCCUPATION_TIERS = { watch: 0.60, alert: 0.80 };
 
 const CURVES = {
   A_induction: buildCurve(8, 2.2),
@@ -943,6 +1403,7 @@ const DEFAULTS_A = {
   inductionRate: 92, firstAttemptRate: 88, routeStopsPerCourier: 110, pkgPerStop: 1.4,
   vehicleCapacity: 150, sortThroughputPerHour: 1200, sortLinesAvailable: 2,
   courierShiftHours: 8, shrinkage: 18, peakBuffer: 15,
+  processingCapacityPerDay: 150000, storageCapacity: 500000, alertThreshold: 80,
   costCourierDay: 95, costVehicleDay: 70, costSortHour: 60, slaPenaltyPerPkg: 4.5
 };
 
@@ -950,6 +1411,7 @@ const DEFAULTS_B = {
   pickerRate: 80, packerRate: 45, receiverRate: 200,
   dockThroughputPerHour: 240, dockDoors: 6, pickZones: 4,
   shiftHours: 8, breaksMin: 60, shrinkage: 22, peakBuffer: 18, damageRate: 1.5,
+  processingCapacityPerDay: 30000, storageCapacity: 80000, alertThreshold: 80,
   costPickerHour: 22, costPackerHour: 22, costReceiverHour: 21,
   costDockHour: 35, slaPenaltyPerPkg: 3.0
 };
@@ -964,7 +1426,9 @@ const PARAM_META_A = [
   { key: 'sortLinesAvailable', label: 'Sort lines available', hint: 'parallel lines', unit: 'lines', min: 1, max: 8, step: 1 },
   { key: 'courierShiftHours', label: 'Courier shift', hint: 'hours per shift', unit: 'h', min: 4, max: 12, step: 0.5 },
   { key: 'shrinkage', label: 'Shrinkage', hint: 'PTO + training + sick', unit: '%', min: 5, max: 40, step: 1 },
-  { key: 'peakBuffer', label: 'Peak buffer', hint: 'variance cushion', unit: '%', min: 0, max: 50, step: 1 }
+  { key: 'peakBuffer', label: 'Peak buffer', hint: 'variance cushion', unit: '%', min: 0, max: 50, step: 1 },
+  { key: 'processingCapacityPerDay', label: 'Processing capacity', hint: 'pkg sortable per day', unit: 'pkg/d', min: 50000, max: 2000000, step: 10000 },
+  { key: 'storageCapacity', label: 'Storage capacity', hint: 'pkg holdable overnight', unit: 'pkg', min: 50000, max: 5000000, step: 10000 }
 ];
 
 const COST_META_A = [
@@ -985,7 +1449,9 @@ const PARAM_META_B = [
   { key: 'breaksMin', label: 'Breaks per shift', hint: 'minutes off-task', unit: 'min', min: 0, max: 120, step: 5 },
   { key: 'shrinkage', label: 'Shrinkage', hint: 'PTO + training + sick', unit: '%', min: 5, max: 40, step: 1 },
   { key: 'peakBuffer', label: 'Peak buffer', hint: 'variance cushion', unit: '%', min: 0, max: 50, step: 1 },
-  { key: 'damageRate', label: 'Damage / rework', hint: 'asymmetric on outbound', unit: '%', min: 0, max: 15, step: 0.5 }
+  { key: 'damageRate', label: 'Damage / rework', hint: 'asymmetric on outbound', unit: '%', min: 0, max: 15, step: 0.5 },
+  { key: 'processingCapacityPerDay', label: 'Processing capacity', hint: 'pkg pickable+packable per day', unit: 'pkg/d', min: 5000, max: 500000, step: 1000 },
+  { key: 'storageCapacity', label: 'Storage capacity', hint: 'pkg holdable overnight', unit: 'pkg', min: 5000, max: 1000000, step: 1000 }
 ];
 
 const COST_META_B = [
@@ -1101,7 +1567,12 @@ const state = {
   forecastB_H: [],
   settings: { ...DEFAULTS_A },
   computed: null,
-  sensitivity: []
+  sensitivity: [],
+  alertThreshold: DEFAULT_ALERT_THRESHOLD,
+  originMix: { line: 40, seller: 35, fbs: 25 },
+  levers: { boostPct: 0, deferPct: 0 },
+  leverBoost: null,
+  leverDefer: null
 };
 
 const $ = id => document.getElementById(id);
@@ -1118,32 +1589,68 @@ const fmtPct = n => (n * 100).toFixed(1) + '%';
 const fmtPctSigned = n => (n >= 0 ? '+' : '') + (n * 100).toFixed(1) + '%';
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
+function runDailyCascade(rawForecast, processingCapacity, storageCapacity, persona) {
+  const days = [];
+  let carriedBacklog = 0;
+  for (let d = 0; d < rawForecast.length; d++) {
+    const raw = persona === 'A'
+      ? (rawForecast[d].packages || 0)
+      : ((rawForecast[d].inbound || 0) + (rawForecast[d].outbound || 0));
+    const inboundEffective = raw + carriedBacklog;
+    const processed = Math.min(inboundEffective, processingCapacity);
+    const backlog = inboundEffective > processingCapacity ? inboundEffective - processingCapacity : 0;
+    const occupation = storageCapacity > 0 ? backlog / storageCapacity : 0;
+    const storageBreach = backlog > storageCapacity;
+    const processingShortfall = backlog;
+    days.push({
+      idx: d, date: rawForecast[d].date,
+      raw, inboundFromBacklog: carriedBacklog, inboundEffective,
+      processed, backlog, occupation, storageBreach, processingShortfall
+    });
+    carriedBacklog = backlog;
+  }
+  return days;
+}
+
 function computePersonaA(forecastDaily, settings) {
   const s = settings;
   const shiftMin = s.courierShiftHours * 60;
-  const days = forecastDaily.map(d => {
-    const forecast = d.packages || 0;
-    const arrivals = forecast * (s.inductionRate / 100);
+  const processingCap = s.processingCapacityPerDay;
+  const storageCap = s.storageCapacity;
+
+  const cascade = runDailyCascade(forecastDaily, processingCap, storageCap, 'A');
+
+  const days = cascade.map((c, i) => {
+    const d = forecastDaily[i];
+    const inboundForInduction = c.processed;
+    const arrivals = inboundForInduction * (s.inductionRate / 100);
     const stops = arrivals / s.pkgPerStop;
     const courierMin = stops * (shiftMin / s.routeStopsPerCourier);
     const couriersBase = courierMin / shiftMin;
     const couriers = Math.ceil((couriersBase / (1 - s.shrinkage / 100)) * (1 + s.peakBuffer / 100));
     const vehicles = Math.ceil(arrivals / s.vehicleCapacity * (1 + s.peakBuffer / 100));
-    const sortLineHours = arrivals / s.sortThroughputPerHour;
+    const sortLineHours = inboundForInduction / s.sortThroughputPerHour;
     const sortLinesActive = Math.min(Math.ceil(sortLineHours / s.courierShiftHours), s.sortLinesAvailable);
-    const sortOverflow = Math.max(0, sortLineHours - s.sortLinesAvailable * s.courierShiftHours);
+    const sortOverflow = sortLineHours > s.sortLinesAvailable * s.courierShiftHours
+      ? sortLineHours - s.sortLinesAvailable * s.courierShiftHours
+      : 0;
     const dockCapacity = s.sortLinesAvailable * s.sortThroughputPerHour * s.courierShiftHours;
     const dockUtil = dockCapacity > 0 ? arrivals / dockCapacity : 0;
 
     const laborCost = couriers * s.costCourierDay;
     const fleetCost = vehicles * s.costVehicleDay;
     const facilityCost = sortLinesActive * s.courierShiftHours * s.costSortHour;
-    const slaMissPkgs = arrivals * (1 - s.firstAttemptRate / 100);
-    const slaPenalty = slaMissPkgs * s.slaPenaltyPerPkg;
+    const firstAttemptMissPkgs = arrivals * (1 - s.firstAttemptRate / 100);
+    const backlogSlaPkgs = c.backlog * 0.5;
+    const slaPenalty = (firstAttemptMissPkgs + backlogSlaPkgs) * s.slaPenaltyPerPkg;
     const totalCost = laborCost + fleetCost + facilityCost + slaPenalty;
 
     return {
-      date: d.date, forecast, arrivals, stops, couriers, vehicles,
+      date: d.date, forecast: c.raw,
+      inboundEffective: c.inboundEffective, inboundFromBacklog: c.inboundFromBacklog,
+      processed: c.processed, backlog: c.backlog, occupation: c.occupation,
+      storageBreach: c.storageBreach, processingShortfall: c.processingShortfall,
+      arrivals, stops, couriers, vehicles,
       sortLineHours, sortLinesActive, sortOverflow, dockUtil,
       laborCost, fleetCost, facilityCost, slaPenalty, totalCost
     };
@@ -1153,9 +1660,10 @@ function computePersonaA(forecastDaily, settings) {
 }
 
 function aggregateDailyA(days) {
-  const sum = (arr, key) => arr.reduce((a, d) => a + d[key], 0);
-  const max = (arr, key) => Math.max(...arr.map(d => d[key]));
+  const sum = (arr, key) => arr.reduce((a, d) => a + (d[key] || 0), 0);
+  const max = (arr, key) => Math.max(...arr.map(d => d[key] || 0));
   const avg = (arr, key) => sum(arr, key) / arr.length;
+  const peakIdx = days.reduce((bi, d, i) => d.occupation > (days[bi] ? days[bi].occupation : -1) ? i : bi, 0);
 
   return {
     days,
@@ -1166,6 +1674,12 @@ function aggregateDailyA(days) {
     sortHoursPeak: max(days, 'sortLineHours'),
     dockUtilPeak: max(days, 'dockUtil'),
     sortOverflowTotal: sum(days, 'sortOverflow'),
+    occupationPeak: max(days, 'occupation'),
+    occupationPeakIdx: peakIdx,
+    occupationByDay: days.map(d => d.occupation),
+    backlogByDay: days.map(d => d.backlog),
+    storageBreachCount: days.filter(d => d.storageBreach).length,
+    processingShortfallTotal: sum(days, 'processingShortfall'),
     totalForecast: sum(days, 'forecast'),
     totalArrivals: sum(days, 'arrivals'),
     laborCost: sum(days, 'laborCost'),
@@ -1268,6 +1782,88 @@ function bucketLabel(b) {
   return pad(startH) + '-' + pad(endH);
 }
 
+function occupationTier(occ, thresholdPct) {
+  const watchRel = OCCUPATION_TIERS.watch;
+  const alertRel = (thresholdPct || DEFAULT_ALERT_THRESHOLD) / 100;
+  if (occ >= alertRel) return 'alert';
+  if (occ >= watchRel) return 'watch';
+  return 'good';
+}
+
+function leverA_BoostCapacity(baseSettings, boostPct, rawForecast, persona) {
+  const boosted = {
+    ...baseSettings,
+    processingCapacityPerDay: baseSettings.processingCapacityPerDay * (1 + boostPct / 100)
+  };
+  const boostedComputed = persona === 'A'
+    ? computePersonaA(rawForecast, boosted)
+    : computePersonaB(rawForecast, boosted);
+  const extraCapacity = boosted.processingCapacityPerDay - baseSettings.processingCapacityPerDay;
+  const horizonDays = rawForecast.length;
+  let costDelta;
+  if (persona === 'A') {
+    const overtimeUnitCost = baseSettings.costSortHour * OVERTIME_COST_MULTIPLIER;
+    const extraSortHours = (extraCapacity * horizonDays) / Math.max(baseSettings.sortThroughputPerHour, 1);
+    costDelta = extraSortHours * overtimeUnitCost;
+  } else {
+    const overtimeUnitCost = (baseSettings.costPickerHour + baseSettings.costPackerHour) / 2 * OVERTIME_COST_MULTIPLIER;
+    const extraLaborHours = (extraCapacity * horizonDays) / 80;
+    costDelta = extraLaborHours * overtimeUnitCost;
+  }
+  const baseSla = state.computed ? state.computed.slaPenalty : 0;
+  return {
+    newOccupationPeak: boostedComputed.occupationPeak,
+    occupationPeakDelta: boostedComputed.occupationPeak - (state.computed ? state.computed.occupationPeak : 0),
+    costDelta,
+    newSlaPenalty: boostedComputed.slaPenalty,
+    slaPenaltyDelta: boostedComputed.slaPenalty - baseSla,
+    boostedComputed
+  };
+}
+
+function leverB_DeferOrigin(baseSettings, deferPct, rawForecast, originMix) {
+  const negotiablePct = (originMix.seller + originMix.fbs) / 100;
+  const modified = rawForecast.map(d => ({ ...d }));
+  // Pre-compute defer amounts from the original forecast so the shift is one-step,
+  // not cascading. Each day defers a fixed % of its OWN raw volume, applied after.
+  const deferAmounts = rawForecast.map((d, i) =>
+    i < rawForecast.length - 1 ? (d.packages || 0) * negotiablePct * (deferPct / 100) : 0
+  );
+  for (let d = 0; d < modified.length - 1; d++) {
+    modified[d].packages = (modified[d].packages || 0) - deferAmounts[d];
+    modified[d + 1].packages = (modified[d + 1].packages || 0) + deferAmounts[d];
+  }
+  const deferredComputed = computePersonaA(modified, baseSettings);
+  const baseSla = state.computed ? state.computed.slaPenalty : 0;
+  const basePeak = state.computed ? state.computed.occupationPeak : 0;
+  return {
+    newOccupationPeak: deferredComputed.occupationPeak,
+    occupationPeakDelta: deferredComputed.occupationPeak - basePeak,
+    newSlaPenalty: deferredComputed.slaPenalty,
+    slaPenaltyDelta: deferredComputed.slaPenalty - baseSla,
+    deferredComputed
+  };
+}
+
+function setOriginSlider(key, newVal) {
+  newVal = clamp(newVal, 0, 100);
+  const others = ['line', 'seller', 'fbs'].filter(k => k !== key);
+  const otherSum = state.originMix[others[0]] + state.originMix[others[1]];
+  const remaining = 100 - newVal;
+  if (otherSum > 0) {
+    state.originMix[others[0]] = (state.originMix[others[0]] / otherSum) * remaining;
+    state.originMix[others[1]] = (state.originMix[others[1]] / otherSum) * remaining;
+  } else {
+    state.originMix[others[0]] = remaining / 2;
+    state.originMix[others[1]] = remaining / 2;
+  }
+  state.originMix[key] = newVal;
+  ['line', 'seller', 'fbs'].forEach(k => state.originMix[k] = Math.round(state.originMix[k]));
+  const drift = 100 - (state.originMix.line + state.originMix.seller + state.originMix.fbs);
+  state.originMix[key] = clamp(state.originMix[key] + drift, 0, 100);
+  recompute();
+}
+
 function computePersonaB(forecastDaily, settings) {
   const s = settings;
   const productiveMin = s.shiftHours * 60 - s.breaksMin;
@@ -1275,29 +1871,41 @@ function computePersonaB(forecastDaily, settings) {
   const peakFactor = 1 + s.peakBuffer / 100;
   const damageFactor = 1 + s.damageRate / 100;
 
-  const days = forecastDaily.map(d => {
-    const inbound = d.inbound || 0;
-    const outbound = d.outbound || 0;
-    const effectiveOut = outbound * damageFactor;
+  const cascade = runDailyCascade(forecastDaily, s.processingCapacityPerDay, s.storageCapacity, 'B');
+
+  const days = cascade.map((c, i) => {
+    const d = forecastDaily[i];
+    const rawIn = d.inbound || 0;
+    const rawOut = d.outbound || 0;
+    const totalRaw = rawIn + rawOut > 0 ? rawIn + rawOut : 1;
+    const processedShare = c.inboundEffective > 0 ? c.processed / c.inboundEffective : 0;
+    const inboundProcessed = (rawIn + c.inboundFromBacklog * (rawIn / totalRaw)) * processedShare;
+    const outboundProcessed = (rawOut + c.inboundFromBacklog * (rawOut / totalRaw)) * processedShare;
+    const effectiveOut = outboundProcessed * damageFactor;
     const pickers = Math.ceil(effectiveOut / s.pickerRate * 60 / productiveMin / shrinkFactor * peakFactor);
     const packers = Math.ceil(effectiveOut / s.packerRate * 60 / productiveMin / shrinkFactor * peakFactor);
-    const receivers = Math.ceil(inbound / s.receiverRate * 60 / productiveMin / shrinkFactor * peakFactor);
-    const dockDemandHours = (inbound + outbound) / s.dockThroughputPerHour;
+    const receivers = Math.ceil(inboundProcessed / s.receiverRate * 60 / productiveMin / shrinkFactor * peakFactor);
+    const dockDemandHours = (inboundProcessed + outboundProcessed) / s.dockThroughputPerHour;
     const dockCapacityHours = s.dockDoors * s.shiftHours;
     const dockUtil = dockCapacityHours > 0 ? dockDemandHours / dockCapacityHours : 0;
-    const dockOverflow = Math.max(0, dockDemandHours - dockCapacityHours);
+    const dockOverflow = dockDemandHours > dockCapacityHours ? dockDemandHours - dockCapacityHours : 0;
     const dockDoorsUsed = Math.min(s.dockDoors, Math.ceil(dockDemandHours / s.shiftHours));
-    const reworkVolume = effectiveOut - outbound;
+    const reworkVolume = effectiveOut - outboundProcessed;
 
     const laborCost = (pickers * s.costPickerHour + packers * s.costPackerHour + receivers * s.costReceiverHour) * s.shiftHours;
     const facilityCost = dockDoorsUsed * s.shiftHours * s.costDockHour;
-    const fleetCost = 0; // No fleet cost on Persona B
-    const slaPenalty = (effectiveOut - outbound) * s.slaPenaltyPerPkg + dockOverflow * s.dockThroughputPerHour * DOCK_OVERFLOW_SLA_RATE * s.slaPenaltyPerPkg;
+    const fleetCost = 0;
+    const backlogSlaPkgs = c.backlog * 0.5;
+    const slaPenalty = (reworkVolume + backlogSlaPkgs) * s.slaPenaltyPerPkg
+      + dockOverflow * s.dockThroughputPerHour * DOCK_OVERFLOW_SLA_RATE * s.slaPenaltyPerPkg;
     const totalCost = laborCost + facilityCost + slaPenalty;
 
     return {
-      date: d.date, inbound, outbound, effectiveOut,
-      pickers, packers, receivers, dockUtil, dockDoorsUsed, dockOverflow, reworkVolume,
+      date: d.date, inbound: rawIn, outbound: rawOut,
+      inboundEffective: c.inboundEffective, inboundFromBacklog: c.inboundFromBacklog,
+      processed: c.processed, backlog: c.backlog, occupation: c.occupation,
+      storageBreach: c.storageBreach, processingShortfall: c.processingShortfall,
+      effectiveOut, pickers, packers, receivers, dockUtil, dockDoorsUsed, dockOverflow, reworkVolume,
       laborCost, fleetCost, facilityCost, slaPenalty, totalCost
     };
   });
@@ -1306,8 +1914,9 @@ function computePersonaB(forecastDaily, settings) {
 }
 
 function aggregateDailyB(days) {
-  const sum = (arr, key) => arr.reduce((a, d) => a + d[key], 0);
-  const max = (arr, key) => Math.max(...arr.map(d => d[key]));
+  const sum = (arr, key) => arr.reduce((a, d) => a + (d[key] || 0), 0);
+  const max = (arr, key) => Math.max(...arr.map(d => d[key] || 0));
+  const peakIdx = days.reduce((bi, d, i) => d.occupation > (days[bi] ? days[bi].occupation : -1) ? i : bi, 0);
 
   return {
     days,
@@ -1318,6 +1927,12 @@ function aggregateDailyB(days) {
     dockDoorsPeak: max(days, 'dockDoorsUsed'),
     dockUtilPeak: max(days, 'dockUtil'),
     reworkVolumeTotal: sum(days, 'reworkVolume'),
+    occupationPeak: max(days, 'occupation'),
+    occupationPeakIdx: peakIdx,
+    occupationByDay: days.map(d => d.occupation),
+    backlogByDay: days.map(d => d.backlog),
+    storageBreachCount: days.filter(d => d.storageBreach).length,
+    processingShortfallTotal: sum(days, 'processingShortfall'),
     totalInbound: sum(days, 'inbound'),
     totalOutbound: sum(days, 'outbound'),
     laborCost: sum(days, 'laborCost'),
@@ -1673,6 +2288,10 @@ function renderOutputHeadline() {
   const opSubEl = $('anchorOperationalSub');
   const finEl = $('anchorFinancial');
   const finSubEl = $('anchorFinancialSub');
+  const occEl = $('anchorOccupation');
+  const occSubEl = $('anchorOccupationSub');
+  const occBlock = $('anchorOccupationBlock');
+  const headlineEl = $('outputHeadline');
 
   if (state.persona === 'A') {
     opEl.textContent = `${fmt(c.couriersPeak)} couriers + ${fmt(c.vehiclesPeak)} vehicles`;
@@ -1689,6 +2308,20 @@ function renderOutputHeadline() {
   finEl.textContent = fmtMoneyFull(c.totalCost);
   const labelHorizon = state.granularity === 'D' ? `${c.horizon}-day` : '24h';
   finSubEl.innerHTML = `${labelHorizon} cost incl. SLA miss penalty &middot; <strong>${fmtMoney(c.slaPenalty)}</strong> penalty exposure`;
+
+  const occAvailable = state.granularity === 'D' && c.occupationPeak !== undefined;
+  if (occBlock && headlineEl) {
+    occBlock.style.display = occAvailable ? '' : 'none';
+    headlineEl.classList.toggle('three', occAvailable);
+  }
+  if (occAvailable && occEl) {
+    const pct = c.occupationPeak * 100;
+    occEl.textContent = pct.toFixed(0);
+    const tier = occupationTier(c.occupationPeak, state.alertThreshold);
+    occBlock.dataset.tier = tier;
+    const peakDay = c.days[c.occupationPeakIdx] ? c.days[c.occupationPeakIdx].date : '';
+    occSubEl.innerHTML = `peak on day ${c.occupationPeakIdx + 1} (${peakDay}) &middot; alert at <strong>${state.alertThreshold}%</strong>`;
+  }
 }
 
 function renderOperationalPanel() {
@@ -1700,16 +2333,26 @@ function renderOperationalPanel() {
     tiles.push({ label: 'Couriers avg', value: fmt1(c.couriersAvg) });
     tiles.push({ label: 'Vehicles peak', value: fmt(c.vehiclesPeak) });
     tiles.push({ label: 'Sort line-hours peak', value: fmt1(c.sortHoursPeak) });
-    tiles.push({ label: 'Dock utilization', value: fmtPct(c.dockUtilPeak), tier: utilTier(c.dockUtilPeak) });
-    const overflow = state.granularity === 'D' ? c.sortOverflowTotal : Math.max(0, c.sortHoursTotal - (state.settings.sortLinesAvailable * state.settings.courierShiftHours));
-    tiles.push({ label: 'Sort overflow', value: fmt1(overflow) + 'h', tier: overflow > 0.5 ? 'alert' : 'good', sub: 'beyond capacity' });
+    if (state.granularity === 'D' && c.occupationPeak !== undefined) {
+      tiles.push({ label: 'Occupation peak', value: fmtPct(c.occupationPeak), tier: occupationTier(c.occupationPeak, state.alertThreshold), sub: 'storage vs hold cap' });
+      tiles.push({ label: 'Peak backlog', value: fmt(Math.max(0, ...(c.backlogByDay || [0]))), sub: 'max end-of-day backlog' });
+    } else {
+      tiles.push({ label: 'Dock utilization', value: fmtPct(c.dockUtilPeak), tier: utilTier(c.dockUtilPeak) });
+      const overflow = state.granularity === 'D' ? c.sortOverflowTotal : Math.max(0, (c.sortHoursTotal || 0) - (state.settings.sortLinesAvailable * state.settings.courierShiftHours));
+      tiles.push({ label: 'Sort overflow', value: fmt1(overflow) + 'h', tier: overflow > 0.5 ? 'alert' : 'good', sub: 'beyond capacity' });
+    }
   } else {
     tiles.push({ label: 'Pickers peak', value: fmt(c.pickersPeak) });
     tiles.push({ label: 'Packers peak', value: fmt(c.packersPeak) });
     tiles.push({ label: 'Receivers peak', value: fmt(c.receiversPeak) });
     tiles.push({ label: 'Dock doors at peak', value: fmt(c.dockDoorsPeak) + ' / ' + state.settings.dockDoors });
-    tiles.push({ label: 'Dock utilization', value: fmtPct(c.dockUtilPeak), tier: utilTier(c.dockUtilPeak) });
-    tiles.push({ label: 'Rework volume', value: fmt(c.reworkVolumeTotal), sub: 'damaged units' });
+    if (state.granularity === 'D' && c.occupationPeak !== undefined) {
+      tiles.push({ label: 'Occupation peak', value: fmtPct(c.occupationPeak), tier: occupationTier(c.occupationPeak, state.alertThreshold), sub: 'storage vs hold cap' });
+      tiles.push({ label: 'Peak backlog', value: fmt(Math.max(0, ...(c.backlogByDay || [0]))), sub: 'max end-of-day backlog' });
+    } else {
+      tiles.push({ label: 'Dock utilization', value: fmtPct(c.dockUtilPeak), tier: utilTier(c.dockUtilPeak) });
+      tiles.push({ label: 'Rework volume', value: fmt(c.reworkVolumeTotal), sub: 'damaged units' });
+    }
   }
 
   $('opTileGrid').innerHTML = tiles.map(t => `
@@ -1803,6 +2446,146 @@ function renderSensitivityCard() {
     : slaTier === 'watch'
     ? 'Capacity is tight against +15% upside. Consider raising peak buffer or adding contingent resources.'
     : 'Booked capacity is materially below expected demand at +15% upside. Reforecast or escalate.';
+}
+
+function renderOccupationTrendChart() {
+  const wrap = $('occupationTrendCard');
+  const strip = $('occupationTrendStrip');
+  if (!wrap || !strip) return;
+
+  const c = state.computed;
+  const showCard = state.granularity === 'D' && c && c.occupationByDay && c.occupationByDay.length > 0;
+  wrap.style.display = showCard ? '' : 'none';
+  if (!showCard) return;
+
+  const thresholdRel = state.alertThreshold / 100;
+  const visualMax = Math.max(1, c.occupationPeak, thresholdRel);
+  strip.style.setProperty('--threshold', (thresholdRel / visualMax).toFixed(4));
+
+  strip.innerHTML = c.days.map((d, i) => {
+    const occ = d.occupation || 0;
+    const pctOfVisual = (occ / visualMax) * 100;
+    const tier = occupationTier(occ, state.alertThreshold);
+    const occPct = (occ * 100).toFixed(0);
+    const relAlertTxt = occ * 100 >= state.alertThreshold
+      ? `above ${state.alertThreshold} percent alert`
+      : `below ${state.alertThreshold} percent alert`;
+    return `
+      <button type="button" class="occ-bar" data-tier="${tier}" style="--pct: ${pctOfVisual.toFixed(2)}"
+              aria-label="Day ${i + 1}, ${d.date}, ${occPct} percent occupation, ${relAlertTxt}">
+        <span class="occ-tip" aria-hidden="true">${d.date} / ${occPct}%</span>
+        <span class="occ-day-label" aria-hidden="true">D${i + 1}</span>
+      </button>
+    `;
+  }).join('');
+
+  const thrInput = $('alertThresholdInput');
+  if (thrInput && document.activeElement !== thrInput) thrInput.value = state.alertThreshold;
+}
+
+function renderOriginMixCard() {
+  const card = $('originMixCard');
+  if (!card) return;
+  const visible = state.persona === 'A' && state.granularity === 'D';
+  card.style.display = visible ? '' : 'none';
+  if (!visible) return;
+
+  const mix = state.originMix;
+  const sum = mix.line + mix.seller + mix.fbs;
+  const totalEl = $('originMixTotal');
+  totalEl.textContent = `Sum: ${sum}%`;
+  totalEl.dataset.state = sum === 100 ? 'valid' : 'invalid';
+
+  ['line', 'seller', 'fbs'].forEach(key => {
+    const slider = $('om_' + key);
+    const valEl = $('omv_' + key);
+    if (!slider || !valEl) return;
+    if (document.activeElement !== slider) slider.value = mix[key];
+    slider.style.setProperty('--fill', mix[key] + '%');
+    slider.setAttribute('aria-valuenow', mix[key]);
+    slider.setAttribute('aria-valuetext', mix[key] + ' percent');
+    valEl.textContent = mix[key] + '%';
+  });
+}
+
+function renderLeversCard() {
+  const card = $('leversCard');
+  if (!card) return;
+  const visible = state.granularity === 'D';
+  card.style.display = visible ? '' : 'none';
+  if (!visible) return;
+
+  const c = state.computed;
+  const baseSettings = state.settings;
+  const rawForecast = currentForecast();
+  const peak = c.occupationPeak || 0;
+  card.dataset.action = peak * 100 >= state.alertThreshold ? 'recommended' : 'standard';
+
+  const boostPct = state.levers.boostPct;
+  const boost = leverA_BoostCapacity(baseSettings, boostPct, rawForecast, state.persona);
+  state.leverBoost = boost;
+  paintLeverPanel('boost', boostPct, boost);
+
+  const deferPanel = $('leverPanel_defer');
+  if (state.persona === 'A') {
+    deferPanel.style.display = '';
+    const deferPct = state.levers.deferPct;
+    const defer = leverB_DeferOrigin(baseSettings, deferPct, rawForecast, state.originMix);
+    state.leverDefer = defer;
+    paintLeverPanel('defer', deferPct, defer);
+  } else {
+    deferPanel.style.display = 'none';
+    state.leverDefer = null;
+  }
+}
+
+function paintLeverPanel(kind, pct, result) {
+  const slider = $('lever_' + kind);
+  const valEl = $('leverVal_' + kind);
+  const outBox = $('leverOut_' + kind);
+  if (!slider || !valEl || !outBox) return;
+
+  if (document.activeElement !== slider) slider.value = pct;
+  slider.style.setProperty('--fill', pct + '%');
+  slider.setAttribute('aria-valuenow', pct);
+  slider.setAttribute('aria-valuetext', pct + ' percent');
+  valEl.textContent = '+' + pct + '%';
+
+  const occPct = (result.newOccupationPeak * 100).toFixed(0);
+  const occTier = occupationTier(result.newOccupationPeak, state.alertThreshold);
+  const occDelta = result.occupationPeakDelta * 100;
+  const occDirection = occDelta < -0.5 ? 'down' : occDelta > 0.5 ? 'up' : 'flat';
+  const occDeltaStr = (occDelta >= 0 ? '+' : '') + occDelta.toFixed(1) + ' pp';
+
+  const slaDelta = result.slaPenaltyDelta || 0;
+  const slaDirection = slaDelta < 0 ? 'down' : slaDelta > 0 ? 'up' : 'flat';
+  const slaDeltaStr = (slaDelta >= 0 ? '+' : '') + fmtMoney(slaDelta);
+
+  let rows = `
+    <div class="lo-row">
+      <div class="lo-label">New peak occupation</div>
+      <div class="lo-val" data-tier="${occTier}">${occPct}%
+        <span class="lo-delta" data-direction="${occDirection}">${occDeltaStr}</span>
+      </div>
+    </div>
+    <div class="lo-row">
+      <div class="lo-label">SLA penalty change</div>
+      <div class="lo-val">${fmtMoney(result.newSlaPenalty)}
+        <span class="lo-delta" data-direction="${slaDirection}">${slaDeltaStr}</span>
+      </div>
+    </div>
+  `;
+  if (kind === 'boost') {
+    rows += `
+      <div class="lo-row">
+        <div class="lo-label">Overtime cost</div>
+        <div class="lo-val">${fmtMoney(result.costDelta)}
+          <span class="lo-delta" data-direction="up">+spend</span>
+        </div>
+      </div>
+    `;
+  }
+  outBox.innerHTML = rows;
 }
 
 function setupCanvas(canvas) {
@@ -2105,6 +2888,8 @@ function switchPersona(persona, doReload) {
   state.persona = persona;
   state.settings = { ...(persona === 'A' ? DEFAULTS_A : DEFAULTS_B) };
   state.scenarioId = null;
+  state.levers = { boostPct: 0, deferPct: 0 };
+  state.alertThreshold = DEFAULT_ALERT_THRESHOLD;
   ensureForecastSeeded();
   if (doReload) recomputeAll();
 }
@@ -2177,6 +2962,8 @@ function loadScenario(id) {
   state.persona = s.persona;
   state.granularity = s.granularity;
   state.settings = { ...(s.persona === 'A' ? DEFAULTS_A : DEFAULTS_B), ...s.settings };
+  state.levers = { boostPct: 0, deferPct: 0 };
+  state.alertThreshold = DEFAULT_ALERT_THRESHOLD;
 
   if (s.persona === 'A' && s.granularity === 'D') state.forecastA_D = JSON.parse(JSON.stringify(s.forecast));
   else if (s.persona === 'A' && s.granularity === 'H') state.forecastA_H = JSON.parse(JSON.stringify(s.forecast));
@@ -2194,6 +2981,9 @@ function recompute() {
   renderOperationalPanel();
   renderFinancialPanel();
   renderSensitivityCard();
+  renderOccupationTrendChart();
+  renderOriginMixCard();
+  renderLeversCard();
   renderChart();
 }
 
@@ -2243,6 +3033,56 @@ function bindGlobalEvents() {
   window.addEventListener('resize', () => {
     if (state.computed) renderChart();
   });
+
+  const thrInput = $('alertThresholdInput');
+  if (thrInput) {
+    thrInput.addEventListener('input', e => {
+      let v = parseFloat(e.target.value);
+      if (isNaN(v)) v = DEFAULT_ALERT_THRESHOLD;
+      v = clamp(v, 50, 95);
+      state.alertThreshold = v;
+      renderOutputHeadline();
+      renderOperationalPanel();
+      renderOccupationTrendChart();
+      renderLeversCard();
+    });
+  }
+  const thrReset = $('alertThresholdReset');
+  if (thrReset) {
+    thrReset.addEventListener('click', () => {
+      state.alertThreshold = DEFAULT_ALERT_THRESHOLD;
+      const inp = $('alertThresholdInput');
+      if (inp) inp.value = DEFAULT_ALERT_THRESHOLD;
+      renderOutputHeadline();
+      renderOperationalPanel();
+      renderOccupationTrendChart();
+      renderLeversCard();
+    });
+  }
+
+  ['line', 'seller', 'fbs'].forEach(k => {
+    const el = $('om_' + k);
+    if (!el) return;
+    el.addEventListener('input', e => {
+      const v = parseFloat(e.target.value);
+      if (!isNaN(v)) setOriginSlider(k, v);
+    });
+  });
+
+  const lvBoost = $('lever_boost');
+  if (lvBoost) {
+    lvBoost.addEventListener('input', e => {
+      state.levers.boostPct = clamp(parseFloat(e.target.value) || 0, 0, 50);
+      renderLeversCard();
+    });
+  }
+  const lvDefer = $('lever_defer');
+  if (lvDefer) {
+    lvDefer.addEventListener('input', e => {
+      state.levers.deferPct = clamp(parseFloat(e.target.value) || 0, 0, 40);
+      renderLeversCard();
+    });
+  }
 }
 
 ensureForecastSeeded();

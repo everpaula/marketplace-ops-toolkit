@@ -199,7 +199,15 @@ Maps directly to the quarterly capacity planning conversations that happen in ev
 
 Translate a marketplace forecast into required resources. Two personas (3PL last-mile and Fulfillment warehouse), two granularities (Daily 14-day horizon and Hourly+Zone intraday), side-by-side operational and financial output, plus sensitivity analysis at +/- 15% and +/- 30% forecast error.
 
-**Why this exists:** logistics operators receive forecasts from marketplaces (Mercado Livre, Shopee, Amazon, Magalu, and others) and have to turn that into actual capacity decisions. How many couriers? How many vehicles? How many sort lines? How many pickers and packers? What is the cost if the forecast is wrong by 15%? Most teams answer those questions by gut feel. The math is straightforward once you frame it right.
+**V2 update (2026-05-15)**, rebuilt on operator feedback from a former Shopee BR logistics ops lead who runs hub occupation analysis as a daily workflow:
+
+- **Day-over-day backlog cascade.** Today's overflow is tomorrow's effective inbound. Each day's processed volume is capped at processing capacity; the remainder rolls into the next day's inbound. Sensitivity scenarios re-run the cascade, so upside cases compound non-linearly.
+- **Two-layer capacity model.** Processing capacity (how much you can sort or pick+pack per day) and storage capacity (how much you can hold overnight) are independent inputs. Both can constrain.
+- **Storage occupation as a primary anchor.** Third headline number next to operational and financial. Configurable alert threshold (default 80%), tiered green / yellow / red, plus a 14-day occupation trend strip chart with focusable bars and tooltips.
+- **Origin mix decomposition (Persona A).** Three sliders for Line haul / Seller direct / FBS with proportional auto-rebalancing to keep the sum at 100%. Drives the defer lever's negotiable share.
+- **Operational levers card.** Two side-by-side sub-panels: boost processing capacity (overtime, 1.5x unit cost) and negotiate origin defer (push Seller+FBS volume one day forward). Card highlights and surfaces a "peak above threshold" badge when baseline occupation crosses the alert.
+
+**Why this exists:** logistics operators receive forecasts from marketplaces (Mercado Livre, Shopee, Amazon, Magalu, and others) and have to turn that into actual capacity decisions. How many couriers? How many vehicles? How many sort lines? How many pickers and packers? What is the cost if the forecast is wrong by 15%? When does today's overflow become tomorrow's crisis? Most teams answer those questions by gut feel. The math is straightforward once you frame it right.
 
 **Two personas in one tool:**
 
