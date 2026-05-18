@@ -623,6 +623,16 @@
   }
   footer a { color: var(--accent); text-decoration: none; }
   footer a:hover { text-decoration: underline; }
+
+  .use-cases { margin: 1.5rem 0; padding-top: 0.25rem; }
+  .use-cases h3 { color: var(--accent); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.45rem; }
+  .use-cases-disclaimer { color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-bottom: 1rem; }
+  .use-case { background: rgba(20, 184, 166, 0.04); border-left: 3px solid var(--accent); border-radius: 4px; padding: 0.85rem 1rem; margin-bottom: 0.8rem; }
+  .use-case-title { color: var(--text); font-weight: 700; font-size: 0.95rem; margin-bottom: 0.6rem; }
+  .use-case-row { display: grid; grid-template-columns: 130px 1fr; gap: 0.6rem; margin-bottom: 0.4rem; font-size: 0.88rem; line-height: 1.55; }
+  .use-case-label { color: var(--accent); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 0.15rem; }
+  .use-case-text { color: var(--text); }
+  @media (max-width: 640px) { .use-case-row { grid-template-columns: 1fr; gap: 0.1rem; } .use-case-label { font-size: 0.66rem; } }
 </style>
 </head>
 <body>
@@ -858,6 +868,27 @@
     <p>Marketplace platforms balance supply and demand using <strong>surge multipliers</strong> — pricing that adjusts in real time to bring more drivers/couriers/sellers online when demand exceeds capacity. The classic way to do this is a threshold rule: <strong>if imbalance &gt; X%, set surge to 1.5x</strong>. It works, but it overshoots and oscillates because there's no feedback memory.</p>
 
     <p>The smarter approach borrows from control theory invented in 1922 by Nicholas Minorsky: the <strong>PID controller</strong>. PID stands for Proportional, Integral, Derivative — three terms that together compute the right amount of correction to apply at any moment, given how much error there is now, how much has accumulated, and how fast it's changing.</p>
+
+    <div class="use-cases">
+      <h3>Real-world impact</h3>
+      <p class="use-cases-disclaimer">Illustrative scenarios drawn from operator practice. Numbers are realistic order-of-magnitude estimates, not measurements from any specific deployment.</p>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 1: City-average surge masking 4 starving polygons</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">Pricing manager at a ride-hailing operation in a Tier-2 LATAM city running a single citywide surge multiplier on weekday evening peaks.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Citywide multiplier averaged 1.4x and looked healthy, but 4 outer polygons were stuck at 18 to 22 minute ETAs while downtown sat at 4 minutes, causing roughly 8% trip cancellation in those zones.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">V2 polygon view showed the 3x3 zone grid with two cells in deep undersupply at effective 1.0x while downtown was overshooting at 1.7x, the PID tune was too smooth for spatial variance.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Zone-level Kp raised on outer cells, cancellation in those polygons dropped from 8% to 3.2%, recovered an estimated $9K per weekday peak in completed trips.</span></div>
+      </div>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 2: Surge oscillation eroding driver trust</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">Marketplace ops at a delivery platform was running surge updates every 5 minutes and pricing kept swinging 1.0x to 1.8x to 1.1x within a single 30 minute window.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Driver complaints spiked about "phantom surge" and weekly driver churn climbed roughly 4 points, costing the team about $22K monthly in re-acquisition and onboarding.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">The simulator showed integral gain was too high and derivative too low, producing classic PID overshoot; smoother coefficients held supply-demand inside the deadband 78% of the time vs 41% in current settings.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">New PID coefficients rolled out region by region, driver churn dropped back 3.5 points within 2 cycles, savings around $19K monthly on retention alone.</span></div>
+      </div>
+    </div>
 
     <p><strong>The formula</strong></p>
     <div class="formula">error[t]  = (demand − supply) / demand × 100    // MAPE as %

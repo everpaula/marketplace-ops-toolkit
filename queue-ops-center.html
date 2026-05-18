@@ -697,6 +697,16 @@
     .priority-table .col-action-icon { display: inline; }
   }
   .priority-table .col-action-icon { display: none; }
+
+  .use-cases { margin: 1.5rem 0; padding-top: 0.25rem; }
+  .use-cases h3 { color: var(--accent); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.45rem; }
+  .use-cases-disclaimer { color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-bottom: 1rem; }
+  .use-case { background: rgba(20, 184, 166, 0.04); border-left: 3px solid var(--accent); border-radius: 4px; padding: 0.85rem 1rem; margin-bottom: 0.8rem; }
+  .use-case-title { color: var(--text); font-weight: 700; font-size: 0.95rem; margin-bottom: 0.6rem; }
+  .use-case-row { display: grid; grid-template-columns: 130px 1fr; gap: 0.6rem; margin-bottom: 0.4rem; font-size: 0.88rem; line-height: 1.55; }
+  .use-case-label { color: var(--accent); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 0.15rem; }
+  .use-case-text { color: var(--text); }
+  @media (max-width: 640px) { .use-case-row { grid-template-columns: 1fr; gap: 0.1rem; } .use-case-label { font-size: 0.66rem; } }
 </style>
 </head>
 <body>
@@ -840,6 +850,27 @@
     <h2>How this tool works</h2>
 
     <p><strong>Two views, one mental model.</strong> Backlog health tells you whether you are behind right now. Queue prioritization tells you which case to grab first. Splitting them across two tools forces the operator to context-switch. Both questions share the same SLA, the same throughput, the same backlog count, so they live together here.</p>
+
+    <div class="use-cases">
+      <h3>Real-world impact</h3>
+      <p class="use-cases-disclaimer">Illustrative scenarios drawn from operator practice. Numbers are realistic order-of-magnitude estimates, not measurements from any specific deployment.</p>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 1: 6,000-case backlog on a Tuesday morning</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">Fraud ops lead walking into Monday standup finds the weekend left a 6,000-case backlog with mixed SLA risk and no clear "who works what first" answer.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Status quo was analyst-by-analyst FIFO, oldest cases worked first regardless of dollar exposure, causing roughly $45K weekly in avoidable losses on high-value cases that aged past windows.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Command center showed hours to SLA breach across queues, ranked cases by dollar-at-risk × time-decay, projected 9 agents needed for full recovery in 36 hours vs 14 for 18 hours.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Team prioritized 380 high-value aging cases first, dollar-weighted loss dropped 62% week over week (around $28K saved), and the backlog cleared in 41 hours.</span></div>
+      </div>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 2: Content moderation team facing an SLA audit</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">Trust and Safety manager at a UGC platform with a 12-person moderation team and contractual 24-hour SLA across 3 queue types (reports, appeals, escalations).</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Audit was 10 days out and the team did not know current SLA compliance percentage by queue, manual sampling estimated somewhere between 78% to 91% with $0.5M of contractual penalty exposure.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Content moderation preset surfaced live SLA compliance per queue (84%, 71%, 96%) and showed appeals queue needed 3 extra reviewers for 4 days to reach 95% before audit date.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Temporary reallocation from escalations to appeals pulled appeals compliance to 97% before audit, full audit passed at 96% weighted, penalty exposure eliminated.</span></div>
+      </div>
+    </div>
 
     <p><strong>The backlog math:</strong></p>
     <div class="formula">effective_throughput = agents × throughput_rate × (1 − shrinkage)

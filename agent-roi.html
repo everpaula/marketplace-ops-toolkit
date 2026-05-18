@@ -595,6 +595,58 @@
   }
   .about p { margin-bottom: 0.85rem; color: var(--text); font-size: 0.94rem; line-height: 1.7; }
   .about p strong { color: var(--accent); }
+
+  .use-cases { margin: 1.5rem 0; padding-top: 0.25rem; }
+  .use-cases h3 {
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.45rem;
+  }
+  .use-cases-disclaimer {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-style: italic;
+    margin-bottom: 1rem;
+  }
+  .use-case {
+    background: rgba(20, 184, 166, 0.04);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.8rem;
+  }
+  .use-case-title {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+  }
+  .use-case-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+  .use-case-label {
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-top: 0.15rem;
+  }
+  .use-case-text {
+    color: var(--text);
+  }
+  @media (max-width: 640px) {
+    .use-case-row { grid-template-columns: 1fr; gap: 0.1rem; }
+    .use-case-label { font-size: 0.66rem; }
+  }
   .about .formula {
     background: var(--bg);
     padding: 0.85rem 1rem;
@@ -900,6 +952,27 @@
     <p>First, accuracy alone misses the cost of wrong cancellations. When an agent blocks a legitimate order, you don't just fail to save the cost of that order — you also lose the lifetime value of the customer who never comes back. V2 adds <strong>false positive rate</strong> and <strong>average customer LTV</strong> as inputs, then subtracts that cost from gross savings to give you net ROI.</p>
 
     <p>Second, ops leaders don't run a single queue. They run multiple in parallel — different case types, different markets, different products. The right decision isn't "is queue X profitable?" but "given my next dollar (or next agent), where does it generate the most savings?" V2 portfolio mode lets you model up to 3 queues side by side and surfaces the queue with the highest per-agent net ROI, which is where the marginal agent goes.</p>
+
+    <div class="use-cases">
+      <h3>Real-world impact</h3>
+      <p class="use-cases-disclaimer">Illustrative scenarios drawn from operator practice. Numbers are realistic order-of-magnitude estimates, not measurements from any specific deployment.</p>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 1: Fraud review queue running 3 months in the red</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">An 8-agent manual review team at a LATAM marketplace screens 200 flagged orders per day at $30 average order value.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Net ROI looked positive on paper at 18% catch rate, but false-positive cost was quietly burning roughly $1,400 per day in lost legitimate customer LTV.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Portfolio mode flagged FP cost at $4.50 per agent-day against gross savings of $3.20, recommending root-cause work on the rule set rather than more headcount.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Decision rules rewritten, FP rate dropped from 6% to 2.5%, net ROI flipped to +0.8x, around $280K saved annually vs the "add 2 more agents" plan that was already approved.</span></div>
+      </div>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 2: VP picking between three queues for one new hire budget</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">A US consumer fintech VP of Ops has budget for exactly one new analyst across three queues (account takeover, disputes, KYC review).</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Each queue manager was lobbying with their own spreadsheet, decisions were political, and the wrong placement would waste roughly $95K fully loaded for the year.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Portfolio comparison ranked marginal ROI per queue: KYC at 2.1x, ATO at 1.4x, disputes at 0.6x because dispute auto-decision coverage was already high.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Hire went to KYC, the dispute queue got a process review instead, combined coverage gain came out at +$140K vs the politically favored allocation.</span></div>
+      </div>
+    </div>
 
     <p><strong>The formula (V2)</strong></p>
     <div class="formula">true positives  = orders × accuracy / 100

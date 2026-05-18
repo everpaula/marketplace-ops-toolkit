@@ -311,6 +311,16 @@
   }
   footer a { color: var(--accent); text-decoration: none; }
   footer a:hover { text-decoration: underline; }
+
+  .use-cases { margin: 1.5rem 0; padding-top: 0.25rem; }
+  .use-cases h3 { color: var(--accent); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.45rem; }
+  .use-cases-disclaimer { color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-bottom: 1rem; }
+  .use-case { background: rgba(20, 184, 166, 0.04); border-left: 3px solid var(--accent); border-radius: 4px; padding: 0.85rem 1rem; margin-bottom: 0.8rem; }
+  .use-case-title { color: var(--text); font-weight: 700; font-size: 0.95rem; margin-bottom: 0.6rem; }
+  .use-case-row { display: grid; grid-template-columns: 130px 1fr; gap: 0.6rem; margin-bottom: 0.4rem; font-size: 0.88rem; line-height: 1.55; }
+  .use-case-label { color: var(--accent); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 0.15rem; }
+  .use-case-text { color: var(--text); }
+  @media (max-width: 640px) { .use-case-row { grid-template-columns: 1fr; gap: 0.1rem; } .use-case-label { font-size: 0.66rem; } }
 </style>
 </head>
 <body>
@@ -403,6 +413,27 @@
     <p>The fix is a <strong>structured SOP</strong> that codifies the decision logic into a sequence of questions any analyst can walk through. The decisions still get made — but they get made consistently, and the reasoning leaves an audit trail.</p>
 
     <p>This template is generalized from operational experience running fraud and dispute investigation in Latin American marketplace and consumer fintech environments. The 8 sections cover the analyst's mental model in order; the wizard above renders the first 7 as an interactive flow.</p>
+
+    <div class="use-cases">
+      <h3>Real-world impact</h3>
+      <p class="use-cases-disclaimer">Illustrative scenarios drawn from operator practice. Numbers are realistic order-of-magnitude estimates, not measurements from any specific deployment.</p>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 1: New chargeback analysts making inconsistent dispute calls</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">A 4-person disputes team at a subscription SaaS handles roughly 180 chargebacks per month with one senior and three juniors hired in the last 90 days.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Junior analysts were accepting disputes that were defensible and fighting ones that were lost causes, win rate sat at 22% vs benchmark 38%, costing about $15K monthly in avoidable losses.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Wizard standardized the 4 to 6 question flow (cardholder contact, delivery proof, prior dispute history, friendly fraud indicators) and dispositioned each case to fight, accept, or refund-and-block with reasoning.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Win rate climbed to 41% within two months, recovered roughly $11K monthly, and senior analyst time spent on QA dropped from 15 hours per week to 4.</span></div>
+      </div>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 2: Onboarding offshore vendor team in 2 weeks</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">Ops manager at a marketplace stood up a vendor team in a different time zone to handle chargeback overflow, with no internal trainer available full time.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Vendor team was expected to take 6 to 8 weeks to reach quality parity, meaning roughly $40K in additional losses during ramp.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Wizard's 8-section SOP plus the decision tree functioned as the training spine, every case run through the same logic regardless of analyst tenure.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Vendor team hit quality parity in 18 days instead of 6 weeks, saved roughly $28K in ramp losses, and post-hoc QA showed consistency scores within 4 points of in-house team.</span></div>
+      </div>
+    </div>
 
     <p><strong>What this template is</strong></p>
     <ul>

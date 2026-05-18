@@ -1088,6 +1088,16 @@
     .chart-canvas-wrap { height: 180px; }
     .anchor-block .anchor-value { font-size: 1.85rem; }
   }
+
+  .use-cases { margin: 1.5rem 0; padding-top: 0.25rem; }
+  .use-cases h3 { color: var(--accent); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.45rem; }
+  .use-cases-disclaimer { color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-bottom: 1rem; }
+  .use-case { background: rgba(20, 184, 166, 0.04); border-left: 3px solid var(--accent); border-radius: 4px; padding: 0.85rem 1rem; margin-bottom: 0.8rem; }
+  .use-case-title { color: var(--text); font-weight: 700; font-size: 0.95rem; margin-bottom: 0.6rem; }
+  .use-case-row { display: grid; grid-template-columns: 130px 1fr; gap: 0.6rem; margin-bottom: 0.4rem; font-size: 0.88rem; line-height: 1.55; }
+  .use-case-label { color: var(--accent); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 0.15rem; }
+  .use-case-text { color: var(--text); }
+  @media (max-width: 640px) { .use-case-row { grid-template-columns: 1fr; gap: 0.1rem; } .use-case-label { font-size: 0.66rem; } }
 </style>
 </head>
 <body>
@@ -1308,6 +1318,27 @@
     <p>"How much capacity do we need next week?" is the question logistics ops gets every Monday. The answer depends on the same five drivers across very different operations: <strong>forecast volume, productivity per resource, shrinkage (PTO + sickness), peak buffer (variance protection), and shift length</strong>. This tool runs the math for two distinct personas and lets you check how the answer changes under realistic forecast error.</p>
 
     <p><strong>V2 update (2026-05-15)</strong>: rebuilt around operator feedback from a former Shopee BR logistics ops lead who runs hub occupation analysis as a daily workflow. Five upgrades: (1) day-over-day backlog cascade (today's overflow is tomorrow's effective inbound), (2) two-layer capacity model (processing throughput vs storage holdability), (3) storage occupation percent as a primary headline anchor with configurable alert threshold, (4) origin mix decomposition (Line haul / Seller / FBS) for Persona A, (5) operational levers card (boost capacity + negotiate origin defer) that activates when baseline peak crosses the alert.</p>
+
+    <div class="use-cases">
+      <h3>Real-world impact</h3>
+      <p class="use-cases-disclaimer">Illustrative scenarios drawn from operator practice. Numbers are realistic order-of-magnitude estimates, not measurements from any specific deployment.</p>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 1: 3PL last-mile facing a 35% Q4 volume jump</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">Network planner at a regional 3PL handling 12,000 daily parcels with 140 couriers and 18 vans across 3 hubs.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Standard linear model said add 50 couriers; gut said that was wrong because backlog from Day 1 would cascade into Day 3-4 vehicle saturation, but no one could quantify it cleanly. Wrong-sizing risk was roughly $180K either way (overhire or service collapse).</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">V2 backlog cascade with 2-layer capacity showed couriers were not the bottleneck (occupation 78%); vans were (occupation 96% with origin mix shift from urban to peri-urban), recommending 8 extra vehicles and 22 couriers, not 50.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Q4 ran at 94% on-time vs 89% prior year, courier overstaffing avoided, net cost vs the linear-model plan came out about $140K lower with better service.</span></div>
+      </div>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 2: DTC fulfillment warehouse missing cutoff 3 days in 5</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">Ops manager at a DTC brand's contracted fulfillment site, 2 shifts, 60 pickers, 8 sorters, processing 8,000 orders per day with same-day cutoff at 2 PM.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Same-day promise was failing on roughly 60% of weekdays, refund and re-ship cost about $11K per missed-cutoff day, and the brand was threatening to switch 3PLs.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Forecaster's intraday view showed sorter capacity at 102% utilization 11 AM to 1 PM while pickers ran at 71%; the bottleneck was sortation, not pick. Adding 2 sorters on a split shift was modeled to fix it.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">2 sorters added on a 10 AM start, cutoff miss rate dropped to 8% of days within 3 weeks, retained the brand account worth about $1.4M annually.</span></div>
+      </div>
+    </div>
 
     <p><strong>Day-over-day cascade</strong></p>
     <div class="formula">day[0].inboundEffective = forecast[0]

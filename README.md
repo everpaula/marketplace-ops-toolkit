@@ -32,6 +32,20 @@ Both features were raised as missing in V1 by [Ricardo Vieira-Gomes](https://www
 - Pre-loaded with 6 illustrative scenarios including a "FP-bleeding queue" that flips ROI negative
 - **Portfolio mode** lets you compare 3 queues + see marginal allocation recommendation
 
+**Real-world impact** *(illustrative scenarios drawn from operator practice, numbers are realistic order-of-magnitude, not measurements from a specific deployment)*
+
+**Case 1: Fraud review queue running 3 months in the red**
+- *Setup:* An 8-agent manual review team at a LATAM marketplace screens 200 flagged orders per day at $30 average order value.
+- *Problem:* Net ROI looked positive on paper at 18% catch rate, but false-positive cost was quietly burning roughly $1,400 per day in lost legitimate customer LTV.
+- *Tool surfaced:* Portfolio mode flagged FP cost at $4.50 per agent-day against gross savings of $3.20, recommending root-cause work on the rule set rather than more headcount.
+- *Outcome:* Decision rules rewritten, FP rate dropped from 6% to 2.5%, net ROI flipped to +0.8x, around $280K saved annually vs the "add 2 more agents" plan that was already approved.
+
+**Case 2: VP picking between three queues for one new hire budget**
+- *Setup:* A US consumer fintech VP of Ops has budget for exactly one new analyst across three queues (account takeover, disputes, KYC review).
+- *Problem:* Each queue manager was lobbying with their own spreadsheet, decisions were political, and the wrong placement would waste roughly $95K fully loaded for the year.
+- *Tool surfaced:* Portfolio comparison ranked marginal ROI per queue: KYC at 2.1x, ATO at 1.4x, disputes at 0.6x because dispute auto-decision coverage was already high.
+- *Outcome:* Hire went to KYC, the dispute queue got a process review instead, combined coverage gain came out at +$140K vs the politically favored allocation.
+
 **Why this exists:** Most teams scale manual review headcount linearly with volume, which is how ops budgets explode and quality drops at the same time. The math to evaluate workforce ROI is simple once you frame it right — what isn't simple is asking the question every quarter and using the answer to decide.
 
 **The formula:**
@@ -97,6 +111,20 @@ ALERT IF (volume velocity > X%) AND (3-day volume > floor) AND (new-user count >
 
 Why **AND** instead of OR? Volume velocity alone triggers on Black Friday. New-user count alone triggers on marketing campaigns. The intersection is where actual attacks separate from legitimate traffic.
 
+**Real-world impact** *(illustrative scenarios drawn from operator practice)*
+
+**Case 1: Card testing wave 47 days before chargebacks would land**
+- *Setup:* Risk analyst at a digital goods platform watching nightly BIN reports across roughly 1,800 active issuer ranges.
+- *Problem:* Standard transaction monitoring missed slow-burn card testing because no single transaction tripped scoring; team usually only saw the damage after $60K-$120K in chargebacks posted.
+- *Tool surfaced:* Two prepaid BINs crossed all three thresholds simultaneously (velocity +210% vs baseline, $14K volume, 78 new users in 3 days), pattern matched the slow-burn attack signature.
+- *Outcome:* Both BINs rate-limited for new users within 6 hours, projected chargeback exposure dropped from an estimated $90K to about $11K, roughly $79K saved on a single alert.
+
+**Case 2: Pre-Black Friday tuning to avoid alert fatigue**
+- *Setup:* Fraud lead at a regional ecommerce site preparing for a holiday week with expected 3x-4x organic volume across all BINs.
+- *Problem:* Existing single-signal alerts (just velocity) would fire on 40+ BINs during peak, drowning the on-call analyst and effectively disabling detection.
+- *Tool surfaced:* Combining velocity AND volume floor AND new-user clustering kept the alert list to 3 real candidates during simulated peak.
+- *Outcome:* Peak week ran with 4 true-positive escalations and zero alert fatigue, vs the prior year where 2 real attacks were missed under noise costing about $45K.
+
 ---
 
 ### Tool #3 — Marketplace Surge Simulator (PID Control) — V2
@@ -141,7 +169,19 @@ With the loaded defaults (Kp=0.4, Ki=0.008, Kd=0.05), PID outperforms the naive 
 
 The math is from control theory (Minorsky, 1922). The application to marketplace surge pricing is industry-standard across ride-hail, food delivery, and on-demand platforms.
 
----
+**Real-world impact** *(illustrative scenarios drawn from operator practice)*
+
+**Case 1: City-average surge masking 4 starving polygons**
+- *Setup:* Pricing manager at a ride-hailing operation in a Tier-2 LATAM city running a single citywide surge multiplier on weekday evening peaks.
+- *Problem:* Citywide multiplier averaged 1.4x and looked healthy, but 4 outer polygons were stuck at 18-22 minute ETAs while downtown sat at 4 minutes, causing roughly 8% trip cancellation in those zones.
+- *Tool surfaced:* V2 polygon view showed the 3x3 zone grid with two cells in deep undersupply at effective 1.0x while downtown was overshooting at 1.7x.
+- *Outcome:* Zone-level Kp raised on outer cells, cancellation in those polygons dropped from 8% to 3.2%, recovered an estimated $9K per weekday peak in completed trips.
+
+**Case 2: Surge oscillation eroding driver trust**
+- *Setup:* Marketplace ops at a delivery platform running surge updates every 5 minutes, pricing swinging 1.0x to 1.8x to 1.1x within a single 30 minute window.
+- *Problem:* Driver complaints spiked about "phantom surge" and weekly driver churn climbed roughly 4 points, costing the team about $22K monthly in re-acquisition.
+- *Tool surfaced:* Simulator showed integral gain too high and derivative too low, classic PID overshoot; smoother coefficients held supply-demand inside the deadband 78% of the time vs 41% in current settings.
+- *Outcome:* New PID coefficients rolled out region by region, driver churn dropped back 3.5 points within 2 cycles, savings around $19K monthly on retention alone.
 
 ---
 
@@ -160,6 +200,20 @@ Walk through a chargeback like a senior fraud analyst. Interactive decision tree
 - **Sample cases** — 4 pre-loaded scenarios (first-party fraud, real card theft, non-delivery, quality dispute) you can step through to see how the wizard handles them
 
 The wizard maps to industry-standard chargeback investigation flow, generalized so any team can adapt regardless of payment processor or geographic jurisdiction. Reg E (US), PSD2 (EU), local equivalents — the regulatory framing layers on top of the investigation flow.
+
+**Real-world impact** *(illustrative scenarios drawn from operator practice)*
+
+**Case 1: New chargeback analysts making inconsistent dispute calls**
+- *Setup:* A 4-person disputes team at a subscription SaaS handles roughly 180 chargebacks per month with one senior and three juniors hired in the last 90 days.
+- *Problem:* Junior analysts were accepting disputes that were defensible and fighting ones that were lost causes, win rate sat at 22% vs benchmark 38%, costing about $15K monthly in avoidable losses.
+- *Tool surfaced:* Wizard standardized the 4-6 question flow (cardholder contact, delivery proof, prior dispute history, friendly fraud indicators) and dispositioned each case with reasoning.
+- *Outcome:* Win rate climbed to 41% within two months, recovered roughly $11K monthly, senior analyst time on QA dropped from 15 hours per week to 4.
+
+**Case 2: Onboarding offshore vendor team in 2 weeks**
+- *Setup:* Ops manager at a marketplace stood up a vendor team in a different time zone to handle chargeback overflow, with no internal trainer available full time.
+- *Problem:* Vendor team was expected to take 6-8 weeks to reach quality parity, meaning roughly $40K in additional losses during ramp.
+- *Tool surfaced:* Wizard's 8-section SOP plus the decision tree functioned as the training spine, every case run through the same logic regardless of analyst tenure.
+- *Outcome:* Vendor team hit quality parity in 18 days instead of 6 weeks, saved roughly $28K in ramp losses, post-hoc QA showed consistency scores within 4 points of in-house team.
 
 ---
 
@@ -190,6 +244,20 @@ final_HC       = after_peak × (1 + service_level_buffer)
 - 4 pre-loaded scenario presets: Steady-state, Hypergrowth ramp, Peak event (Black Friday-style), Lean startup
 
 Maps directly to the quarterly capacity planning conversations that happen in every ops function. Hand this to the team and the "how many agents do we hire?" debate becomes a math problem instead of a political one.
+
+**Real-world impact** *(illustrative scenarios drawn from operator practice)*
+
+**Case 1: Finance asking for next year headcount in 5 days**
+- *Setup:* Head of Ops at a regional fintech needs to justify a 2026 plan covering 4 case types (KYC, fraud review, ATO, disputes) with different complexity and volume curves.
+- *Problem:* Existing spreadsheet model was 14 tabs of stale assumptions, last touched 8 months ago, produced a single headcount number with no scenario range, putting roughly $1.8M in payroll asks at risk of being slashed.
+- *Tool surfaced:* Multi-case-type calculator separated AHT and volume per type, layered shrinkage (22% real vs 15% assumed) and peak month uplift, produced in-house vs vendor split economics side by side.
+- *Outcome:* Plan went in with three scenarios (lean, base, peak-ready) and finance approved base case at 31 FTE plus 8 vendor seats, vs the original ask of 38 FTE that would have been rejected.
+
+**Case 2: 60% vendor-heavy footprint that was bleeding cost**
+- *Setup:* COO at a high-growth ecommerce platform had 24 in-house and 36 vendor reviewers across two sites, locked into a per-case vendor rate set 3 years prior.
+- *Problem:* Vendor cost per case had crept to roughly $4.20 vs in-house fully loaded $3.10 once productivity and shrinkage were applied honestly; the platform was spending an extra $360K per year on the worse option.
+- *Tool surfaced:* Vendor split scenario showed crossover point at 45% vendor, not 60%, given current AHT and shrinkage; rebalancing recovered the spread without losing peak flexibility.
+- *Outcome:* 12 cases per day shifted in-house, vendor headcount renegotiated to a smaller flex pool, net savings around $230K annualized in year one with peak coverage preserved.
 
 ---
 
@@ -241,6 +309,20 @@ sensitivity = cost(forecast × (1 + delta)) for delta in [-0.30, -0.15, 0, +0.15
 
 This is the math that gets argued about every quarter at operations leadership meetings, codified so the answer is the same whether you have 12 years of experience or 12 weeks.
 
+**Real-world impact** *(illustrative scenarios drawn from operator practice)*
+
+**Case 1: 3PL last-mile facing a 35% Q4 volume jump**
+- *Setup:* Network planner at a regional 3PL handling 12,000 daily parcels with 140 couriers and 18 vans across 3 hubs.
+- *Problem:* Standard linear model said add 50 couriers; gut said wrong because backlog from Day 1 would cascade into Day 3-4 vehicle saturation. Wrong-sizing risk was roughly $180K either way.
+- *Tool surfaced:* V2 backlog cascade with 2-layer capacity showed couriers were not the bottleneck (occupation 78%); vans were (occupation 96%), recommending 8 extra vehicles and 22 couriers, not 50.
+- *Outcome:* Q4 ran at 94% on-time vs 89% prior year, courier overstaffing avoided, net cost vs the linear-model plan came out about $140K lower with better service.
+
+**Case 2: DTC fulfillment warehouse missing cutoff 3 days in 5**
+- *Setup:* Ops manager at a DTC brand's contracted fulfillment site, 2 shifts, 60 pickers, 8 sorters, processing 8,000 orders per day with same-day cutoff at 2 PM.
+- *Problem:* Same-day promise was failing on roughly 60% of weekdays, refund and re-ship cost about $11K per missed-cutoff day, brand was threatening to switch 3PLs.
+- *Tool surfaced:* Forecaster's intraday view showed sorter capacity at 102% utilization 11 AM to 1 PM while pickers ran at 71%; the bottleneck was sortation, not pick.
+- *Outcome:* 2 sorters added on a 10 AM start, cutoff miss rate dropped to 8% of days within 3 weeks, retained the brand account worth about $1.4M annually.
+
 ---
 
 ### Tool #7: Queue Operations Command Center
@@ -290,6 +372,20 @@ priority_score       = (w_risk × risk/100) + (w_age × age_factor) + (w_value �
 ```
 
 **What this is NOT:** not a real-time monitor (inputs static for the session), not an ML predictor (formula-based with explicit weights, the point is for the operator to see the math), not a ticketing system (recommends order, doesn't execute), not a portfolio view (single queue, use Tool #1 V2 portfolio mode for multi-queue allocation).
+
+**Real-world impact** *(illustrative scenarios drawn from operator practice)*
+
+**Case 1: 6,000-case backlog on a Tuesday morning**
+- *Setup:* Fraud ops lead walking into Monday standup finds the weekend left a 6,000-case backlog with mixed SLA risk and no clear "who works what first" answer.
+- *Problem:* Status quo was analyst-by-analyst FIFO, oldest cases worked first regardless of dollar exposure, causing roughly $45K weekly in avoidable losses on high-value cases that aged past windows.
+- *Tool surfaced:* Command center showed hours to SLA breach across queues, ranked cases by dollar-at-risk × time-decay, projected 9 agents needed for full recovery in 36 hours vs 14 for 18 hours.
+- *Outcome:* Team prioritized 380 high-value aging cases first, dollar-weighted loss dropped 62% week over week (around $28K saved), backlog cleared in 41 hours.
+
+**Case 2: Content moderation team facing an SLA audit**
+- *Setup:* Trust and Safety manager at a UGC platform with a 12-person moderation team and contractual 24-hour SLA across 3 queue types.
+- *Problem:* Audit was 10 days out and the team did not know current SLA compliance percentage by queue, manual sampling estimated somewhere between 78%-91% with $0.5M of contractual penalty exposure.
+- *Tool surfaced:* Content moderation preset surfaced live SLA compliance per queue (84%, 71%, 96%) and showed appeals queue needed 3 extra reviewers for 4 days to reach 95% before audit date.
+- *Outcome:* Temporary reallocation from escalations to appeals pulled appeals compliance to 97% before audit, full audit passed at 96% weighted, penalty exposure eliminated.
 
 ---
 

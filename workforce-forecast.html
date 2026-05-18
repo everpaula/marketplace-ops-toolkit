@@ -384,6 +384,16 @@
   }
   footer a { color: var(--accent); text-decoration: none; }
   footer a:hover { text-decoration: underline; }
+
+  .use-cases { margin: 1.5rem 0; padding-top: 0.25rem; }
+  .use-cases h3 { color: var(--accent); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.45rem; }
+  .use-cases-disclaimer { color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-bottom: 1rem; }
+  .use-case { background: rgba(20, 184, 166, 0.04); border-left: 3px solid var(--accent); border-radius: 4px; padding: 0.85rem 1rem; margin-bottom: 0.8rem; }
+  .use-case-title { color: var(--text); font-weight: 700; font-size: 0.95rem; margin-bottom: 0.6rem; }
+  .use-case-row { display: grid; grid-template-columns: 130px 1fr; gap: 0.6rem; margin-bottom: 0.4rem; font-size: 0.88rem; line-height: 1.55; }
+  .use-case-label { color: var(--accent); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 0.15rem; }
+  .use-case-text { color: var(--text); }
+  @media (max-width: 640px) { .use-case-row { grid-template-columns: 1fr; gap: 0.1rem; } .use-case-label { font-size: 0.66rem; } }
 </style>
 </head>
 <body>
@@ -543,6 +553,27 @@
     <p>The classic workforce forecasting question — "how many agents do we need?" — has a deceptively simple math at the core. The complication isn't the formula. It's that most teams pick numbers out of the air for the inputs and then defend the forecast politically rather than analytically.</p>
 
     <p>This calculator forces explicit inputs across the five drivers that actually matter:</p>
+
+    <div class="use-cases">
+      <h3>Real-world impact</h3>
+      <p class="use-cases-disclaimer">Illustrative scenarios drawn from operator practice. Numbers are realistic order-of-magnitude estimates, not measurements from any specific deployment.</p>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 1: Finance asking for next year headcount in 5 days</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">Head of Ops at a regional fintech needs to justify a 2026 plan covering 4 case types (KYC, fraud review, ATO, disputes) with different complexity and volume curves.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Existing spreadsheet model was 14 tabs of stale assumptions, last touched 8 months ago, produced a single headcount number with no scenario range, putting roughly $1.8M in payroll asks at risk of being slashed.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Multi-case-type calculator separated AHT and volume per type, layered shrinkage (22% real vs 15% assumed) and peak month uplift, produced in-house vs vendor split economics side by side.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Plan went in with three scenarios (lean, base, peak-ready) and finance approved base case at 31 FTE plus 8 vendor seats, vs the original ask of 38 FTE that would have been rejected.</span></div>
+      </div>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 2: 60% vendor-heavy footprint that was bleeding cost</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">COO at a high-growth ecommerce platform had 24 in-house and 36 vendor reviewers across two sites, locked into a per-case vendor rate set 3 years prior.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Vendor cost per case had crept to roughly $4.20 vs in-house fully loaded $3.10 once productivity and shrinkage were applied honestly; the platform was spending an extra $360K per year on the worse option.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Vendor split scenario showed crossover point at 45% vendor, not 60%, given current AHT and shrinkage; rebalancing recovered the spread without losing peak flexibility.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">12 cases per day shifted in-house, vendor headcount renegotiated to a smaller flex pool, net savings around $230K annualized in year one with peak coverage preserved.</span></div>
+      </div>
+    </div>
 
     <p><strong>The formula</strong></p>
     <div class="formula">total_minutes  = Σ (volume_i × handle_time_i)        // sum across case types

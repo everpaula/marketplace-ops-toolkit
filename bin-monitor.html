@@ -376,6 +376,16 @@
     font-size: 0.85rem;
   }
   .top-nav a:hover { color: var(--accent); }
+
+  .use-cases { margin: 1.5rem 0; padding-top: 0.25rem; }
+  .use-cases h3 { color: var(--accent); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.45rem; }
+  .use-cases-disclaimer { color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-bottom: 1rem; }
+  .use-case { background: rgba(20, 184, 166, 0.04); border-left: 3px solid var(--accent); border-radius: 4px; padding: 0.85rem 1rem; margin-bottom: 0.8rem; }
+  .use-case-title { color: var(--text); font-weight: 700; font-size: 0.95rem; margin-bottom: 0.6rem; }
+  .use-case-row { display: grid; grid-template-columns: 130px 1fr; gap: 0.6rem; margin-bottom: 0.4rem; font-size: 0.88rem; line-height: 1.55; }
+  .use-case-label { color: var(--accent); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 0.15rem; }
+  .use-case-text { color: var(--text); }
+  @media (max-width: 640px) { .use-case-row { grid-template-columns: 1fr; gap: 0.1rem; } .use-case-label { font-size: 0.66rem; } }
 </style>
 </head>
 <body>
@@ -487,6 +497,27 @@
     <p>BIN attacks happen when fraudsters acquire valid BIN ranges (typically from breaches or BIN-list databases), generate card numbers within those ranges using the Luhn algorithm, then test them at scale against merchant checkouts. The successful cards get used for fraud — at which point chargebacks land, weeks later, after the funds have already moved.</p>
 
     <p>The detection problem isn't <strong>after-the-fact</strong>: by the time chargebacks land you've already lost the money. The detection problem is <strong>before-the-fact</strong>: spotting the pattern in real time and pulling the trigger while damage is still containable.</p>
+
+    <div class="use-cases">
+      <h3>Real-world impact</h3>
+      <p class="use-cases-disclaimer">Illustrative scenarios drawn from operator practice. Numbers are realistic order-of-magnitude estimates, not measurements from any specific deployment.</p>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 1: Card testing wave 47 days before chargebacks would land</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">Risk analyst at a digital goods platform watching nightly BIN reports across roughly 1,800 active issuer ranges.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Standard transaction monitoring missed slow-burn card testing because no single transaction tripped scoring; the team usually only saw the damage after $60K to $120K in chargebacks posted.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Two prepaid BINs crossed all three thresholds simultaneously (velocity +210% vs baseline, $14K volume, 78 new users in 3 days), pattern matched the slow-burn attack signature.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Both BINs rate-limited for new users within 6 hours, projected chargeback exposure dropped from an estimated $90K to about $11K, roughly $79K saved on a single alert.</span></div>
+      </div>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 2: Pre-Black Friday tuning to avoid alert fatigue</div>
+        <div class="use-case-row"><span class="use-case-label">Setup</span><span class="use-case-text">Fraud lead at a regional ecommerce site preparing for a holiday week with expected 3x to 4x organic volume across all BINs.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Problem</span><span class="use-case-text">Existing single-signal alerts (just velocity) would fire on 40+ BINs during peak, drowning the on-call analyst and effectively disabling detection.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Tool surfaced</span><span class="use-case-text">Combining velocity AND volume floor AND new-user clustering kept the alert list to 3 real candidates during simulated peak, distinguishing organic holiday lift from coordinated attack patterns.</span></div>
+        <div class="use-case-row"><span class="use-case-label">Outcome</span><span class="use-case-text">Peak week ran with 4 true-positive escalations and zero alert fatigue burnout, vs the prior year where 2 real attacks were missed under noise costing about $45K.</span></div>
+      </div>
+    </div>
 
     <p><strong>The three signals</strong></p>
     <p>This monitor combines three signals because no single one is reliable on its own:</p>
