@@ -243,11 +243,60 @@ This is the math that gets argued about every quarter at operations leadership m
 
 ---
 
+### Tool #7: Queue Operations Command Center
+
+**[→ Open the command center](./queue-ops-center.html)**
+
+![Queue Ops Command Center, sticky backlog health header with priority table](./images/queue-ops-center.png)
+
+Two questions every ops leader asks at standup, fused into one tool: **are we behind on SLA right now** and **what should the agent pick next**. Splitting these across two screens forces context-switching. They share the same SLA, the same throughput, the same backlog count, so they live together here.
+
+Tool #7 was inspired by feedback from Ricardo Vieira-Gomes (Co-Founder & Executive Director, ET Armadillo · AI Transformation in Operations) on a previous launch post. The integrated backlog-health-plus-prioritization model is his concept, refined into a single tool.
+
+**Backlog health view (sticky header):**
+
+- Hours to first SLA breach (reports the earlier of oldest-case-aging or new-arrivals-flooding, tags which driver is binding)
+- Backlog trajectory with growth/shrink arrow and rate
+- Agents needed to recover with hourly recovery cost
+- Tier badge (green stable, yellow watch, red at risk) drives the header border color
+- 24-hour projection chart: teal baseline, amber line layers when you add agents in the stepper, red dashed line marks the SLA threshold
+
+**Queue prioritization view (table):**
+
+- Priority score per case: `(w_risk × risk/100) + (w_age × age_factor) + (w_value × value_factor)` normalized 0 to 100
+- Top 5 highlighted with teal left border and filled rank pill
+- Tier coloring on Risk, Age, Priority columns
+- Three reprioritize modes cycling through Balanced → Risk-weighted → Value-weighted, weights shift with the mode
+- Click any row to see the substituted-formula breakdown in a native dialog modal
+- Sortable columns with `aria-sort`, keyboard-accessible rows
+
+**Four operator presets:**
+
+| Preset | SLA | Throughput | Cases | Weighting |
+|---|---|---|---|---|
+| Fraud Operations | 4h | 30 cases/agent/hr | 18 | Balanced |
+| Content Moderation | 24h | 80 cases/agent/hr | 22 | Balanced (no value) |
+| Disputes Resolution | 7 days | 8 cases/agent/hr | 16 | Value-weighted |
+| CS Escalations | 2h | 20 cases/agent/hr | 15 | Balanced |
+
+**The math:**
+
+```
+effective_throughput = agents × throughput_rate × (1 − shrinkage)
+net_change_rate      = arrival_rate − effective_throughput
+hours_to_breach      = min(SLA − oldest_case_age, SLA − backlog / effective_throughput)
+agents_needed        = ceil((backlog + arrivals × hours_remaining) / (throughput × hours_remaining × (1 − shrinkage)))
+priority_score       = (w_risk × risk/100) + (w_age × age_factor) + (w_value × value_factor)
+```
+
+**What this is NOT:** not a real-time monitor (inputs static for the session), not an ML predictor (formula-based with explicit weights, the point is for the operator to see the math), not a ticketing system (recommends order, doesn't execute), not a portfolio view (single queue, use Tool #1 V2 portfolio mode for multi-queue allocation).
+
+---
+
 ## Roadmap
 
 Other tools planned for this toolkit (inspired by community feedback, especially from Ricardo Vieira-Gomes):
 
-- **Tool #7: Queue Operations Command Center** *(coming)*. Combines queue prioritization (which case first based on risk × aging × value) and backlog health monitoring (how long before SLA breach, how many agents needed to recover) into one connected tool.
 - **Tool #8: Escalation Decision Calculator** *(coming)*. When does it make sense to escalate vs close at agent level? Cost-benefit of the escalation layer.
 - **Tool #9: QA Sampling Optimizer** *(coming)*. How many cases to audit per agent for statistically meaningful accuracy without over-sampling.
 - **Tool #10: Shift Handoff Impact Analyzer** *(coming)*. Quantifies the hidden cost of handoffs across shifts and the real productivity loss.

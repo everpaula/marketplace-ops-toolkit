@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queue Operations Command Center · Marketplace Ops Toolkit</title>
+<meta name="description" content="Backlog health monitor plus queue prioritization in one tool. Hours to SLA breach, agents needed to recover, and priority-ranked case list. Four operator presets for fraud, content moderation, disputes, and CS escalations.">
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-elev: #131c33;
+    --bg-card: #131c33;
+    --border: #1f2a44;
+    --border-bright: #2e3d5f;
+    --text: #e6ecf5;
+    --text-muted: #8a96b4;
+    --accent: #14b8a6;
+    --accent-soft: rgba(20, 184, 166, 0.1);
+    --accent-alt: #f59e0b;
+    --accent-alt-soft: rgba(245, 158, 11, 0.12);
+    --accent-alt-border: rgba(245, 158, 11, 0.4);
+    --green: #10b981;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+  .top-nav { margin-bottom: 1rem; }
+  .top-nav a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
+  .top-nav a:hover { color: var(--accent); }
+
+  header { margin-bottom: 1.5rem; }
+  .brand {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  header h1 {
+    font-size: 1.9rem;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  header .tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 760px;
+    line-height: 1.55;
+  }
+  header .tagline strong { color: var(--text); }
+
+  .operator-credit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-alt-border);
+    color: var(--text);
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    margin-top: 0.85rem;
+    line-height: 1.4;
+  }
+  .operator-credit::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-alt);
+  }
+  .operator-credit a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .operator-credit a:hover { text-decoration: underline; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .card .sub {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.7rem;
+  }
+  .preset-btn {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .preset-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .preset-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .preset-btn[data-active="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .preset-btn .preset-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 0.2rem;
+  }
+  .preset-btn .preset-meta {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  .health-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.85rem 1rem 1rem;
+    margin: 0 -1.5rem 1.25rem;
+  }
+  .health-header[data-tier="red"]    { border-bottom-color: rgba(239,68,68,0.4); }
+  .health-header[data-tier="yellow"] { border-bottom-color: rgba(251,191,36,0.4); }
+  .health-header[data-tier="green"]  { border-bottom-color: rgba(16,185,129,0.4); }
+
+  .health-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.7rem;
+  }
+  .health-header-left { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+  .health-header-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+
+  .health-header-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .health-header-sub {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  .health-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+  }
+  .mobile-expand-toggle { display: none; }
+
+  .kpi-tile {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .kpi-tile:hover { border-color: var(--border-bright); background: #182238; }
+  .kpi-label {
+    color: var(--text-muted);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+  }
+  .kpi-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .kpi-tile[data-emphasis="primary"] .kpi-value { font-size: 2.1rem; color: var(--accent); }
+  .kpi-tile[data-tier="red"]    .kpi-value { color: var(--red); }
+  .kpi-tile[data-tier="yellow"] .kpi-value { color: var(--yellow); }
+  .kpi-tile[data-tier="green"]  .kpi-value { color: var(--green); }
+  .kpi-sub {
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    margin-top: 0.2rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi-arrow { display: inline-block; margin-left: 0.25rem; font-size: 0.85rem; }
+  .kpi-arrow[data-dir="up"]   { color: var(--red); }
+  .kpi-arrow[data-dir="down"] { color: var(--green); }
+  .kpi-arrow[data-dir="flat"] { color: var(--text-muted); }
+
+  .tier-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+  .tier-badge.green  { background: var(--green);  color: #062e23; }
+  .tier-badge.yellow { background: var(--yellow); color: #422a05; }
+  .tier-badge.red    { background: var(--red);    color: #fff; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .tier-badge.red[data-pulse="true"] { animation: tier-pulse 2.4s ease-in-out infinite; }
+    @keyframes tier-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+      50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+    }
+  }
+
+  .health-action-btn {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .health-action-btn:hover { background: var(--accent); color: #042f2e; }
+  .health-action-btn:active { filter: brightness(0.92); }
+  .health-action-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .health-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .health-action-btn.amber {
+    background: var(--accent-alt-soft);
+    border-color: var(--accent-alt-border);
+    color: var(--accent-alt);
+  }
+  .health-action-btn.amber:hover { background: var(--accent-alt); color: #3a2806; }
+  .health-action-btn.amber:focus-visible { outline-color: var(--accent-alt); }
+
+  .agents-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-bright);
+    border-radius: 6px;
+    padding: 0.25rem 0.4rem;
+  }
+  .agents-stepper button {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 0.95rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  .agents-stepper button:hover { background: var(--accent-soft); }
+  .agents-stepper button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .agents-stepper button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .agents-stepper .val {
+    min-width: 1.4rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: 0.86rem;
+    color: var(--text);
+  }
+  .agents-stepper .label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-right: 0.2rem;
+    letter-spacing: 0.04em;
+  }
+
+  .repri-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.45rem 0.75rem 0.45rem 0.85rem;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .repri-pill::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .repri-pill[data-mode="risk"]::before  { background: var(--red); }
+  .repri-pill[data-mode="value"]::before { background: var(--accent-alt); }
+  .repri-pill:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .repri-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .repri-pill[data-flash="true"] { background: var(--accent-soft); border-color: var(--accent); }
+
+  .inputs-details {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0;
+    margin-bottom: 1.25rem;
+  }
+  .inputs-details > summary {
+    cursor: pointer;
+    padding: 1rem 1.4rem;
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .inputs-details > summary::-webkit-details-marker { display: none; }
+  .inputs-details > summary::after {
+    content: "▾";
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    transition: transform 0.18s ease;
+  }
+  .inputs-details[open] > summary::after { transform: rotate(180deg); }
+  .inputs-details > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .inputs-details > .inputs-body { padding: 0 1.4rem 1.25rem; }
+
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.85rem;
+  }
+  .setting-cell {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+  }
+  .setting-cell label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+  .setting-cell label .hint {
+    color: var(--border-bright);
+    font-size: 0.7rem;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+  }
+  .setting-input { display: flex; align-items: center; gap: 0.4rem; }
+  .setting-input input {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.4rem 0.6rem;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .setting-input input:focus { outline: none; border-color: var(--accent); }
+  .setting-input .unit { color: var(--text-muted); font-size: 0.85rem; }
+
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    background: #0a1024;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .chart-wrap canvas { display: block; width: 100%; height: 100%; }
+  .chart-legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.7rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .chart-legend .swatch {
+    display: inline-block;
+    width: 14px;
+    height: 3px;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+    border-radius: 2px;
+  }
+  .chart-legend .swatch.teal   { background: var(--accent); }
+  .chart-legend .swatch.amber  { background: var(--accent-alt); }
+  .chart-legend .swatch.dashed {
+    background: transparent;
+    border-top: 2px dashed var(--red);
+    height: 0;
+    width: 18px;
+  }
+
+  .priority-table-wrap { overflow-x: auto; }
+  .priority-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  .priority-table th {
+    text-align: left;
+    color: var(--text-muted);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    padding: 0.55rem 0.6rem;
+    border-bottom: 1px solid var(--border-bright);
+    cursor: pointer;
+    user-select: none;
+    background: var(--bg-card);
+  }
+  .priority-table th.numeric { text-align: right; }
+  .priority-table th[aria-sort="ascending"]::after  { content: " ↑"; color: var(--accent); }
+  .priority-table th[aria-sort="descending"]::after { content: " ↓"; color: var(--accent); }
+  .priority-table th:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .priority-table td {
+    padding: 0.55rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.86rem;
+  }
+  .priority-table td.numeric { text-align: right; }
+  .priority-table td.center  { text-align: center; }
+  .priority-table tr { transition: background 0.12s ease; }
+  .priority-table tbody tr:hover { background: rgba(255,255,255,0.02); cursor: pointer; }
+  .priority-table tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .priority-table tbody tr[data-top5="true"] {
+    background: rgba(20,184,166,0.06);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  .priority-table tbody tr[data-top5="true"]:hover { background: rgba(20,184,166,0.12); }
+
+  .rank-pill {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 28px;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    background: var(--border);
+    color: var(--text-muted);
+  }
+  tr[data-top5="true"] .rank-pill { background: var(--accent); color: #042f2e; }
+
+  .case-id-mono {
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+
+  .cell-tier-red    { color: var(--red);    font-weight: 700; }
+  .cell-tier-yellow { color: var(--yellow); font-weight: 700; }
+  .cell-tier-green  { color: var(--green);  font-weight: 700; }
+  .cell-empty       { color: var(--border-bright); }
+
+  .action-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .action-label.review-now { color: var(--red); }
+  .action-label.standard   { color: var(--text); }
+  .action-label.hold       { color: var(--text-muted); }
+
+  .top5-strip { display: none; }
+
+  .priority-modal::backdrop { background: rgba(11, 18, 32, 0.78); }
+  .priority-modal {
+    background: var(--bg-elev);
+    color: var(--text);
+    border: 1px solid var(--border-bright);
+    border-radius: 10px;
+    padding: 1.4rem 1.5rem;
+    width: clamp(320px, 80vw, 560px);
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .priority-modal[open] { animation: modal-fade 0.18s ease; }
+  @keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .priority-modal[open] { animation: none; } }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+  }
+  .modal-title {
+    color: var(--accent);
+    font-size: 0.84rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .modal-close {
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text-muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: border-color 0.12s ease, color 0.12s ease;
+  }
+  .modal-close:hover { border-color: var(--accent); color: var(--accent); }
+  .modal-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .modal-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+  .modal-row:last-of-type { border-bottom: none; }
+  .modal-row .lbl { color: var(--text-muted); }
+  .modal-row .val { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+  .formula-substituted {
+    background: var(--bg);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.84rem;
+    color: var(--text);
+    border-left: 3px solid var(--accent);
+    white-space: pre-wrap;
+    line-height: 1.65;
+    font-variant-numeric: tabular-nums;
+    margin-top: 0.7rem;
+  }
+  .formula-substituted .num-risk  { color: var(--red); }
+  .formula-substituted .num-age   { color: var(--yellow); }
+  .formula-substituted .num-value { color: var(--accent-alt); }
+  .formula-substituted .result    { color: var(--accent); font-weight: 700; }
+  .modal-note {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    margin-top: 0.7rem;
+    line-height: 1.55;
+  }
+
+  .about p { margin-bottom: 0.85rem; color: var(--text); font-size: 0.94rem; line-height: 1.7; }
+  .about p strong { color: var(--accent); }
+  .about ul { margin: 0.5rem 0 1rem 1.4rem; color: var(--text); }
+  .about ul li { margin-bottom: 0.35rem; font-size: 0.93rem; }
+  .about .formula {
+    background: var(--bg);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.86rem;
+    color: var(--text);
+    margin: 0.5rem 0 1rem;
+    border-left: 3px solid var(--accent);
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 720px) {
+    header h1 { font-size: 1.45rem; }
+    .container { padding: 1rem; }
+    .health-header { margin: 0 -1rem 1rem; padding: 0.7rem 1rem 0.8rem; }
+    .health-header-top { gap: 0.5rem; }
+    .mobile-expand-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: transparent;
+      border: 1px solid var(--border-bright);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.74rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .mobile-expand-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    .health-kpi-row { display: none; }
+    .health-header[data-expanded="true"] .health-kpi-row {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+    .top5-strip {
+      display: flex;
+      gap: 0.6rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: 0.25rem 1rem 0.75rem;
+      margin: 0 -1rem 0.5rem;
+    }
+    .top5-card {
+      flex: 0 0 78%;
+      scroll-snap-align: start;
+      background: var(--bg-elev);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 0.8rem 0.9rem;
+    }
+    .top5-card .t5-rank {
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+    .top5-card .t5-id {
+      font-family: ui-monospace, monospace;
+      font-size: 0.84rem;
+      margin-bottom: 0.4rem;
+    }
+    .top5-card .t5-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.3rem 0.6rem;
+      font-size: 0.78rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .top5-card .t5-stats .lbl { color: var(--text-muted); display: block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .priority-table { display: none; }
+    .priority-table[data-mobile-show="true"] { display: table; }
+  }
+  @media (min-width: 721px) and (max-width: 1024px) {
+    .priority-table .col-action-text { display: none; }
+    .priority-table .col-action-icon { display: inline; }
+  }
+  .priority-table .col-action-icon { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top-nav">
+    <a href="./index.html">← marketplace-ops-toolkit</a>
+  </div>
+
+  <header>
+    <div class="brand">marketplace-ops-toolkit · tool #7</div>
+    <h1>Queue Operations Command Center</h1>
+    <div class="tagline">
+      Two questions every ops leader asks at standup: <strong>are we behind on SLA right now and what should the agent pick next?</strong> Backlog health monitor and queue prioritization built as one connected tool, with four operator presets covering fraud, content moderation, disputes, and CS escalations.
+    </div>
+    <div class="operator-credit" role="note">
+      Inspired by feedback from <a href="https://www.linkedin.com/in/" target="_blank" rel="noopener">Ricardo Vieira-Gomes</a> (Co-Founder &amp; Executive Director, ET Armadillo · AI Transformation in Operations). The integrated backlog-health-plus-prioritization model is his concept, refined into a single tool.
+    </div>
+  </header>
+
+  <div class="card">
+    <h2>Pick a persona preset</h2>
+    <p class="sub">Four operator scenarios with realistic SLA, throughput, and a sample case list. Load one, then customize the inputs below.</p>
+    <div class="presets" id="presetsGrid" role="group" aria-label="Persona presets"></div>
+  </div>
+
+  <section
+    class="health-header"
+    id="healthHeader"
+    data-tier="green"
+    data-expanded="false"
+    aria-label="Backlog health summary"
+  >
+    <div class="health-header-top">
+      <div class="health-header-left">
+        <span class="tier-badge green" id="tierBadge" aria-label="Backlog tier green">STABLE</span>
+        <div>
+          <div class="health-header-title" id="healthHeaderTitle">Stable. No breach expected.</div>
+          <div class="health-header-sub" id="healthHeaderSub">Throughput above arrivals.</div>
+        </div>
+      </div>
+      <div class="health-header-actions">
+        <button
+          type="button"
+          class="mobile-expand-toggle"
+          id="mobileExpandToggle"
+          aria-expanded="false"
+          aria-controls="healthKpiRow"
+          aria-label="Show backlog KPI tiles"
+        >Details ▾</button>
+        <div class="agents-stepper" role="group" aria-label="Added agents">
+          <span class="label">Add agents</span>
+          <button type="button" id="addAgentsDown" aria-label="Decrease added agents">−</button>
+          <span class="val" id="addedAgentsVal" aria-live="polite">0</span>
+          <button type="button" id="addAgentsUp" aria-label="Increase added agents">+</button>
+        </div>
+        <button
+          type="button"
+          class="repri-pill"
+          id="reprioritizeBtn"
+          data-mode="balanced"
+          aria-label="Reprioritize queue, current mode balanced"
+        >Balanced</button>
+      </div>
+    </div>
+
+    <div
+      class="health-kpi-row"
+      id="healthKpiRow"
+      role="status"
+      aria-live="polite"
+      aria-atomic="false"
+    >
+      <div class="kpi-tile" data-emphasis="primary" data-tier="green" id="kpiBreachTile">
+        <div class="kpi-label">Hours to first breach</div>
+        <div class="kpi-value" id="kpiBreach">Stable</div>
+        <div class="kpi-sub" id="kpiBreachSub">No breach expected at current rate.</div>
+      </div>
+      <div class="kpi-tile" id="kpiBacklogTile">
+        <div class="kpi-label">Backlog trajectory</div>
+        <div class="kpi-value">
+          <span id="kpiBacklog">0</span>
+          <span class="kpi-arrow" id="kpiBacklogArrow" data-dir="flat">→</span>
+        </div>
+        <div class="kpi-sub" id="kpiBacklogSub">Flat at current throughput.</div>
+      </div>
+      <div class="kpi-tile" id="kpiAgentsTile">
+        <div class="kpi-label">Agents needed to recover</div>
+        <div class="kpi-value" id="kpiAgents">0</div>
+        <div class="kpi-sub" id="kpiAgentsSub">No extra capacity required.</div>
+      </div>
+    </div>
+  </section>
+
+  <details class="inputs-details" id="inputsDetails">
+    <summary>Operating inputs <span style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0;font-size:0.72rem;">click to edit</span></summary>
+    <div class="inputs-body">
+      <p class="sub">Eight fields that drive the backlog math. Adjust to match your operation. Changes recompute the sticky header and the projection chart below.</p>
+      <div class="settings-grid" id="settingsGrid"></div>
+    </div>
+  </details>
+
+  <div class="card">
+    <h2>24-hour backlog projection</h2>
+    <p class="sub">Teal line is current trajectory. Amber line appears when you add agents in the header above. Red dashed line is the SLA breach threshold (queue size that breaches at current throughput).</p>
+    <div class="chart-wrap">
+      <canvas id="projectionChart" aria-label="Projected backlog over 24 hours"></canvas>
+    </div>
+    <div class="chart-legend" id="chartLegend">
+      <span><span class="swatch teal"></span>Current trajectory</span>
+      <span id="legendAmber" hidden><span class="swatch amber"></span>With added agents</span>
+      <span><span class="swatch dashed"></span>SLA breach threshold</span>
+    </div>
+  </div>
+
+  <div class="top5-strip" id="top5Strip" aria-label="Top 5 priority cases"></div>
+
+  <div class="card">
+    <h2>Queue prioritization</h2>
+    <p class="sub">Priority = (weight_risk × risk) + (weight_age × age_factor) + (weight_value × value_factor). Top 5 are highlighted. Click any row for the math breakdown.</p>
+    <div class="priority-table-wrap">
+      <table class="priority-table" id="priorityTable" data-mobile-show="false">
+        <thead>
+          <tr>
+            <th scope="col" tabindex="0" role="button" data-sort="rank" aria-sort="none">#</th>
+            <th scope="col" tabindex="0" role="button" data-sort="id" aria-sort="none">Case ID</th>
+            <th scope="col" tabindex="0" role="button" data-sort="riskScore" aria-sort="none" class="numeric">Risk</th>
+            <th scope="col" tabindex="0" role="button" data-sort="ageHours" aria-sort="none" class="numeric">Age</th>
+            <th scope="col" tabindex="0" role="button" data-sort="value" aria-sort="none" class="numeric" id="thValue">Value</th>
+            <th scope="col" tabindex="0" role="button" data-sort="priorityScore" aria-sort="descending" class="numeric">Priority</th>
+            <th scope="col" tabindex="0" role="button" data-sort="tier" aria-sort="none" class="center">Tier</th>
+            <th scope="col" tabindex="-1">Action</th>
+          </tr>
+        </thead>
+        <tbody id="priorityTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card about">
+    <h2>How this tool works</h2>
+
+    <p><strong>Two views, one mental model.</strong> Backlog health tells you whether you are behind right now. Queue prioritization tells you which case to grab first. Splitting them across two tools forces the operator to context-switch. Both questions share the same SLA, the same throughput, the same backlog count, so they live together here.</p>
+
+    <p><strong>The backlog math:</strong></p>
+    <div class="formula">effective_throughput = agents × throughput_rate × (1 − shrinkage)
+net_change_rate      = arrival_rate − effective_throughput
+hours_to_breach      = min(SLA − oldest_case_age, SLA − backlog / effective_throughput)
+agents_needed        = ceil((backlog + arrivals × hours_remaining) / (throughput × hours_remaining × (1 − shrinkage)))
+recovery_cost        = added_agents × hours × hourly_cost</div>
+
+    <p>The breach formula reports the earlier of two conditions: the oldest case in the queue aging past SLA, or new arrivals pushing the queue past the throughput ceiling. The tool tags which driver is binding so you can act on the right lever.</p>
+
+    <p><strong>The priority formula:</strong></p>
+    <div class="formula">age_factor      = min(1.0, age_hours / SLA_target_hours)
+value_factor    = case_value / max_case_value_in_queue
+priority_score  = (w_risk × risk / 100) + (w_age × age_factor) + (w_value × value_factor)
+priority_score  is normalized 0 to 100, tier red ≥ 80, yellow 50 to 79, green &lt; 50</div>
+
+    <p>Three reprioritize modes change the weights:</p>
+    <ul>
+      <li><strong>Balanced</strong> (default): risk 0.5, age 0.3, value 0.2</li>
+      <li><strong>Risk-weighted</strong> (loss prevention): risk 0.7, age 0.2, value 0.1</li>
+      <li><strong>Value-weighted</strong> (revenue protection): risk 0.3, age 0.2, value 0.5</li>
+    </ul>
+
+    <p><strong>The four presets</strong> change SLA, throughput, and the sample case mix to match the operator persona. Fraud ops runs short SLA and risk-weighted. Content moderation runs long SLA and ignores value (zero-value cases by design). Disputes runs week-long SLA and is value-heavy. CS escalations runs 2-hour SLA and is age-dominated.</p>
+
+    <p><strong>What this tool is NOT:</strong></p>
+    <ul>
+      <li>Not a real-time monitor. Inputs are static for the session. Plug into your queue data manually or use it as a planning tool ahead of the shift.</li>
+      <li>Not an ML predictor. Priority is a formula with explicit weights, not a learned model. The point is for the operator to see the math.</li>
+      <li>Not a ticketing system. It recommends order, it does not execute or assign work.</li>
+      <li>Not a portfolio view. Single queue at a time. For multi-queue allocation use Tool #1 V2 portfolio mode.</li>
+    </ul>
+
+    <p><strong>Operator credit.</strong> Tool #7 was inspired by feedback from Ricardo Vieira-Gomes (Co-Founder &amp; Executive Director, ET Armadillo · AI Transformation in Operations) on a previous launch post. The integrated backlog-health-plus-prioritization model is his concept, refined into a single tool.</p>
+  </div>
+
+  <footer>
+    Open source · MIT License · Built by Everton Paula · <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">View on GitHub</a>
+  </footer>
+
+</div>
+
+<dialog class="priority-modal" id="priorityModal" aria-labelledby="modalTitle">
+  <div class="modal-header">
+    <span class="modal-title" id="modalTitle">Priority breakdown</span>
+    <button type="button" class="modal-close" id="modalClose" aria-label="Close breakdown">×</button>
+  </div>
+  <div id="modalBody"></div>
+</dialog>
+
+<script>
+const WEIGHTS = {
+  balanced: { risk: 0.5, age: 0.3, value: 0.2 },
+  risk:     { risk: 0.7, age: 0.2, value: 0.1 },
+  value:    { risk: 0.3, age: 0.2, value: 0.5 }
+};
+
+const REPRI_LABELS = {
+  balanced: 'Balanced',
+  risk:     'Risk-weighted',
+  value:    'Value-weighted'
+};
+
+const PRESETS = [
+  {
+    id: 'fraud',
+    title: 'Fraud Operations',
+    meta: 'SLA 4h · risk-weighted · ~150 cases',
+    health: {
+      backlog: 150, arrivalRate: 60, throughputRate: 30, agents: 6,
+      slaTargetHours: 4, shrinkage: 25, oldestCaseAgeHours: 2.5, hourlyCostPerAgent: 35
+    },
+    defaultMode: 'balanced',
+    cases: [
+      { id: 'FR-1042', riskScore: 92, ageHours: 3.8, value: 4200 },
+      { id: 'FR-1043', riskScore: 88, ageHours: 1.2, value: 1800 },
+      { id: 'FR-1044', riskScore: 76, ageHours: 3.5, value: 950 },
+      { id: 'FR-1045', riskScore: 95, ageHours: 0.4, value: 8500 },
+      { id: 'FR-1046', riskScore: 64, ageHours: 2.9, value: 320 },
+      { id: 'FR-1047', riskScore: 81, ageHours: 2.1, value: 2200 },
+      { id: 'FR-1048', riskScore: 58, ageHours: 3.7, value: 480 },
+      { id: 'FR-1049', riskScore: 71, ageHours: 1.6, value: 1150 },
+      { id: 'FR-1050', riskScore: 89, ageHours: 0.9, value: 3600 },
+      { id: 'FR-1051', riskScore: 45, ageHours: 3.2, value: 220 },
+      { id: 'FR-1052', riskScore: 83, ageHours: 2.4, value: 5400 },
+      { id: 'FR-1053', riskScore: 67, ageHours: 1.1, value: 780 },
+      { id: 'FR-1054', riskScore: 52, ageHours: 0.6, value: 410 },
+      { id: 'FR-1055', riskScore: 78, ageHours: 3.0, value: 1620 },
+      { id: 'FR-1056', riskScore: 41, ageHours: 2.3, value: 290 },
+      { id: 'FR-1057', riskScore: 86, ageHours: 1.8, value: 2950 },
+      { id: 'FR-1058', riskScore: 33, ageHours: 0.8, value: 175 },
+      { id: 'FR-1059', riskScore: 72, ageHours: 3.6, value: 1340 }
+    ]
+  },
+  {
+    id: 'content',
+    title: 'Content Moderation',
+    meta: 'SLA 24h · age-dominated · ~800 cases',
+    health: {
+      backlog: 820, arrivalRate: 95, throughputRate: 80, agents: 8,
+      slaTargetHours: 24, shrinkage: 30, oldestCaseAgeHours: 18.0, hourlyCostPerAgent: 22
+    },
+    defaultMode: 'balanced',
+    cases: [
+      { id: 'CM-2210', riskScore: 88, ageHours: 22.5, value: 0 },
+      { id: 'CM-2211', riskScore: 74, ageHours: 21.2, value: 0 },
+      { id: 'CM-2212', riskScore: 61, ageHours: 19.8, value: 0 },
+      { id: 'CM-2213', riskScore: 92, ageHours: 4.3,  value: 0 },
+      { id: 'CM-2214', riskScore: 55, ageHours: 23.1, value: 0 },
+      { id: 'CM-2215', riskScore: 47, ageHours: 17.6, value: 0 },
+      { id: 'CM-2216', riskScore: 80, ageHours: 12.5, value: 0 },
+      { id: 'CM-2217', riskScore: 36, ageHours: 20.4, value: 0 },
+      { id: 'CM-2218', riskScore: 69, ageHours: 6.7,  value: 0 },
+      { id: 'CM-2219', riskScore: 51, ageHours: 22.0, value: 0 },
+      { id: 'CM-2220', riskScore: 84, ageHours: 8.1,  value: 0 },
+      { id: 'CM-2221', riskScore: 42, ageHours: 18.9, value: 0 },
+      { id: 'CM-2222', riskScore: 77, ageHours: 14.2, value: 0 },
+      { id: 'CM-2223', riskScore: 29, ageHours: 21.6, value: 0 },
+      { id: 'CM-2224', riskScore: 66, ageHours: 3.4,  value: 0 },
+      { id: 'CM-2225', riskScore: 58, ageHours: 16.8, value: 0 },
+      { id: 'CM-2226', riskScore: 73, ageHours: 11.5, value: 0 },
+      { id: 'CM-2227', riskScore: 90, ageHours: 9.2,  value: 0 },
+      { id: 'CM-2228', riskScore: 38, ageHours: 23.6, value: 0 },
+      { id: 'CM-2229', riskScore: 63, ageHours: 7.5,  value: 0 },
+      { id: 'CM-2230', riskScore: 49, ageHours: 13.1, value: 0 },
+      { id: 'CM-2231', riskScore: 82, ageHours: 2.6,  value: 0 }
+    ]
+  },
+  {
+    id: 'disputes',
+    title: 'Disputes Resolution',
+    meta: 'SLA 7d · value-weighted · ~50 cases',
+    health: {
+      backlog: 52, arrivalRate: 4, throughputRate: 8, agents: 3,
+      slaTargetHours: 168, shrinkage: 22, oldestCaseAgeHours: 132.0, hourlyCostPerAgent: 48
+    },
+    defaultMode: 'value',
+    cases: [
+      { id: 'DR-501', riskScore: 64, ageHours: 156, value: 12800 },
+      { id: 'DR-502', riskScore: 51, ageHours: 142, value: 4200 },
+      { id: 'DR-503', riskScore: 78, ageHours: 96,  value: 18500 },
+      { id: 'DR-504', riskScore: 42, ageHours: 165, value: 2300 },
+      { id: 'DR-505', riskScore: 69, ageHours: 84,  value: 9700 },
+      { id: 'DR-506', riskScore: 35, ageHours: 148, value: 1450 },
+      { id: 'DR-507', riskScore: 81, ageHours: 60,  value: 24500 },
+      { id: 'DR-508', riskScore: 58, ageHours: 120, value: 6800 },
+      { id: 'DR-509', riskScore: 46, ageHours: 132, value: 3100 },
+      { id: 'DR-510', riskScore: 72, ageHours: 36,  value: 15200 },
+      { id: 'DR-511', riskScore: 39, ageHours: 158, value: 1880 },
+      { id: 'DR-512', riskScore: 65, ageHours: 72,  value: 8400 },
+      { id: 'DR-513', riskScore: 53, ageHours: 108, value: 5500 },
+      { id: 'DR-514', riskScore: 87, ageHours: 24,  value: 31000 },
+      { id: 'DR-515', riskScore: 44, ageHours: 144, value: 2650 },
+      { id: 'DR-516', riskScore: 59, ageHours: 90,  value: 7200 }
+    ]
+  },
+  {
+    id: 'cs_escalations',
+    title: 'CS Escalations',
+    meta: 'SLA 2h · age-weighted · ~40 cases',
+    health: {
+      backlog: 38, arrivalRate: 22, throughputRate: 20, agents: 4,
+      slaTargetHours: 2, shrinkage: 28, oldestCaseAgeHours: 1.4, hourlyCostPerAgent: 28
+    },
+    defaultMode: 'balanced',
+    cases: [
+      { id: 'CS-7701', riskScore: 60, ageHours: 1.85, value: 340 },
+      { id: 'CS-7702', riskScore: 48, ageHours: 1.70, value: 180 },
+      { id: 'CS-7703', riskScore: 72, ageHours: 1.20, value: 520 },
+      { id: 'CS-7704', riskScore: 35, ageHours: 1.95, value: 95 },
+      { id: 'CS-7705', riskScore: 81, ageHours: 0.55, value: 770 },
+      { id: 'CS-7706', riskScore: 53, ageHours: 1.55, value: 260 },
+      { id: 'CS-7707', riskScore: 44, ageHours: 1.10, value: 140 },
+      { id: 'CS-7708', riskScore: 67, ageHours: 1.80, value: 410 },
+      { id: 'CS-7709', riskScore: 39, ageHours: 0.85, value: 110 },
+      { id: 'CS-7710', riskScore: 75, ageHours: 1.45, value: 590 },
+      { id: 'CS-7711', riskScore: 51, ageHours: 1.65, value: 220 },
+      { id: 'CS-7712', riskScore: 28, ageHours: 1.30, value: 75 },
+      { id: 'CS-7713', riskScore: 62, ageHours: 0.40, value: 350 },
+      { id: 'CS-7714', riskScore: 56, ageHours: 1.90, value: 290 },
+      { id: 'CS-7715', riskScore: 70, ageHours: 1.05, value: 480 }
+    ]
+  }
+];
+
+const INPUT_FIELDS = [
+  { key: 'backlog',             label: 'Current backlog',     hint: 'open cases',         unit: 'cases',     min: 0, max: 100000, step: 1 },
+  { key: 'arrivalRate',         label: 'Arrival rate',        hint: 'new cases per hour', unit: '/hr',       min: 0, max: 10000,  step: 1 },
+  { key: 'throughputRate',      label: 'Throughput rate',     hint: 'per agent per hour', unit: '/agent/hr', min: 0.5, max: 500,  step: 0.5 },
+  { key: 'agents',              label: 'Available agents',    hint: 'on shift now',       unit: 'agents',    min: 1, max: 500,    step: 1 },
+  { key: 'slaTargetHours',      label: 'SLA target',          hint: 'disposition window', unit: 'hours',     min: 0.25, max: 720, step: 0.25 },
+  { key: 'shrinkage',           label: 'Shrinkage',           hint: 'breaks, meetings',   unit: '%',         min: 0, max: 50,     step: 1 },
+  { key: 'oldestCaseAgeHours',  label: 'Oldest case age',     hint: 'hours in queue',     unit: 'hours',     min: 0, max: 1440,   step: 0.25 },
+  { key: 'hourlyCostPerAgent',  label: 'Hourly cost / agent', hint: 'fully loaded',       unit: '$/hr',      min: 5, max: 500,    step: 1 }
+];
+
+const MAX_ADDED_AGENTS = 10;
+
+const state = {
+  presetId: 'fraud',
+  health: {},
+  cases: [],
+  modifiers: { addedAgents: 0, reprioritizeMode: 'balanced' },
+  ui: { sortBy: 'priorityScore', sortDir: 'desc', modalCaseId: null, mobileExpanded: false }
+};
+
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const fmt1 = n => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
+const fmtMoney = n => '$' + Math.round(n).toLocaleString('en-US');
+
+function fmtHours(h) {
+  if (!isFinite(h) || h <= 0) return '0m';
+  if (h < 1) return Math.round(h * 60) + 'm';
+  const whole = Math.floor(h);
+  const mins = Math.round((h - whole) * 60);
+  if (mins === 0) return whole + 'h';
+  return whole + 'h ' + mins + 'm';
+}
+
+function effectiveThroughput(agents, throughputRate, shrinkagePct) {
+  return agents * throughputRate * (1 - shrinkagePct / 100);
+}
+
+function netChangeRate(arrivalRate, effThroughput) {
+  return arrivalRate - effThroughput;
+}
+
+function hoursToBreach({ oldestCaseAgeHours, slaTargetHours, backlog, effThroughput, arrivalRate }) {
+  const oldestCaseBreach = Math.max(0, slaTargetHours - oldestCaseAgeHours);
+  const netRate = arrivalRate - effThroughput;
+  // A new arrival at t=0 waits queueWait = backlog / effThroughput hours.
+  // It breaches if queueWait >= slaTargetHours.
+  const queueWaitHours = backlog / Math.max(effThroughput, 0.0001);
+  const newArrivalBreach = queueWaitHours >= slaTargetHours ? 0 : Infinity;
+  const hours = Math.min(oldestCaseBreach, newArrivalBreach);
+  const stable = netRate <= 0 && newArrivalBreach === Infinity;
+  // Tie-break to new_arrival when equal, since adding agents is the actionable lever.
+  const driver = newArrivalBreach < oldestCaseBreach ? 'new_arrival' : 'oldest_case';
+  return { hours, driver, stable };
+}
+
+function agentsNeededToRecover({ backlog, arrivalRate, throughputRate, shrinkagePct, slaTargetHours, oldestCaseAgeHours }) {
+  const hoursRemaining = Math.max(0.5, slaTargetHours - oldestCaseAgeHours);
+  const projectedArrivals = arrivalRate * hoursRemaining;
+  const workToClear = backlog + projectedArrivals;
+  const denom = throughputRate * hoursRemaining * (1 - shrinkagePct / 100);
+  return Math.max(1, Math.ceil(workToClear / Math.max(denom, 0.0001)));
+}
+
+function recoveryCost(addedAgents, hours, hourlyCostPerAgent) {
+  return addedAgents * Math.max(0, hours) * hourlyCostPerAgent;
+}
+
+function priorityScore(caseObj, ctx) {
+  const { slaTargetHours, maxValue, weights } = ctx;
+  const ageFactor = Math.min(1, caseObj.ageHours / slaTargetHours);
+  const valueFactor = maxValue > 0 ? caseObj.value / maxValue : 0;
+  const riskFactor = caseObj.riskScore / 100;
+  const raw = weights.risk * riskFactor + weights.age * ageFactor + weights.value * valueFactor;
+  return Math.round(raw * 100);
+}
+
+function projectBacklog({ backlog, arrivalRate, effThroughput, hours = 24 }) {
+  const points = [];
+  let q = backlog;
+  for (let t = 0; t <= hours; t++) {
+    points.push({ t, q: Math.max(0, q) });
+    q += (arrivalRate - effThroughput);
+  }
+  return points;
+}
+
+function backlogTier({ stable, hours, slaTargetHours }) {
+  // Already-breaching oldest case is red regardless of stability.
+  if (hours <= 0) return 'red';
+  if (stable && hours > slaTargetHours * 0.5) return 'green';
+  if (stable) return 'yellow';
+  if (hours > 1) return 'yellow';
+  return 'red';
+}
+
+function priorityTierFor(score) {
+  if (score >= 80) return 'red';
+  if (score >= 50) return 'yellow';
+  return 'green';
+}
+
+function actionFor(score) {
+  if (score >= 80) return { label: 'Review now', icon: '!', cls: 'review-now' };
+  if (score >= 50) return { label: 'Standard queue', icon: '~', cls: 'standard' };
+  return { label: 'Hold', icon: '·', cls: 'hold' };
+}
+
+function setupCanvas(canvas) {
+  const wrap = canvas.parentElement;
+  const ratio = window.devicePixelRatio || 1;
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  canvas.width = w * ratio; canvas.height = h * ratio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(ratio, ratio);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+
+function deepCloneCases(arr) {
+  return arr.map(c => ({ id: c.id, riskScore: c.riskScore, ageHours: c.ageHours, value: c.value }));
+}
+
+function loadPreset(presetId) {
+  const p = PRESETS.find(x => x.id === presetId);
+  if (!p) return;
+  state.presetId = presetId;
+  state.health = { ...p.health };
+  state.cases = deepCloneCases(p.cases);
+  state.modifiers.addedAgents = 0;
+  state.modifiers.reprioritizeMode = p.defaultMode || 'balanced';
+  state.ui.sortBy = 'priorityScore';
+  state.ui.sortDir = 'desc';
+  state.ui.modalCaseId = null;
+  renderPresets();
+  renderInputs();
+  renderAll();
+}
+
+function computeHealthSnapshot() {
+  const h = state.health;
+  const added = state.modifiers.addedAgents;
+  const effBase = effectiveThroughput(h.agents, h.throughputRate, h.shrinkage);
+  const effWithAdded = effectiveThroughput(h.agents + added, h.throughputRate, h.shrinkage);
+  const breach = hoursToBreach({
+    oldestCaseAgeHours: h.oldestCaseAgeHours,
+    slaTargetHours: h.slaTargetHours,
+    backlog: h.backlog,
+    effThroughput: effBase,
+    arrivalRate: h.arrivalRate
+  });
+  const net = netChangeRate(h.arrivalRate, effBase);
+  const tier = backlogTier({ stable: breach.stable, hours: breach.hours, slaTargetHours: h.slaTargetHours });
+  const suggestedAgents = agentsNeededToRecover({
+    backlog: h.backlog, arrivalRate: h.arrivalRate, throughputRate: h.throughputRate,
+    shrinkagePct: h.shrinkage, slaTargetHours: h.slaTargetHours, oldestCaseAgeHours: h.oldestCaseAgeHours
+  });
+  const deltaAgents = Math.max(0, suggestedAgents - h.agents);
+  const hoursRemaining = Math.max(0.5, h.slaTargetHours - h.oldestCaseAgeHours);
+  const cost = recoveryCost(deltaAgents, hoursRemaining, h.hourlyCostPerAgent);
+  return { effBase, effWithAdded, breach, net, tier, suggestedAgents, deltaAgents, hoursRemaining, cost };
+}
+
+function renderPresets() {
+  const grid = $('presetsGrid');
+  grid.innerHTML = PRESETS.map(p => `
+    <button type="button"
+            class="preset-btn"
+            data-id="${p.id}"
+            data-active="${state.presetId === p.id ? 'true' : 'false'}"
+            aria-pressed="${state.presetId === p.id ? 'true' : 'false'}">
+      <div class="preset-title">${p.title}</div>
+      <div class="preset-meta">${p.meta}</div>
+    </button>
+  `).join('');
+}
+
+function renderInputs() {
+  const grid = $('settingsGrid');
+  grid.innerHTML = INPUT_FIELDS.map(f => `
+    <div class="setting-cell">
+      <label for="inp_${f.key}">${f.label} <span class="hint">${f.hint}</span></label>
+      <div class="setting-input">
+        <input type="number"
+               id="inp_${f.key}"
+               data-key="${f.key}"
+               value="${state.health[f.key]}"
+               min="${f.min}"
+               max="${f.max}"
+               step="${f.step}"
+               aria-label="${f.label}">
+        <span class="unit">${f.unit}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderHealthHeader(snap) {
+  const h = state.health;
+  const header = $('healthHeader');
+  header.dataset.tier = snap.tier;
+  const badge = $('tierBadge');
+  badge.classList.remove('green', 'yellow', 'red');
+  badge.classList.add(snap.tier);
+  const badgeText = snap.tier === 'red' ? 'AT RISK' : snap.tier === 'yellow' ? 'WATCH' : 'STABLE';
+  badge.textContent = badgeText;
+  badge.setAttribute('aria-label', 'Backlog tier ' + snap.tier);
+  badge.dataset.pulse = snap.tier === 'red' ? 'true' : 'false';
+
+  const title = $('healthHeaderTitle');
+  const sub = $('healthHeaderSub');
+  if (snap.tier === 'red') {
+    title.textContent = 'SLA breach imminent. Add capacity now.';
+    sub.textContent = snap.breach.driver === 'oldest_case'
+      ? 'Oldest case in queue is aging out.'
+      : 'New arrivals outpacing throughput.';
+  } else if (snap.tier === 'yellow') {
+    title.textContent = 'Backlog under pressure. Monitor closely.';
+    sub.textContent = snap.net > 0
+      ? 'Queue growing at ' + fmt1(snap.net) + ' cases per hour.'
+      : 'Throughput keeping up, oldest case is the risk.';
+  } else {
+    title.textContent = 'Stable. No breach expected.';
+    sub.textContent = 'Throughput above arrivals.';
+  }
+
+  const breachTile = $('kpiBreachTile');
+  const breachEl = $('kpiBreach');
+  const breachSub = $('kpiBreachSub');
+  breachTile.dataset.tier = snap.tier;
+  if (snap.breach.stable && snap.tier === 'green') {
+    breachEl.textContent = 'Stable';
+    breachSub.textContent = 'No breach expected at current rate.';
+  } else {
+    breachEl.textContent = fmtHours(snap.breach.hours);
+    breachSub.textContent = snap.breach.driver === 'oldest_case'
+      ? 'Driver: oldest case (' + fmt1(h.oldestCaseAgeHours) + 'h of ' + fmt1(h.slaTargetHours) + 'h SLA).'
+      : 'Driver: new arrivals (' + fmt1(h.arrivalRate) + '/hr vs throughput ' + fmt1(snap.effBase) + '/hr).';
+  }
+
+  const backlogTile = $('kpiBacklogTile');
+  $('kpiBacklog').textContent = fmt(h.backlog);
+  const arrow = $('kpiBacklogArrow');
+  if (snap.net > 0.5) {
+    arrow.dataset.dir = 'up';
+    arrow.textContent = '↑';
+    backlogTile.dataset.tier = snap.tier === 'green' ? 'yellow' : snap.tier;
+    $('kpiBacklogSub').textContent = 'Growing at ' + fmt1(snap.net) + ' cases per hour.';
+  } else if (snap.net < -0.5) {
+    arrow.dataset.dir = 'down';
+    arrow.textContent = '↓';
+    backlogTile.dataset.tier = 'green';
+    $('kpiBacklogSub').textContent = 'Shrinking at ' + fmt1(Math.abs(snap.net)) + ' cases per hour.';
+  } else {
+    arrow.dataset.dir = 'flat';
+    arrow.textContent = '→';
+    delete backlogTile.dataset.tier;
+    $('kpiBacklogSub').textContent = 'Flat at current throughput.';
+  }
+
+  const agentsTile = $('kpiAgentsTile');
+  if (snap.deltaAgents > 0) {
+    agentsTile.dataset.tier = snap.deltaAgents > 3 ? 'red' : 'yellow';
+    $('kpiAgents').textContent = '+' + snap.deltaAgents;
+    $('kpiAgentsSub').textContent = 'For ' + fmtHours(snap.hoursRemaining) + '. Recovery cost ' + fmtMoney(snap.cost) + '.';
+  } else {
+    agentsTile.dataset.tier = 'green';
+    $('kpiAgents').textContent = '0';
+    $('kpiAgentsSub').textContent = 'No extra capacity required.';
+  }
+
+  $('addedAgentsVal').textContent = state.modifiers.addedAgents;
+  $('addAgentsDown').disabled = state.modifiers.addedAgents <= 0;
+  $('addAgentsUp').disabled = state.modifiers.addedAgents >= MAX_ADDED_AGENTS;
+
+  const repri = $('reprioritizeBtn');
+  repri.dataset.mode = state.modifiers.reprioritizeMode;
+  repri.textContent = REPRI_LABELS[state.modifiers.reprioritizeMode];
+  repri.setAttribute('aria-label', 'Reprioritize queue, current mode ' + REPRI_LABELS[state.modifiers.reprioritizeMode]);
+}
+
+function renderProjectionChart(snap) {
+  const canvas = $('projectionChart');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const hh = state.health;
+  const baseLine = projectBacklog({
+    backlog: hh.backlog, arrivalRate: hh.arrivalRate, effThroughput: snap.effBase, hours: 24
+  });
+  const showAmber = state.modifiers.addedAgents > 0;
+  const amberLine = showAmber ? projectBacklog({
+    backlog: hh.backlog, arrivalRate: hh.arrivalRate, effThroughput: snap.effWithAdded, hours: 24
+  }) : null;
+
+  const slaThreshold = hh.slaTargetHours * Math.max(snap.effBase, 0.0001);
+  const maxQ = Math.max(
+    ...baseLine.map(p => p.q),
+    ...(amberLine ? amberLine.map(p => p.q) : []),
+    slaThreshold,
+    hh.backlog
+  );
+  const yMax = maxQ * 1.15 || 10;
+
+  const padL = 44, padR = 14, padT = 10, padB = 26;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  ctx.fillStyle = '#0a1024';
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.strokeStyle = '#1f2a44';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#5a6788';
+  ctx.font = '10px ui-monospace, monospace';
+  const yTicks = 4;
+  for (let i = 0; i <= yTicks; i++) {
+    const y = padT + (plotH * i) / yTicks;
+    ctx.beginPath();
+    ctx.strokeStyle = '#1f2a44';
+    ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
+    const val = yMax - (yMax * i) / yTicks;
+    ctx.fillStyle = '#5a6788';
+    ctx.textAlign = 'right';
+    ctx.fillText(fmt(val), padL - 4, y + 3);
+  }
+
+  ctx.textAlign = 'center';
+  for (let xH = 0; xH <= 24; xH += 4) {
+    const x = padL + (plotW * xH) / 24;
+    ctx.fillStyle = '#5a6788';
+    ctx.fillText(xH === 0 ? 'now' : '+' + xH + 'h', x, h - 8);
+  }
+
+  const slaY = padT + plotH - (slaThreshold / yMax) * plotH;
+  ctx.strokeStyle = 'rgba(239,68,68,0.65)';
+  ctx.setLineDash([5, 4]);
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(padL, slaY); ctx.lineTo(w - padR, slaY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(239,68,68,0.8)';
+  ctx.textAlign = 'left';
+  ctx.fillText('SLA threshold', padL + 6, slaY - 4);
+
+  if (!snap.breach.stable && snap.breach.hours < 24) {
+    const bx = padL + (plotW * snap.breach.hours) / 24;
+    ctx.strokeStyle = 'rgba(239,68,68,0.4)';
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    ctx.moveTo(bx, padT); ctx.lineTo(bx, padT + plotH); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawLine(points, color, lineWidth = 2.2) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const x = padL + (plotW * p.t) / 24;
+      const y = padT + plotH - (p.q / yMax) * plotH;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  drawLine(baseLine, '#14b8a6');
+  if (amberLine) drawLine(amberLine, '#f59e0b');
+
+  $('legendAmber').hidden = !showAmber;
+}
+
+function buildEnrichedCases() {
+  const weights = WEIGHTS[state.modifiers.reprioritizeMode];
+  const slaTargetHours = state.health.slaTargetHours;
+  const maxValue = Math.max(0, ...state.cases.map(c => c.value));
+  const enriched = state.cases.map(c => {
+    const score = priorityScore(c, { slaTargetHours, maxValue, weights });
+    return {
+      ...c,
+      priorityScore: score,
+      tier: priorityTierFor(score),
+      ageFactor: Math.min(1, c.ageHours / slaTargetHours),
+      valueFactor: maxValue > 0 ? c.value / maxValue : 0
+    };
+  });
+  enriched.sort((a, b) => b.priorityScore - a.priorityScore);
+  enriched.forEach((c, i) => { c.rank = i + 1; c.isTop5 = i < 5; });
+  return { enriched, maxValue };
+}
+
+function sortEnriched(arr) {
+  const { sortBy, sortDir } = state.ui;
+  const dir = sortDir === 'asc' ? 1 : -1;
+  const sorted = [...arr];
+  sorted.sort((a, b) => {
+    let av, bv;
+    if (sortBy === 'rank') { av = a.rank; bv = b.rank; }
+    else if (sortBy === 'id') { return a.id.localeCompare(b.id) * dir; }
+    else if (sortBy === 'tier') {
+      const order = { red: 3, yellow: 2, green: 1 };
+      av = order[a.tier]; bv = order[b.tier];
+    }
+    else { av = a[sortBy]; bv = b[sortBy]; }
+    return (av - bv) * dir;
+  });
+  return sorted;
+}
+
+function renderPriorityTable() {
+  const { enriched, maxValue } = buildEnrichedCases();
+  const hideValueCol = maxValue === 0;
+  $('thValue').style.display = hideValueCol ? 'none' : '';
+
+  const sorted = sortEnriched(enriched);
+  const tbody = $('priorityTbody');
+  const slaTargetHours = state.health.slaTargetHours;
+
+  tbody.innerHTML = sorted.map(c => {
+    const riskCls = c.riskScore >= 80 ? 'cell-tier-red' : c.riskScore >= 50 ? 'cell-tier-yellow' : '';
+    const ageCls = c.ageHours >= slaTargetHours ? 'cell-tier-red'
+      : c.ageHours >= slaTargetHours * 0.7 ? 'cell-tier-yellow' : '';
+    const priCls = 'cell-tier-' + c.tier;
+    const action = actionFor(c.priorityScore);
+    const valueCell = hideValueCol
+      ? ''
+      : (c.value > 0
+          ? `<td class="numeric">${fmtMoney(c.value)}</td>`
+          : `<td class="numeric cell-empty">--</td>`);
+    const ariaLabel = `Case ${c.id}, rank ${c.rank}, risk ${c.riskScore}, age ${fmt1(c.ageHours)} hours, priority ${c.priorityScore}, ${action.label}. Press Enter for breakdown.`;
+    return `
+      <tr data-id="${c.id}" data-top5="${c.isTop5 ? 'true' : 'false'}" role="button" tabindex="0" aria-label="${ariaLabel}">
+        <td><span class="rank-pill">${c.rank}</span></td>
+        <td><span class="case-id-mono">${c.id}</span></td>
+        <td class="numeric ${riskCls}">${c.riskScore}</td>
+        <td class="numeric ${ageCls}">${fmt1(c.ageHours)}h</td>
+        ${valueCell}
+        <td class="numeric ${priCls}"><strong>${c.priorityScore}</strong></td>
+        <td class="center"><span class="tier-badge ${c.tier}">${c.tier.toUpperCase()}</span></td>
+        <td>
+          <span class="action-label ${action.cls}">
+            <span class="col-action-text">${action.label}</span>
+            <span class="col-action-icon" aria-hidden="true">${action.icon}</span>
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  document.querySelectorAll('.priority-table thead th[data-sort]').forEach(th => {
+    const key = th.dataset.sort;
+    th.setAttribute('aria-sort', key === state.ui.sortBy ? (state.ui.sortDir === 'asc' ? 'ascending' : 'descending') : 'none');
+  });
+
+  renderTop5Strip(enriched.slice(0, 5), hideValueCol);
+}
+
+function renderTop5Strip(top5, hideValue) {
+  const strip = $('top5Strip');
+  strip.innerHTML = top5.map(c => `
+    <article class="top5-card" tabindex="0" data-id="${c.id}" aria-label="Top ${c.rank} priority case ${c.id}, priority score ${c.priorityScore}">
+      <div class="t5-rank">Top #${c.rank} · ${c.tier.toUpperCase()}</div>
+      <div class="t5-id">${c.id}</div>
+      <div class="t5-stats">
+        <div><span class="lbl">Risk</span>${c.riskScore}</div>
+        <div><span class="lbl">Age</span>${fmt1(c.ageHours)}h</div>
+        <div><span class="lbl">Priority</span>${c.priorityScore}</div>
+        ${hideValue ? '' : `<div><span class="lbl">Value</span>${c.value > 0 ? fmtMoney(c.value) : '--'}</div>`}
+      </div>
+    </article>
+  `).join('');
+}
+
+function renderModal(caseId) {
+  const { enriched } = buildEnrichedCases();
+  const c = enriched.find(x => x.id === caseId);
+  if (!c) return;
+  const weights = WEIGHTS[state.modifiers.reprioritizeMode];
+  const slaTargetHours = state.health.slaTargetHours;
+  const riskTerm = (weights.risk * c.riskScore / 100);
+  const ageTerm = (weights.age * c.ageFactor);
+  const valueTerm = (weights.value * c.valueFactor);
+  const total = (riskTerm + ageTerm + valueTerm) * 100;
+  const action = actionFor(c.priorityScore);
+
+  $('modalTitle').textContent = `Priority breakdown · ${c.id}`;
+  const body = $('modalBody');
+  body.innerHTML = `
+    <div class="modal-row"><span class="lbl">Rank</span><span class="val">#${c.rank} of ${enriched.length}</span></div>
+    <div class="modal-row"><span class="lbl">Risk score</span><span class="val">${c.riskScore} / 100</span></div>
+    <div class="modal-row"><span class="lbl">Age in queue</span><span class="val">${fmt1(c.ageHours)}h (${(c.ageFactor * 100).toFixed(0)}% of SLA ${fmt1(slaTargetHours)}h)</span></div>
+    <div class="modal-row"><span class="lbl">Case value</span><span class="val">${c.value > 0 ? fmtMoney(c.value) : 'n/a for this preset'}</span></div>
+    <div class="modal-row"><span class="lbl">Priority tier</span><span class="val">${c.tier.toUpperCase()}</span></div>
+    <div class="modal-row"><span class="lbl">Recommended</span><span class="val">${action.label}</span></div>
+    <div class="formula-substituted">priority = (<span class="num-risk">${weights.risk}</span> × <span class="num-risk">${c.riskScore}</span>/100)
+         + (<span class="num-age">${weights.age}</span> × <span class="num-age">${c.ageFactor.toFixed(2)}</span>)
+         + (<span class="num-value">${weights.value}</span> × <span class="num-value">${c.valueFactor.toFixed(2)}</span>)
+       = <span class="num-risk">${riskTerm.toFixed(3)}</span> + <span class="num-age">${ageTerm.toFixed(3)}</span> + <span class="num-value">${valueTerm.toFixed(3)}</span>
+       = <span class="result">${(total / 100).toFixed(3)}</span> × 100
+       = <span class="result">${c.priorityScore}</span></div>
+    <p class="modal-note">Weights come from the <strong>${REPRI_LABELS[state.modifiers.reprioritizeMode]}</strong> mode (risk ${weights.risk}, age ${weights.age}, value ${weights.value}). Cycle the Reprioritize pill in the sticky header to see how the ranking shifts.</p>
+  `;
+}
+
+function openModalFor(caseId) {
+  const dlg = $('priorityModal');
+  state.ui.modalCaseId = caseId;
+  renderModal(caseId);
+  const trigger = document.activeElement;
+  dlg._returnFocus = trigger;
+  if (typeof dlg.showModal === 'function') {
+    dlg.showModal();
+  } else {
+    dlg.setAttribute('open', '');
+  }
+}
+
+function closeModal() {
+  const dlg = $('priorityModal');
+  if (typeof dlg.close === 'function' && dlg.open) dlg.close();
+  else dlg.removeAttribute('open');
+  state.ui.modalCaseId = null;
+  if (dlg._returnFocus && typeof dlg._returnFocus.focus === 'function') {
+    dlg._returnFocus.focus();
+  }
+}
+
+function renderAll() {
+  const snap = computeHealthSnapshot();
+  renderHealthHeader(snap);
+  renderProjectionChart(snap);
+  renderPriorityTable();
+}
+
+let rafToken = null;
+function scheduleRender() {
+  if (rafToken) return;
+  rafToken = requestAnimationFrame(() => {
+    rafToken = null;
+    renderAll();
+  });
+}
+
+let resizeTimer = null;
+function onResize() {
+  if (resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const snap = computeHealthSnapshot();
+    renderProjectionChart(snap);
+  }, 100);
+}
+
+function bindEvents() {
+  $('presetsGrid').addEventListener('click', e => {
+    const btn = e.target.closest('.preset-btn');
+    if (!btn) return;
+    loadPreset(btn.dataset.id);
+  });
+
+  $('settingsGrid').addEventListener('input', e => {
+    const inp = e.target.closest('input[data-key]');
+    if (!inp) return;
+    const key = inp.dataset.key;
+    const val = parseFloat(inp.value);
+    state.health[key] = isFinite(val) ? val : 0;
+    scheduleRender();
+  });
+
+  $('addAgentsUp').addEventListener('click', () => {
+    if (state.modifiers.addedAgents < MAX_ADDED_AGENTS) {
+      state.modifiers.addedAgents++;
+      scheduleRender();
+    }
+  });
+  $('addAgentsDown').addEventListener('click', () => {
+    if (state.modifiers.addedAgents > 0) {
+      state.modifiers.addedAgents--;
+      scheduleRender();
+    }
+  });
+
+  const repri = $('reprioritizeBtn');
+  repri.addEventListener('click', () => {
+    const order = ['balanced', 'risk', 'value'];
+    const idx = order.indexOf(state.modifiers.reprioritizeMode);
+    state.modifiers.reprioritizeMode = order[(idx + 1) % order.length];
+    repri.dataset.flash = 'true';
+    setTimeout(() => { repri.dataset.flash = 'false'; }, 250);
+    scheduleRender();
+  });
+
+  document.querySelectorAll('.priority-table thead th[data-sort]').forEach(th => {
+    const handler = () => {
+      const key = th.dataset.sort;
+      if (state.ui.sortBy === key) {
+        state.ui.sortDir = state.ui.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.ui.sortBy = key;
+        state.ui.sortDir = key === 'id' ? 'asc' : 'desc';
+      }
+      renderPriorityTable();
+    };
+    th.addEventListener('click', handler);
+    th.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
+    });
+  });
+
+  $('priorityTbody').addEventListener('click', e => {
+    const tr = e.target.closest('tr[data-id]');
+    if (!tr) return;
+    openModalFor(tr.dataset.id);
+  });
+  $('priorityTbody').addEventListener('keydown', e => {
+    const tr = e.target.closest('tr[data-id]');
+    if (!tr) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openModalFor(tr.dataset.id);
+    }
+  });
+
+  $('top5Strip').addEventListener('click', e => {
+    const card = e.target.closest('.top5-card');
+    if (!card) return;
+    openModalFor(card.dataset.id);
+  });
+  $('top5Strip').addEventListener('keydown', e => {
+    const card = e.target.closest('.top5-card');
+    if (!card) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openModalFor(card.dataset.id);
+    }
+  });
+
+  const dlg = $('priorityModal');
+  $('modalClose').addEventListener('click', closeModal);
+  dlg.addEventListener('click', e => {
+    const rect = dlg.getBoundingClientRect();
+    const inside = e.clientX >= rect.left && e.clientX <= rect.right
+                && e.clientY >= rect.top  && e.clientY <= rect.bottom;
+    if (!inside) closeModal();
+  });
+  dlg.addEventListener('close', () => {
+    state.ui.modalCaseId = null;
+    if (dlg._returnFocus && typeof dlg._returnFocus.focus === 'function') {
+      dlg._returnFocus.focus();
+    }
+  });
+
+  $('mobileExpandToggle').addEventListener('click', () => {
+    state.ui.mobileExpanded = !state.ui.mobileExpanded;
+    const header = $('healthHeader');
+    const toggle = $('mobileExpandToggle');
+    header.dataset.expanded = state.ui.mobileExpanded ? 'true' : 'false';
+    toggle.setAttribute('aria-expanded', state.ui.mobileExpanded ? 'true' : 'false');
+    toggle.textContent = state.ui.mobileExpanded ? 'Hide ▴' : 'Details ▾';
+  });
+
+  window.addEventListener('resize', onResize);
+}
+
+bindEvents();
+loadPreset('fraud');
+</script>
+</body>
+</html>
