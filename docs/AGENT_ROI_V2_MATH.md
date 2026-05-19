@@ -6,7 +6,7 @@
 
 V1 of this calculator answered one question: **is this single queue making or losing money?**
 
-After V1 shipped publicly, [Ricardo Vieira-Gomes](https://www.linkedin.com/in/) (Co-Founder & Executive Director at ET Armadillo, AI Transformation in Operations) raised two gaps on the launch post:
+After V1 shipped publicly, [Ricardo Vieira-Gomes](https://www.linkedin.com/in/ricardo-vieira-gomes/) (Co-Founder & Executive Director at ET Armadillo, AI Transformation in Operations) raised two gaps on the launch post:
 
 1. **False positive cost is missing.** Accuracy alone misses the cost of blocking legitimate orders. The customer LTV impact is invisible in V1.
 2. **Single-queue framing is wrong.** Ops leaders run multiple queues. The right question isn't "is queue X profitable?" but "given my next marginal agent, where does it go?"
@@ -300,7 +300,7 @@ Six scenarios in single-queue mode. Portfolio mode has a default 3-queue configu
 
 ## Credit
 
-V2 features and math model were prompted by [Ricardo Vieira-Gomes](https://www.linkedin.com/in/)'s feedback on the V1 launch post. Both critiques were structural, not stylistic. They moved the tool from a single-queue ROI calculator into a portfolio-aware net-of-FP-cost decision tool. The math discipline behind V2 is on Ricardo.
+V2 features and math model were prompted by [Ricardo Vieira-Gomes](https://www.linkedin.com/in/ricardo-vieira-gomes/)'s feedback on the V1 launch post. Both critiques were structural, not stylistic. They moved the tool from a single-queue ROI calculator into a portfolio-aware net-of-FP-cost decision tool. The math discipline behind V2 is on Ricardo.
 
 ---
 

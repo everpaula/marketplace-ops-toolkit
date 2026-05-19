@@ -22,7 +22,7 @@ Evaluate workforce ROI in manual review operations. Helps you decide which queue
 1. **False positive cost** — When an agent blocks a legitimate order, you don't just lose the savings, you lose the LTV of that customer. V2 takes FP rate + avg customer LTV as inputs and subtracts that cost from gross savings to give you net ROI.
 2. **Portfolio mode** — Most ops leaders don't run one queue, they run multiple. V2 portfolio mode lets you model up to 3 queues side by side and surfaces which queue gets the next marginal agent. Real decision isn't "is queue X profitable?" but "where do I put the next dollar?"
 
-Both features were raised as missing in V1 by [Ricardo Vieira-Gomes](https://www.linkedin.com/in/) (Co-Founder & Executive Director, ET Armadillo · AI Transformation in Operations) on the launch post. Both critiques were right and are now built in.
+Both features were raised as missing in V1 by [Ricardo Vieira-Gomes](https://www.linkedin.com/in/ricardo-vieira-gomes/) (Co-Founder & Executive Director, ET Armadillo · AI Transformation in Operations) on the launch post. Both critiques were right and are now built in.
 
 **What it does:**
 - 7 inputs: team size, daily cost, throughput, accuracy, avg savings, **FP rate (V2)**, **avg customer LTV (V2)**
