@@ -1183,7 +1183,7 @@
 
   <div class="card">
     <h2>Operating parameters <span class="card-context-tag" id="opParamsTag">3PL</span></h2>
-    <p class="sub">Productivity and capacity per resource. Defaults reflect typical LATAM marketplace 3PL benchmarks; calibrate to your operation.</p>
+    <p class="sub">Productivity and capacity per resource. Defaults reflect typical multi-country marketplace 3PL benchmarks; calibrate to your operation.</p>
     <div class="settings-grid" id="opParamsGrid"></div>
   </div>
 
@@ -1376,10 +1376,10 @@ dock_util     = dock_demand_h / (dockDoors * shiftHours)</div>
 
     <p><strong>Where the numbers come from</strong></p>
     <ul>
-      <li><strong>Time-of-day curves</strong> are fixed per persona in v1 (induction peaks around 08:00 for 3PL, delivery around 16:00, fulfillment outbound bimodal at 11:00 and 16:00). Real ops should fit curves to their own data; this tool calibrates curve shape to representative LATAM marketplace patterns.</li>
-      <li><strong>Shrinkage defaults</strong> 18-22% reflect typical operations including PTO, training, sickness, and breaks. Latin American 3PL ops often run higher (20-25%); US fulfillment with proper schedule adherence tools can hit 12-15%.</li>
+      <li><strong>Time-of-day curves</strong> are fixed per persona in v1 (induction peaks around 08:00 for 3PL, delivery around 16:00, fulfillment outbound bimodal at 11:00 and 16:00). Real ops should fit curves to their own data; this tool calibrates curve shape to representative marketplace patterns.</li>
+      <li><strong>Shrinkage defaults</strong> 18-22% reflect typical operations including PTO, training, sickness, and breaks. Emerging-market 3PL ops often run higher (20-25%); US fulfillment with proper schedule adherence tools can hit 12-15%.</li>
       <li><strong>Peak buffer</strong> 15-25% adds variance protection. The buffer compounds: if you forecast 10k packages with a 20% buffer, you staff for 12k. If the day comes in at 14k, you are still 14% short.</li>
-      <li><strong>Cost defaults</strong> are USD and approximate. Real 3PL courier costs vary 60-180 USD/day across LATAM depending on city, vehicle ownership model, and gig vs employed labor mix. Fulfillment hourly rates vary similarly.</li>
+      <li><strong>Cost defaults</strong> are USD and approximate. Real 3PL courier costs vary 60-180 USD/day depending on city, vehicle ownership model, and gig vs employed labor mix. Fulfillment hourly rates vary similarly.</li>
     </ul>
 
     <p><strong>What this tool is NOT</strong></p>

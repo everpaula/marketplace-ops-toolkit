@@ -1,8 +1,8 @@
 # Marketplace Ops Toolkit
 
-> Practical tools for operations leaders running manual review queues — fraud, content moderation, customer service QA, anywhere humans decision flagged cases at scale.
+> Practical tools for operations leaders making decisions at scale. Fraud, supply chain, workforce planning, vendor management, driver performance, dispute investigation. Anywhere an ops decision deserves the actual numbers, not intuition.
 
-Open-source methodologies for evaluating, scaling, and optimizing manual review operations. Drawn from years of hands-on work in fraud and marketplace operations across Latin America, sanitized and generalized so any ops leader can adapt them to their own context.
+Open-source methodologies and simulators for evaluating, scaling, and tuning operational decisions. Built from years of hands-on multi-country marketplace and consumer fintech operations, sanitized and generalized so any ops leader can adapt them to their own context.
 
 ---
 
@@ -35,7 +35,7 @@ Both features were raised as missing in V1 by [Ricardo Vieira-Gomes](https://www
 **Real-world impact** *(illustrative scenarios drawn from operator practice, numbers are realistic order-of-magnitude, not measurements from a specific deployment)*
 
 **Case 1: Fraud review queue running 3 months in the red**
-- *Setup:* An 8-agent manual review team at a LATAM marketplace screens 200 flagged orders per day at $30 average order value.
+- *Setup:* An 8-agent manual review team at a global marketplace screens 200 flagged orders per day at $30 average order value.
 - *Problem:* Net ROI looked positive on paper at 18% catch rate, but false-positive cost was quietly burning roughly $1,400 per day in lost legitimate customer LTV.
 - *Tool surfaced:* Portfolio mode flagged FP cost at $4.50 per agent-day against gross savings of $3.20, recommending root-cause work on the rule set rather than more headcount.
 - *Outcome:* Decision rules rewritten, FP rate dropped from 6% to 2.5%, net ROI flipped to +0.8x, around $280K saved annually vs the "add 2 more agents" plan that was already approved.
@@ -172,7 +172,7 @@ The math is from control theory (Minorsky, 1922). The application to marketplace
 **Real-world impact** *(illustrative scenarios drawn from operator practice)*
 
 **Case 1: City-average surge masking 4 starving polygons**
-- *Setup:* Pricing manager at a ride-hailing operation in a Tier-2 LATAM city running a single citywide surge multiplier on weekday evening peaks.
+- *Setup:* Pricing manager at a ride-hailing operation in a Tier-2 city running a single citywide surge multiplier on weekday evening peaks.
 - *Problem:* Citywide multiplier averaged 1.4x and looked healthy, but 4 outer polygons were stuck at 18-22 minute ETAs while downtown sat at 4 minutes, causing roughly 8% trip cancellation in those zones.
 - *Tool surfaced:* V2 polygon view showed the 3x3 zone grid with two cells in deep undersupply at effective 1.0x while downtown was overshooting at 1.7x.
 - *Outcome:* Zone-level Kp raised on outer cells, cancellation in those polygons dropped from 8% to 3.2%, recovered an estimated $9K per weekday peak in completed trips.
@@ -536,7 +536,7 @@ MIT. Use freely. If it helps you make a better decision, that's enough.
 
 ## About me
 
-I'm Everton Paula. I spent the last 12+ years building and running operations at hypergrowth marketplaces and consumer fintech in Latin America — fraud, marketplace ops, logistics, vendor management, workforce planning across multiple countries. This toolkit codifies the recurring patterns I've seen work, framed in a way any operations leader can adapt to their own environment.
+I'm Everton Paula. I spent the last 12+ years building and running operations at hypergrowth marketplaces and consumer fintech across multiple countries. Fraud, marketplace ops, logistics, vendor management, workforce planning at scale. This toolkit codifies the recurring patterns I've seen work, framed in a way any operations leader can adapt to their own environment.
 
 Currently based in Tampa, FL, focused on Director / Head roles in operations and fraud operations at consumer fintech and marketplaces.
 
