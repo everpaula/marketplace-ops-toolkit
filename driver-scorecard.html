@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driver / Courier Performance Scorecard · Marketplace Ops Toolkit</title>
+<meta name="description" content="Rank drivers and couriers on weighted multi-dimensional performance. Tenure-based bias correction so new drivers aren't unfairly penalized. Four-tier classification (Top / Reliable / Watch / At-risk), best-gets-first-call simulation, and turnover risk surfacing. Presets for instant delivery, gig couriers, ride-hail, and 3PL last-mile.">
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-elev: #131c33;
+    --bg-card: #131c33;
+    --bg-soft: #0f1729;
+    --border: #1f2a44;
+    --border-bright: #2e3d5f;
+    --text: #e6ecf5;
+    --text-muted: #8a96b4;
+    --text-dim: #5f6b87;
+    --accent: #14b8a6;
+    --accent-soft: rgba(20, 184, 166, 0.1);
+    --accent-border: rgba(20, 184, 166, 0.4);
+    --green: #10b981;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --orange: #fb923c;
+
+    /* Tier surfaces (subtle weight variation: Top is loudest, At-Risk is sharpest, Reliable + Watch sit between) */
+    --tier-top-bg: rgba(16, 185, 129, 0.14);
+    --tier-top-border: rgba(16, 185, 129, 0.45);
+    --tier-reliable-bg: rgba(96, 165, 250, 0.10);
+    --tier-reliable-border: rgba(96, 165, 250, 0.35);
+    --tier-watch-bg: rgba(251, 191, 36, 0.12);
+    --tier-watch-border: rgba(251, 191, 36, 0.4);
+    --tier-atrisk-bg: rgba(239, 68, 68, 0.14);
+    --tier-atrisk-border: rgba(239, 68, 68, 0.45);
+
+    --radius-sm: 5px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    --t-fast: 90ms ease;
+    --t-base: 140ms ease;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .container { max-width: 1180px; margin: 0 auto; padding: 1.75rem 1.5rem 2.5rem; }
+
+  ::selection { background: var(--accent-soft); color: var(--text); }
+
+  /* Focus ring system */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .top-nav { margin-bottom: 1.1rem; }
+  .top-nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.82rem;
+    transition: color var(--t-fast);
+  }
+  .top-nav a:hover { color: var(--accent); }
+
+  header { margin-bottom: 1.75rem; }
+  .brand {
+    color: var(--accent);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  header h1 {
+    font-size: 2rem;
+    color: var(--text);
+    margin-bottom: 0.7rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    font-weight: 700;
+  }
+  header .tagline {
+    color: var(--text-muted);
+    font-size: 0.98rem;
+    max-width: 820px;
+    line-height: 1.6;
+  }
+  header .tagline strong { color: var(--text); font-weight: 600; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.35rem 1.5rem;
+    margin-bottom: 1.1rem;
+  }
+  .card h2 {
+    color: var(--accent);
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.4rem;
+  }
+  .card .sub {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+    line-height: 1.55;
+    max-width: 760px;
+  }
+
+  /* === SCENARIOS === */
+  .scenarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.65rem;
+  }
+  .scenario-btn {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-md);
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color var(--t-base), background var(--t-base), transform var(--t-fast);
+  }
+  .scenario-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .scenario-btn:active { transform: translateY(1px); }
+  .scenario-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .scenario-btn .scn-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.86rem;
+    margin-bottom: 0.2rem;
+    letter-spacing: -0.005em;
+  }
+  .scenario-btn .scn-meta {
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    line-height: 1.45;
+  }
+
+  /* === WEIGHTS === */
+  .weights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .weight-input {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-md);
+    padding: 0.55rem 0.75rem 0.6rem;
+    transition: border-color var(--t-base);
+  }
+  .weight-input:focus-within {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .weight-input label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .weight-input .input-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+  }
+  .weight-input input {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: 700;
+    width: 100%;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .weight-input input:focus { outline: none; }
+  .weight-input .unit {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .weight-total {
+    margin-top: 0.7rem;
+    padding: 0.55rem 0.85rem;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-bright);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    font-size: 0.86rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .weight-total .ok { color: var(--green); font-weight: 700; }
+  .weight-total .warn { color: var(--yellow); font-weight: 700; }
+  .weight-total .err { color: var(--red); font-weight: 700; }
+
+  /* === BIAS CORRECTION (flagship feature treatment) === */
+  .bias-card {
+    margin-top: 1rem;
+    position: relative;
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.10), rgba(20, 184, 166, 0.06) 70%);
+    border: 1px solid rgba(167, 139, 250, 0.32);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.15rem 1.05rem;
+    overflow: hidden;
+  }
+  .bias-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--purple), var(--accent));
+  }
+  .bias-card-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: center;
+  }
+  .bias-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--purple);
+    font-size: 0.66rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.35rem;
+  }
+  .bias-eyebrow::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--purple);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
+  }
+  .bias-title {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 1.02rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.25rem;
+  }
+  .bias-detail {
+    color: var(--text-muted);
+    font-size: 0.84rem;
+    line-height: 1.55;
+    max-width: 620px;
+  }
+  .bias-detail strong { color: var(--text); font-weight: 600; }
+  .bias-state {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-direction: column;
+  }
+  .bias-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text-muted);
+    transition: all var(--t-base);
+    font-variant-numeric: tabular-nums;
+  }
+  .bias-status-pill[data-on="true"] {
+    background: rgba(167, 139, 250, 0.14);
+    border-color: rgba(167, 139, 250, 0.5);
+    color: var(--purple);
+  }
+  .bias-status-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: background var(--t-base);
+  }
+  .bias-status-pill[data-on="true"]::before { background: var(--purple); }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: 999px;
+    transition: background var(--t-base), border-color var(--t-base);
+  }
+  .slider::before {
+    position: absolute;
+    content: '';
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    top: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: transform var(--t-base), background var(--t-base);
+  }
+  input:checked + .slider {
+    background: rgba(167, 139, 250, 0.25);
+    border-color: var(--purple);
+  }
+  input:checked + .slider::before {
+    transform: translateX(24px);
+    background: var(--purple);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
+  }
+  .switch input:focus-visible + .slider { outline: 2px solid var(--purple); outline-offset: 2px; }
+
+  /* === DRIVERS TABLE === */
+  .drivers-scroll { overflow-x: auto; margin: 0 -0.25rem; padding: 0 0.25rem; }
+  .drivers-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.85rem;
+    min-width: 720px;
+  }
+  .drivers-table th, .drivers-table td {
+    padding: 0.5rem 0.45rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .drivers-table th {
+    color: var(--text-muted);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    text-align: right;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    line-height: 1.25;
+    padding: 0.55rem 0.45rem 0.5rem;
+  }
+  .drivers-table th:first-child { border-top-left-radius: var(--radius-sm); }
+  .drivers-table th:last-child { border-top-right-radius: var(--radius-sm); }
+  .drivers-table th .h-sub {
+    display: block;
+    color: var(--text-dim);
+    font-weight: 500;
+    font-size: 0.58rem;
+    margin-top: 0.15rem;
+    letter-spacing: 0.04em;
+  }
+  .drivers-table th:first-child, .drivers-table td:first-child {
+    text-align: left;
+    padding-left: 0.65rem;
+  }
+  .drivers-table th:last-child, .drivers-table td:last-child {
+    text-align: center;
+    padding-right: 0.65rem;
+  }
+  .drivers-table tbody tr:last-child td { border-bottom: none; }
+  .drivers-table tbody tr { transition: background var(--t-fast); }
+  .drivers-table tbody tr:hover { background: rgba(255,255,255,0.015); }
+  .drivers-table input {
+    background: var(--bg);
+    border: 1px solid transparent;
+    color: var(--text);
+    padding: 0.32rem 0.4rem;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    width: 100%;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    transition: border-color var(--t-fast), background var(--t-fast);
+  }
+  .drivers-table input:hover { border-color: var(--border-bright); }
+  .drivers-table input[type="text"] { text-align: left; font-weight: 600; }
+  .drivers-table input:focus { outline: none; border-color: var(--accent); background: var(--bg-soft); }
+  .drivers-table td.tenure-cell { position: relative; }
+  .drivers-table td.tenure-cell.is-new::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 25%;
+    bottom: 25%;
+    width: 2px;
+    background: var(--purple);
+    border-radius: 1px;
+  }
+  .remove-btn {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-bright);
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    line-height: 1;
+    transition: all var(--t-fast);
+  }
+  .remove-btn:hover { color: var(--red); border-color: var(--red); background: rgba(239,68,68,0.08); }
+  .add-btn {
+    background: transparent;
+    color: var(--accent);
+    border: 1px dashed var(--accent-border);
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.85rem;
+    transition: background var(--t-base), border-color var(--t-base);
+  }
+  .add-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+  /* === EMPTY STATE === */
+  .empty {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    background: var(--bg);
+    border: 1px dashed var(--border-bright);
+    border-radius: var(--radius-md);
+  }
+  .empty strong { color: var(--text); display: block; margin-bottom: 0.3rem; font-weight: 600; }
+
+  /* === RANKING === */
+  .ranking-card { padding: 0; overflow: hidden; }
+  .ranking-card .ranking-header {
+    padding: 1.05rem 1.5rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+  .ranking-card .ranking-header h2 { margin-bottom: 0; }
+  .ranking-header-hint {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .ranking-header-hint::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--purple);
+  }
+  .ranking-scroll { overflow-x: auto; }
+  .ranking-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+  .ranking-table th, .ranking-table td {
+    padding: 0.65rem 0.55rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85rem;
+  }
+  .ranking-table th {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    text-align: right;
+    background: var(--bg);
+    padding: 0.55rem 0.55rem;
+  }
+  .ranking-table th:first-child, .ranking-table td:first-child {
+    text-align: left;
+    padding-left: 1.3rem;
+    width: 44px;
+    color: var(--text-dim);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .ranking-table th:nth-child(2), .ranking-table td:nth-child(2) { text-align: left; }
+  .ranking-table th:last-child, .ranking-table td:last-child {
+    padding-right: 1.3rem;
+    text-align: center;
+  }
+  .ranking-table tbody tr:last-child td { border-bottom: none; }
+  .ranking-table tbody tr {
+    transition: background var(--t-fast);
+  }
+  .ranking-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+  .ranking-table tbody tr.is-top { box-shadow: inset 3px 0 0 var(--green); }
+  .ranking-table tbody tr.is-atrisk { box-shadow: inset 3px 0 0 var(--red); }
+  .ranking-table .driver-name {
+    font-weight: 600;
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .ranking-table .score {
+    font-size: 1.05rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .ranking-table .dim-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    line-height: 1.15;
+  }
+  .ranking-table .dim-cell .dim-score {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.86rem;
+  }
+  .ranking-table .dim-cell .dim-raw {
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .ranking-row-detail {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    margin-top: 0.18rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+
+  /* === TIER PILLS (refined weight variation) === */
+  .tier-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .tier-pill::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .tier-Top {
+    background: var(--tier-top-bg);
+    color: var(--green);
+    border: 1px solid var(--tier-top-border);
+  }
+  .tier-Reliable {
+    background: var(--tier-reliable-bg);
+    color: var(--blue);
+    border: 1px solid var(--tier-reliable-border);
+  }
+  .tier-Watch {
+    background: var(--tier-watch-bg);
+    color: var(--yellow);
+    border: 1px solid var(--tier-watch-border);
+  }
+  .tier-AtRisk {
+    background: var(--tier-atrisk-bg);
+    color: var(--red);
+    border: 1px solid var(--tier-atrisk-border);
+  }
+  .score-Top { color: var(--green); }
+  .score-Reliable { color: var(--blue); }
+  .score-Watch { color: var(--yellow); }
+  .score-AtRisk { color: var(--red); }
+
+  /* === NEW FLAG (the bias-correction story lives here) === */
+  .new-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: rgba(167, 139, 250, 0.14);
+    color: var(--purple);
+    border: 1px solid rgba(167, 139, 250, 0.42);
+    padding: 0.12rem 0.42rem 0.12rem 0.35rem;
+    border-radius: 999px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    cursor: help;
+    position: relative;
+    transition: all var(--t-fast);
+  }
+  .new-flag::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--purple);
+    box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.22);
+  }
+  .new-flag:hover {
+    background: rgba(167, 139, 250, 0.22);
+    border-color: var(--purple);
+  }
+  .new-flag[data-corrected="true"]::after {
+    content: "·corrected";
+    color: var(--purple);
+    opacity: 0.7;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    margin-left: 0.05rem;
+  }
+
+  /* === STATS === */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 0.65rem;
+  }
+  .stat-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 1rem;
+    transition: border-color var(--t-base), background var(--t-base);
+  }
+  .stat-box:hover { border-color: var(--border-bright); background: var(--bg-soft); }
+  .stat-box .stat-label {
+    color: var(--text-muted);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+  .stat-box .stat-value {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .stat-box .stat-detail {
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    margin-top: 0.3rem;
+    line-height: 1.4;
+  }
+  .stat-box .stat-value.green { color: var(--green); }
+  .stat-box .stat-value.yellow { color: var(--yellow); }
+  .stat-box .stat-value.red { color: var(--red); }
+  .stat-box .stat-value.blue { color: var(--blue); }
+  .stat-box .stat-value.purple { color: var(--purple); }
+
+  /* === DISTRIBUTION (premium bars) === */
+  .dist-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 130px;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.45rem 0;
+  }
+  .dist-row .dist-label {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.86rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .dist-row .dist-label::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+  .dist-row.tier-Top .dist-label::before { background: var(--green); }
+  .dist-row.tier-Reliable .dist-label::before { background: var(--blue); }
+  .dist-row.tier-Watch .dist-label::before { background: var(--yellow); }
+  .dist-row.tier-AtRisk .dist-label::before { background: var(--red); }
+
+  .dist-row .dist-bar {
+    height: 10px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .dist-row .dist-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  .dist-row .dist-fill.Top {
+    background: linear-gradient(90deg, var(--green), #34d399);
+    box-shadow: 0 0 12px -2px rgba(16, 185, 129, 0.4);
+  }
+  .dist-row .dist-fill.Reliable {
+    background: linear-gradient(90deg, var(--blue), #93c5fd);
+    box-shadow: 0 0 12px -2px rgba(96, 165, 250, 0.35);
+  }
+  .dist-row .dist-fill.Watch {
+    background: linear-gradient(90deg, var(--yellow), #fcd34d);
+    box-shadow: 0 0 12px -2px rgba(251, 191, 36, 0.35);
+  }
+  .dist-row .dist-fill.AtRisk {
+    background: linear-gradient(90deg, var(--red), #fca5a5);
+    box-shadow: 0 0 12px -2px rgba(239, 68, 68, 0.4);
+  }
+  .dist-row .dist-val {
+    color: var(--text);
+    font-weight: 600;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.82rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .dist-row .dist-val .dist-pct {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    min-width: 2.6rem;
+    text-align: right;
+  }
+  .dist-row .dist-val .dist-meta {
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* === FIRST CALL (flagship outcome) === */
+  .firstcall-card {
+    background: var(--bg-card);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-lg);
+    padding: 0;
+    overflow: hidden;
+    margin-bottom: 1.1rem;
+  }
+  .firstcall-card .firstcall-head {
+    padding: 1.15rem 1.5rem 0.9rem;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, transparent 70%);
+    border-bottom: 1px solid var(--border);
+  }
+  .firstcall-card h2 {
+    color: var(--accent);
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .firstcall-card h2::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .firstcall-card .sub {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    margin-bottom: 0;
+    line-height: 1.55;
+    max-width: 780px;
+  }
+  .firstcall-body {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) 2fr;
+    gap: 0;
+  }
+  .firstcall-hero {
+    padding: 1.4rem 1.5rem;
+    border-right: 1px solid var(--border);
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+  .firstcall-hero .fc-hero-label {
+    color: var(--accent);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 800;
+  }
+  .firstcall-hero .fc-hero-value {
+    font-size: 3.2rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.04em;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+  .firstcall-hero .fc-hero-value .fc-of {
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .firstcall-hero .fc-hero-detail {
+    color: var(--text-muted);
+    font-size: 0.84rem;
+    line-height: 1.5;
+    margin-top: 0.3rem;
+    max-width: 240px;
+  }
+  .firstcall-tiers {
+    padding: 1rem 1.4rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  .firstcall-tier {
+    display: grid;
+    grid-template-columns: 130px 1fr 60px;
+    gap: 0.8rem;
+    align-items: center;
+  }
+  .firstcall-tier .fct-label {
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .firstcall-tier .fct-label::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+  .firstcall-tier.Top .fct-label::before { background: var(--green); }
+  .firstcall-tier.Reliable .fct-label::before { background: var(--blue); }
+  .firstcall-tier.Overflow .fct-label::before { background: var(--yellow); }
+  .firstcall-tier .fct-track {
+    height: 8px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .firstcall-tier .fct-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .firstcall-tier.Top .fct-fill { background: linear-gradient(90deg, var(--green), #34d399); }
+  .firstcall-tier.Reliable .fct-fill { background: linear-gradient(90deg, var(--blue), #93c5fd); }
+  .firstcall-tier.Overflow .fct-fill { background: linear-gradient(90deg, var(--yellow), #fcd34d); }
+  .firstcall-tier .fct-val {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+  }
+  .firstcall-tier.Top .fct-val { color: var(--green); }
+  .firstcall-tier.Reliable .fct-val { color: var(--blue); }
+  .firstcall-tier.Overflow .fct-val { color: var(--yellow); }
+
+  /* === ACTIONS === */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+  .action-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 240px) 1fr;
+    gap: 1rem;
+    align-items: start;
+    padding: 0.85rem 1.1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--t-base), background var(--t-base);
+  }
+  .action-row:hover { border-color: var(--border-bright); background: var(--bg-soft); }
+  .action-row.tier-Top-bg { border-left: 3px solid var(--green); }
+  .action-row.tier-Reliable-bg { border-left: 3px solid var(--blue); }
+  .action-row.tier-Watch-bg { border-left: 3px solid var(--yellow); }
+  .action-row.tier-AtRisk-bg { border-left: 3px solid var(--red); }
+  .action-row .action-driver {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    letter-spacing: -0.005em;
+  }
+  .action-row .action-driver-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .action-row .action-driver .small {
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+  .action-row .action-text {
+    color: var(--text);
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+  .action-row .action-text strong { color: var(--accent); font-weight: 600; }
+
+  /* === MONEY BAND === */
+  .money-band {
+    background:
+      linear-gradient(135deg, rgba(20, 184, 166, 0.18), rgba(96, 165, 250, 0.08) 60%, transparent 100%),
+      var(--bg-card);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-lg);
+    padding: 1.15rem 1.5rem 1.25rem;
+    margin-bottom: 1.1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .money-band::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent), var(--blue));
+  }
+  .money-band .money-label {
+    color: var(--accent);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 800;
+    margin-bottom: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .money-band .money-label::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .money-band .money-value {
+    font-size: 1.05rem;
+    color: var(--text);
+    font-weight: 600;
+    line-height: 1.45;
+    margin-bottom: 0.5rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.005em;
+  }
+  .money-band .money-value .accent {
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 1.55rem;
+    letter-spacing: -0.02em;
+    display: inline-block;
+    margin: 0 0.1rem;
+  }
+  .money-band .money-detail {
+    color: var(--text-muted);
+    font-size: 0.84rem;
+    line-height: 1.55;
+    max-width: 760px;
+  }
+  .money-band .money-detail strong { color: var(--text); font-weight: 600; }
+
+  /* === USE CASES === */
+  .use-cases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0.9rem;
+  }
+  .use-case {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.05rem 1.15rem;
+    transition: border-color var(--t-base);
+  }
+  .use-case:hover { border-color: var(--border-bright); }
+  .use-case-title {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.55rem;
+    letter-spacing: -0.005em;
+  }
+  .use-case-body {
+    color: var(--text-muted);
+    font-size: 0.86rem;
+    line-height: 1.6;
+  }
+  .use-case-body strong { color: var(--text); font-weight: 600; }
+
+  details.help {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.65rem 0.95rem;
+    margin-top: 0.85rem;
+    font-size: 0.85rem;
+  }
+  details.help summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 700;
+    user-select: none;
+    font-size: 0.82rem;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  details.help summary::-webkit-details-marker { display: none; }
+  details.help summary::after {
+    content: "+";
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    transition: transform var(--t-base);
+    font-weight: 400;
+  }
+  details.help[open] summary::after { transform: rotate(45deg); }
+  details.help p { color: var(--text-muted); margin-top: 0.55rem; line-height: 1.6; }
+  details.help ul { margin: 0.5rem 0 0 1.2rem; color: var(--text-muted); }
+  details.help li { margin-bottom: 0.35rem; line-height: 1.55; }
+  details.help strong { color: var(--text); font-weight: 600; }
+
+  .footer {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding-top: 1.5rem;
+    margin-top: 2.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .footer a { color: var(--accent); text-decoration: none; transition: color var(--t-fast); }
+  .footer a:hover { text-decoration: underline; }
+  .footer p { margin-bottom: 0.3rem; }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 900px) {
+    .firstcall-body { grid-template-columns: 1fr; }
+    .firstcall-hero { border-right: none; border-bottom: 1px solid var(--border); }
+    .bias-card-grid { grid-template-columns: 1fr; gap: 0.7rem; }
+    .bias-state { flex-direction: row; justify-content: flex-start; }
+  }
+  @media (max-width: 720px) {
+    .container { padding: 1.25rem 1rem 2rem; }
+    header h1 { font-size: 1.55rem; }
+    header .tagline { font-size: 0.92rem; }
+    .card { padding: 1.1rem 1.1rem; border-radius: var(--radius-md); }
+    .ranking-card .ranking-header { padding: 0.9rem 1.1rem; }
+    .firstcall-card .firstcall-head { padding: 1rem 1.1rem 0.8rem; }
+    .firstcall-hero { padding: 1.1rem 1.1rem; }
+    .firstcall-tiers { padding: 0.85rem 1.1rem 1rem; }
+    .firstcall-hero .fc-hero-value { font-size: 2.6rem; }
+    .firstcall-tier { grid-template-columns: 105px 1fr 50px; gap: 0.55rem; }
+    .firstcall-tier .fct-label { font-size: 0.78rem; }
+    .dist-row { grid-template-columns: 90px 1fr 110px; gap: 0.6rem; }
+    .action-row { grid-template-columns: 1fr; gap: 0.5rem; padding: 0.85rem 0.95rem; }
+    .drivers-table { font-size: 0.78rem; min-width: 640px; }
+    .drivers-table input { font-size: 0.76rem; padding: 0.28rem 0.32rem; }
+    .ranking-table { font-size: 0.8rem; min-width: 680px; }
+    .ranking-table th, .ranking-table td { padding: 0.55rem 0.45rem; }
+    .ranking-table th:first-child, .ranking-table td:first-child { padding-left: 0.85rem; }
+    .ranking-table th:last-child, .ranking-table td:last-child { padding-right: 0.85rem; }
+    .ranking-table .dim-cell .dim-raw { display: none; }
+    .scenario-btn { padding: 0.75rem 0.85rem; }
+    .stat-box .stat-value { font-size: 1.35rem; }
+    .money-band { padding: 1rem 1.15rem 1.1rem; }
+    .money-band .money-value .accent { font-size: 1.35rem; }
+  }
+  @media (max-width: 480px) {
+    .firstcall-hero .fc-hero-value { font-size: 2.2rem; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* === PRINT === */
+  @media print {
+    body { background: #fff; color: #111; }
+    .container { max-width: 100%; padding: 0.5in; }
+    .top-nav, .footer, .add-btn, .remove-btn, details.help, .scenarios, .bias-card { display: none; }
+    .card, .firstcall-card, .money-band {
+      background: #fff;
+      border: 1px solid #d1d5db;
+      box-shadow: none;
+      page-break-inside: avoid;
+      margin-bottom: 0.4in;
+      color: #111;
+    }
+    .card h2, .firstcall-card h2, .money-band .money-label { color: #047857; }
+    .brand { color: #047857; }
+    header h1, .card .sub, .ranking-table, .ranking-table td, .ranking-table .driver-name,
+    .stat-box .stat-value, .money-band .money-value, .action-row .action-driver,
+    .action-row .action-text, .use-case-title, .use-case-body, .dist-row .dist-label,
+    .firstcall-hero .fc-hero-value, .firstcall-tier .fct-label {
+      color: #111 !important;
+    }
+    .card .sub, .ranking-row-detail, .stat-box .stat-detail,
+    .action-row .action-driver .small, .dist-row .dist-val .dist-meta,
+    .firstcall-hero .fc-hero-detail { color: #4b5563 !important; }
+    .ranking-table th { background: #f3f4f6; color: #374151; }
+    .stat-box, .firstcall-hero, .firstcall-tiers, .action-row, .use-case {
+      background: #fff; border-color: #e5e7eb;
+    }
+    .tier-pill, .new-flag { border-width: 1px; }
+    .dist-row .dist-fill, .firstcall-tier .fct-fill { box-shadow: none; }
+    .ranking-table tbody tr.is-top { box-shadow: inset 4px 0 0 #047857; }
+    .ranking-table tbody tr.is-atrisk { box-shadow: inset 4px 0 0 #b91c1c; }
+    a { color: #047857; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top-nav"><a href="./index.html">← All tools</a></div>
+
+  <header>
+    <div class="brand">Tool #13 · marketplace-ops-toolkit</div>
+    <h1>Driver / Courier Performance Scorecard</h1>
+    <div class="tagline">
+      Rank drivers and couriers on <strong>weighted multi-dimensional performance</strong> with optional <strong>tenure-based bias correction</strong> so new drivers aren't unfairly penalized. Four-tier classification (Top / Reliable / Watch / At-risk), <strong>best-gets-first-call simulation</strong>, and turnover risk surfacing. Presets for instant delivery, gig couriers, ride-hail, and 3PL last-mile.
+    </div>
+  </header>
+
+  <!-- SCENARIO PRESETS -->
+  <section class="card" aria-labelledby="operator-preset-heading">
+    <h2 id="operator-preset-heading">Operator Preset</h2>
+    <div class="sub">Pick the scenario closest to your platform. Each preset rebalances dimension weights for the operating context.</div>
+    <div class="scenarios" id="scenarios" role="group" aria-label="Operator presets"></div>
+  </section>
+
+  <!-- WEIGHTS -->
+  <section class="card" aria-labelledby="weights-heading">
+    <h2 id="weights-heading">Dimension Weights</h2>
+    <div class="sub">Each dimension contributes 0 to 100 to the weighted score. Total weights should sum to 100. Adjust to match what drives supply quality in your model.</div>
+    <div class="weights-grid" id="weightsGrid"></div>
+    <div class="weight-total" id="weightTotal" aria-live="polite"></div>
+
+    <!-- BIAS CORRECTION (flagship feature card) -->
+    <div class="bias-card" role="region" aria-labelledby="bias-title">
+      <div class="bias-card-grid">
+        <div class="bias-info">
+          <div class="bias-eyebrow">Flagship feature</div>
+          <div class="bias-title" id="bias-title">Tenure-based bias correction</div>
+          <div class="bias-detail">
+            Drivers under 30 days on the platform get score smoothing toward the portfolio median. Avoids penalizing new drivers with thin data while still surfacing <strong>genuinely</strong> weak performers. Most fleet scorecards skip this step.
+          </div>
+        </div>
+        <div class="bias-state">
+          <span class="bias-status-pill" id="biasStatusPill" data-on="true" aria-hidden="true">On</span>
+          <label class="switch" aria-label="Toggle tenure-based bias correction">
+            <input type="checkbox" id="biasToggle" checked aria-describedby="bias-title">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <details class="help">
+      <summary>How dimension scoring works</summary>
+      <p>Each driver is scored 0 to 100 on each dimension. The weighted total is the sum of (weight × dimension score) divided by total weight. Scoring rules:</p>
+      <ul>
+        <li><strong>Acceptance Rate %</strong>: raw % becomes score directly. 85% acceptance = 85 points.</li>
+        <li><strong>On-Time Delivery %</strong>: raw % becomes score directly. 92% on-time = 92 points.</li>
+        <li><strong>Customer Rating (1 to 5)</strong>: normalized to 0 to 100. 4.8 stars = 96 points. Anything below 3.5 = 0 points.</li>
+        <li><strong>Completion Rate %</strong>: raw % becomes score directly. Share of accepted orders that completed without refusal or failure.</li>
+        <li><strong>Response Time min</strong>: normalized against best driver. Best = 100, each added minute = 5 point penalty.</li>
+      </ul>
+      <p>When bias correction is ON, drivers with under 30 days tenure get a 50/50 blend between their raw weighted score and the portfolio median. The shorter the tenure, the more weight on the median. Drivers with 30+ days = full raw score.</p>
+    </details>
+  </section>
+
+  <!-- DRIVERS INPUT -->
+  <section class="card" aria-labelledby="drivers-heading">
+    <h2 id="drivers-heading">Drivers</h2>
+    <div class="sub">Enter driver-level performance from the last 30 days. Tenure column drives bias correction. Drivers with low tenure show with NEW flag in the ranking.</div>
+    <div class="drivers-scroll">
+      <table class="drivers-table">
+        <thead>
+          <tr>
+            <th scope="col">Driver</th>
+            <th scope="col">Tenure <span class="h-sub">days</span></th>
+            <th scope="col">Volume <span class="h-sub">deliveries</span></th>
+            <th scope="col">Accept <span class="h-sub">%</span></th>
+            <th scope="col">On-Time <span class="h-sub">%</span></th>
+            <th scope="col">Rating <span class="h-sub">1 to 5</span></th>
+            <th scope="col">Complete <span class="h-sub">%</span></th>
+            <th scope="col">Response <span class="h-sub">min</span></th>
+            <th scope="col"><span class="h-sub" style="text-align:center;display:block;">remove</span></th>
+          </tr>
+        </thead>
+        <tbody id="driversBody"></tbody>
+      </table>
+    </div>
+    <button class="add-btn" id="addDriverBtn" type="button">+ Add driver</button>
+  </section>
+
+  <!-- MONEY BAND -->
+  <div class="money-band" id="moneyBand" role="region" aria-label="Money on the table"></div>
+
+  <!-- STATS -->
+  <section class="card" aria-labelledby="snapshot-heading">
+    <h2 id="snapshot-heading">Fleet Snapshot</h2>
+    <div class="stat-grid" id="statGrid"></div>
+  </section>
+
+  <!-- TIER DISTRIBUTION -->
+  <section class="card" aria-labelledby="dist-heading">
+    <h2 id="dist-heading">Tier Distribution</h2>
+    <div class="sub">Top = top 20%, Reliable = next 40%, Watch = next 20%, At-Risk = bottom 20%. Bar length shows delivery volume share within each tier.</div>
+    <div id="distChart"></div>
+  </section>
+
+  <!-- BEST-GETS-FIRST-CALL -->
+  <section class="firstcall-card" aria-labelledby="firstcall-heading">
+    <div class="firstcall-head">
+      <h2 id="firstcall-heading">Best-Gets-First-Call Simulation</h2>
+      <div class="sub">If you route the next 100 orders to the top-ranked drivers first (in order), what share of volume goes to each tier? Simplest way to model what supply allocation looks like under a performance-based dispatch rule.</div>
+    </div>
+    <div class="firstcall-body" id="firstCallBody"></div>
+  </section>
+
+  <!-- RANKING -->
+  <section class="card ranking-card" aria-labelledby="ranking-heading">
+    <div class="ranking-header">
+      <h2 id="ranking-heading">Ranked Drivers</h2>
+      <div class="ranking-header-hint">Sorted by weighted score. NEW = under 30 days tenure, bias-corrected when toggle is on.</div>
+    </div>
+    <div class="ranking-scroll">
+      <table class="ranking-table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Driver</th>
+            <th scope="col">Accept</th>
+            <th scope="col">On-Time</th>
+            <th scope="col">Rating</th>
+            <th scope="col">Complete</th>
+            <th scope="col">Response</th>
+            <th scope="col">Score</th>
+            <th scope="col">Tier</th>
+          </tr>
+        </thead>
+        <tbody id="rankingBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ACTIONS -->
+  <section class="card" aria-labelledby="actions-heading">
+    <h2 id="actions-heading">Action Recommendations</h2>
+    <div class="sub">Generated from tier classification + tenure + score. Actions for new drivers favor support and onboarding completion. For tenured drivers, accountability and replacement.</div>
+    <div class="actions-grid" id="actionsGrid"></div>
+  </section>
+
+  <!-- USE CASES -->
+  <section class="card" aria-labelledby="cases-heading">
+    <h2 id="cases-heading">Use cases I've seen this work</h2>
+    <div class="sub">Patterns from courier and dispatch ops I've run before. Adjust to your specific platform. The operating logic transfers.</div>
+    <div class="use-cases-grid">
+
+      <article class="use-case">
+        <div class="use-case-title">Case 1: Instant delivery driver onboarding leak</div>
+        <div class="use-case-body">
+          You're onboarding 500 drivers a month. <strong>The dashboard says 500 onboardings. The P&amp;L says 220 of them never delivered a second order.</strong> That gap is where the money disappears.
+          <br><br>
+          <strong>How this maps:</strong> use the "Instant delivery" preset. Run the scorecard with tenure-based bias correction ON. New drivers get a chance to ramp, but the ones with poor signal in the first 30 days surface in the Watch and At-Risk tiers. <strong>The onboarding funnel becomes measurable instead of vibes-based.</strong>
+          <br><br>
+          <strong>The play:</strong> targeted support intervention on Watch-tier new drivers. At-Risk new drivers either get a structured remediation or get cut before they cost more onboarding investment.
+        </div>
+      </article>
+
+      <article class="use-case">
+        <div class="use-case-title">Case 2: Gig courier supply during peak event</div>
+        <div class="use-case-body">
+          Black Friday or game-day surge. You have 8,000 active couriers but only 1,500 are reliable. <strong>Routing high-value orders to the wrong driver during peak = refunds, churn, and a P&amp;L hit.</strong>
+          <br><br>
+          <strong>How this maps:</strong> use the "Gig courier platform" preset. On-time delivery + completion rate weighted heaviest. Run the best-gets-first-call simulation to confirm what share of peak volume your top drivers can absorb.
+          <br><br>
+          <strong>The play I ran at Rappi:</strong> tier-based dispatch during peak events. Top tier drivers got first call on high-value orders, At-Risk drivers got low-stakes orders or were paused. Refund volume during peak dropped because the right driver got the right order.
+        </div>
+      </article>
+
+      <article class="use-case">
+        <div class="use-case-title">Case 3: Driver retention through earnings stability</div>
+        <div class="use-case-body">
+          Top drivers earn more because they get more orders. <strong>But when dispatch is opaque, even top drivers feel inconsistency, and they churn for the next platform.</strong>
+          <br><br>
+          <strong>How this maps:</strong> use the scorecard to make tier-based dispatch transparent to drivers. Top tier sees their tier publicly. Reliable tier sees what to improve to graduate. <strong>Visible meritocracy is a retention tool.</strong>
+          <br><br>
+          <strong>The reframe:</strong> retention through earnings stability isn't just "pay them more." It's "let them see why they earn what they earn, and how to earn more." The scorecard becomes the conversation.
+        </div>
+      </article>
+
+      <article class="use-case">
+        <div class="use-case-title">Case 4: Bias correction for new drivers (the structural insight)</div>
+        <div class="use-case-body">
+          Most fleet scorecards penalize new drivers with thin data. A driver with 5 deliveries and one bad rating looks worse than a driver with 500 deliveries and 4 bad ratings. <strong>That's a math artifact, not a quality signal.</strong>
+          <br><br>
+          <strong>How this maps:</strong> bias correction blends new-driver scores toward the portfolio median. The driver needs to PROVE they're below median, not just have low confidence from thin data. <strong>You stop firing drivers your scorecard couldn't measure yet.</strong>
+          <br><br>
+          <strong>The structural insight:</strong> the same applies to vendor scorecards, content moderator QA, fraud analyst ranking. Anywhere you score people on early data, bias correction is the line between fair decisions and structural unfairness.
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <div class="footer">
+    <p>Part of <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">marketplace-ops-toolkit</a>. Single-file HTML, no install, no tracking.</p>
+    <p><a href="./index.html">← All tools</a></p>
+  </div>
+
+</div>
+
+<script>
+const DIMENSIONS = [
+  { key: 'acceptance', label: 'Acceptance Rate', unit: '%', defaultWeight: 15 },
+  { key: 'ontime', label: 'On-Time Delivery', unit: '%', defaultWeight: 25 },
+  { key: 'rating', label: 'Customer Rating', unit: '★', defaultWeight: 20 },
+  { key: 'completion', label: 'Completion Rate', unit: '%', defaultWeight: 25 },
+  { key: 'response', label: 'Response Time', unit: 'min', defaultWeight: 15 }
+];
+
+const PRESETS = [
+  {
+    id: 'instant-delivery',
+    title: 'Instant delivery (Gopuff-style)',
+    meta: 'On-time + completion rate are SLA-critical',
+    weights: { acceptance: 15, ontime: 30, rating: 15, completion: 30, response: 10 },
+    drivers: [
+      { name: 'Driver 001', tenure: 180, volume: 420, acceptance: 92, ontime: 94, rating: 4.8, completion: 96, response: 1.2 },
+      { name: 'Driver 002', tenure: 95, volume: 380, acceptance: 88, ontime: 91, rating: 4.6, completion: 94, response: 1.5 },
+      { name: 'Driver 003', tenure: 12, volume: 45, acceptance: 78, ontime: 85, rating: 4.3, completion: 89, response: 2.4 },
+      { name: 'Driver 004', tenure: 240, volume: 510, acceptance: 95, ontime: 92, rating: 4.9, completion: 97, response: 1.0 },
+      { name: 'Driver 005', tenure: 60, volume: 280, acceptance: 70, ontime: 82, rating: 4.2, completion: 87, response: 2.8 },
+      { name: 'Driver 006', tenure: 8, volume: 22, acceptance: 65, ontime: 78, rating: 4.0, completion: 84, response: 3.1 },
+      { name: 'Driver 007', tenure: 320, volume: 590, acceptance: 90, ontime: 96, rating: 4.7, completion: 98, response: 1.1 },
+      { name: 'Driver 008', tenure: 145, volume: 340, acceptance: 82, ontime: 88, rating: 4.5, completion: 91, response: 1.8 },
+      { name: 'Driver 009', tenure: 22, volume: 78, acceptance: 60, ontime: 72, rating: 3.8, completion: 79, response: 3.5 },
+      { name: 'Driver 010', tenure: 200, volume: 440, acceptance: 87, ontime: 89, rating: 4.6, completion: 93, response: 1.4 }
+    ]
+  },
+  {
+    id: 'gig-courier',
+    title: 'Gig courier platform (Rappi-style)',
+    meta: 'On-time + completion + rating balanced',
+    weights: { acceptance: 20, ontime: 25, rating: 20, completion: 25, response: 10 },
+    drivers: [
+      { name: 'Courier A1', tenure: 420, volume: 620, acceptance: 85, ontime: 93, rating: 4.7, completion: 95, response: 2.1 },
+      { name: 'Courier A2', tenure: 180, volume: 410, acceptance: 78, ontime: 88, rating: 4.5, completion: 92, response: 2.8 },
+      { name: 'Courier A3', tenure: 45, volume: 165, acceptance: 72, ontime: 82, rating: 4.2, completion: 88, response: 3.4 },
+      { name: 'Courier A4', tenure: 540, volume: 780, acceptance: 92, ontime: 95, rating: 4.9, completion: 97, response: 1.8 },
+      { name: 'Courier A5', tenure: 90, volume: 290, acceptance: 68, ontime: 79, rating: 4.1, completion: 85, response: 3.8 },
+      { name: 'Courier A6', tenure: 15, volume: 38, acceptance: 60, ontime: 73, rating: 3.9, completion: 81, response: 4.2 },
+      { name: 'Courier A7', tenure: 280, volume: 510, acceptance: 80, ontime: 90, rating: 4.6, completion: 93, response: 2.4 },
+      { name: 'Courier A8', tenure: 360, volume: 590, acceptance: 88, ontime: 92, rating: 4.7, completion: 94, response: 2.0 }
+    ]
+  },
+  {
+    id: 'ride-hail',
+    title: 'Ride-hail (inDrive-style)',
+    meta: 'Rating + acceptance heaviest. Trip ETA in response',
+    weights: { acceptance: 25, ontime: 15, rating: 30, completion: 20, response: 10 },
+    drivers: [
+      { name: 'Driver R-01', tenure: 300, volume: 480, acceptance: 88, ontime: 90, rating: 4.8, completion: 96, response: 0.8 },
+      { name: 'Driver R-02', tenure: 120, volume: 320, acceptance: 75, ontime: 84, rating: 4.4, completion: 90, response: 1.2 },
+      { name: 'Driver R-03', tenure: 18, volume: 55, acceptance: 65, ontime: 78, rating: 4.1, completion: 85, response: 1.5 },
+      { name: 'Driver R-04', tenure: 480, volume: 650, acceptance: 92, ontime: 93, rating: 4.9, completion: 98, response: 0.7 },
+      { name: 'Driver R-05', tenure: 60, volume: 210, acceptance: 70, ontime: 80, rating: 4.0, completion: 88, response: 1.4 },
+      { name: 'Driver R-06', tenure: 240, volume: 410, acceptance: 82, ontime: 88, rating: 4.6, completion: 93, response: 1.0 },
+      { name: 'Driver R-07', tenure: 5, volume: 12, acceptance: 55, ontime: 72, rating: 3.8, completion: 80, response: 1.8 },
+      { name: 'Driver R-08', tenure: 360, volume: 560, acceptance: 86, ontime: 89, rating: 4.7, completion: 95, response: 0.9 }
+    ]
+  },
+  {
+    id: '3pl-lastmile',
+    title: '3PL last-mile (route-based)',
+    meta: 'Completion + on-time heaviest. Route reliability matters',
+    weights: { acceptance: 10, ontime: 30, rating: 15, completion: 35, response: 10 },
+    drivers: [
+      { name: 'Route Driver 1', tenure: 280, volume: 720, acceptance: 95, ontime: 93, rating: 4.6, completion: 96, response: 4.5 },
+      { name: 'Route Driver 2', tenure: 150, volume: 540, acceptance: 90, ontime: 88, rating: 4.4, completion: 92, response: 5.2 },
+      { name: 'Route Driver 3', tenure: 40, volume: 220, acceptance: 82, ontime: 81, rating: 4.1, completion: 87, response: 6.4 },
+      { name: 'Route Driver 4', tenure: 420, volume: 850, acceptance: 96, ontime: 95, rating: 4.8, completion: 97, response: 4.1 },
+      { name: 'Route Driver 5', tenure: 75, volume: 380, acceptance: 85, ontime: 84, rating: 4.2, completion: 89, response: 5.8 },
+      { name: 'Route Driver 6', tenure: 20, volume: 95, acceptance: 78, ontime: 75, rating: 3.9, completion: 82, response: 7.1 }
+    ]
+  }
+];
+
+let state = {
+  weights: { ...PRESETS[0].weights },
+  drivers: JSON.parse(JSON.stringify(PRESETS[0].drivers)),
+  activePreset: 'instant-delivery',
+  biasCorrection: true
+};
+
+function fmt(n, decimals = 1) {
+  if (n === null || n === undefined || isNaN(n)) return '-';
+  return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function fmtMoney(n) {
+  if (Math.abs(n) >= 1000000) return '$' + (n/1000000).toFixed(2) + 'M';
+  if (Math.abs(n) >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function scoreAcceptance(v) { return Math.max(0, Math.min(100, v)); }
+function scoreOntime(v) { return Math.max(0, Math.min(100, v)); }
+function scoreRating(v) {
+  if (v < 3.5) return 0;
+  return Math.max(0, Math.min(100, ((v - 3.5) / 1.5) * 100));
+}
+function scoreCompletion(v) { return Math.max(0, Math.min(100, v)); }
+function scoreResponse(v, all) {
+  const best = Math.min(...all.filter(x => x > 0));
+  if (best === Infinity || best === 0) return 100;
+  const extra = v - best;
+  return Math.max(0, Math.min(100, 100 - extra * 5));
+}
+
+function driverScores(drivers) {
+  const allResponse = drivers.map(d => d.response);
+  return drivers.map(d => ({
+    ...d,
+    sAcceptance: scoreAcceptance(d.acceptance),
+    sOntime: scoreOntime(d.ontime),
+    sRating: scoreRating(d.rating),
+    sCompletion: scoreCompletion(d.completion),
+    sResponse: scoreResponse(d.response, allResponse)
+  }));
+}
+
+function rawScore(d, weights) {
+  const totalWeight = weights.acceptance + weights.ontime + weights.rating + weights.completion + weights.response;
+  if (totalWeight === 0) return 0;
+  return (
+    d.sAcceptance * weights.acceptance +
+    d.sOntime * weights.ontime +
+    d.sRating * weights.rating +
+    d.sCompletion * weights.completion +
+    d.sResponse * weights.response
+  ) / totalWeight;
+}
+
+function biasCorrectScore(rawScoreVal, tenureDays, portfolioMedian) {
+  if (!state.biasCorrection || tenureDays >= 30) return rawScoreVal;
+  // smooth toward median based on tenure
+  const blendWeight = Math.max(0, (30 - tenureDays) / 30); // 0 to 1
+  return rawScoreVal * (1 - blendWeight * 0.5) + portfolioMedian * (blendWeight * 0.5);
+}
+
+function tierClass(rank, total) {
+  const pct = (rank + 1) / total;
+  if (pct <= 0.20) return 'Top';
+  if (pct <= 0.60) return 'Reliable';
+  if (pct <= 0.80) return 'Watch';
+  return 'AtRisk';
+}
+
+function computeRanking() {
+  const scored = driverScores(state.drivers).map(d => ({
+    ...d,
+    rawScore: rawScore(d, state.weights)
+  }));
+  // portfolio median of raw scores
+  const rawScores = scored.map(s => s.rawScore).sort((a, b) => a - b);
+  const median = rawScores.length === 0 ? 50 : rawScores[Math.floor(rawScores.length / 2)];
+  // apply bias correction
+  const corrected = scored.map(d => ({
+    ...d,
+    score: biasCorrectScore(d.rawScore, d.tenure, median),
+    isNew: d.tenure < 30,
+    wasCorrected: state.biasCorrection && d.tenure < 30
+  }));
+  corrected.sort((a, b) => b.score - a.score);
+  return corrected;
+}
+
+function renderScenarios() {
+  const root = document.getElementById('scenarios');
+  root.innerHTML = PRESETS.map(p => `
+    <button class="scenario-btn ${state.activePreset === p.id ? 'active' : ''}" data-id="${p.id}" type="button" aria-pressed="${state.activePreset === p.id}">
+      <div class="scn-title">${escapeHtml(p.title)}</div>
+      <div class="scn-meta">${escapeHtml(p.meta)}</div>
+    </button>
+  `).join('');
+  root.querySelectorAll('.scenario-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = PRESETS.find(x => x.id === btn.dataset.id);
+      state.activePreset = p.id;
+      state.weights = { ...p.weights };
+      state.drivers = JSON.parse(JSON.stringify(p.drivers));
+      renderAll();
+    });
+  });
+}
+
+function renderWeights() {
+  const root = document.getElementById('weightsGrid');
+  root.innerHTML = DIMENSIONS.map(d => `
+    <div class="weight-input">
+      <label for="weight-${d.key}">${escapeHtml(d.label)}</label>
+      <div class="input-row">
+        <input id="weight-${d.key}" type="number" min="0" max="100" step="1" data-key="${d.key}" value="${state.weights[d.key]}" aria-label="${escapeHtml(d.label)} weight">
+        <span class="unit">%</span>
+      </div>
+    </div>
+  `).join('');
+  root.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const k = inp.dataset.key;
+      state.weights[k] = parseFloat(inp.value) || 0;
+      renderWeightTotal();
+      renderRanking();
+      renderStats();
+      renderDist();
+      renderFirstCall();
+      renderActions();
+      renderMoneyBand();
+    });
+  });
+  renderWeightTotal();
+}
+
+function renderWeightTotal() {
+  const root = document.getElementById('weightTotal');
+  const total = DIMENSIONS.reduce((sum, d) => sum + (state.weights[d.key] || 0), 0);
+  let cls = 'ok', label = 'Sums to 100, ready to go.';
+  if (total !== 100) {
+    if (Math.abs(total - 100) <= 5) { cls = 'warn'; label = 'Close to 100, off by ' + Math.abs(total - 100).toFixed(0) + '. Scores normalize against total.'; }
+    else { cls = 'err'; label = 'Off by ' + Math.abs(total - 100).toFixed(0) + ' points. Scores normalize but adjust for cleaner signal.'; }
+  }
+  root.innerHTML = `
+    <span>Weights total: <span class="${cls}">${total.toFixed(0)}%</span></span>
+    <span style="color: var(--text-muted); font-size: 0.8rem;">${label}</span>
+  `;
+}
+
+function renderDrivers() {
+  const root = document.getElementById('driversBody');
+  if (state.drivers.length === 0) {
+    root.innerHTML = `<tr><td colspan="9" style="padding: 1rem 0.6rem;"><div class="empty"><strong>No drivers yet.</strong>Add at least one driver to see the ranking and tier distribution.</div></td></tr>`;
+    return;
+  }
+  root.innerHTML = state.drivers.map((d, i) => {
+    const isNew = d.tenure < 30;
+    return `
+    <tr>
+      <td><input type="text" data-i="${i}" data-key="name" value="${escapeHtml(d.name)}" aria-label="Driver ${i+1} name"></td>
+      <td class="tenure-cell ${isNew ? 'is-new' : ''}"><input type="number" data-i="${i}" data-key="tenure" value="${d.tenure}" min="0" step="1" aria-label="Driver ${i+1} tenure in days"></td>
+      <td><input type="number" data-i="${i}" data-key="volume" value="${d.volume}" min="0" step="1" aria-label="Driver ${i+1} delivery volume"></td>
+      <td><input type="number" data-i="${i}" data-key="acceptance" value="${d.acceptance}" min="0" max="100" step="0.1" aria-label="Driver ${i+1} acceptance rate"></td>
+      <td><input type="number" data-i="${i}" data-key="ontime" value="${d.ontime}" min="0" max="100" step="0.1" aria-label="Driver ${i+1} on-time rate"></td>
+      <td><input type="number" data-i="${i}" data-key="rating" value="${d.rating}" min="0" max="5" step="0.1" aria-label="Driver ${i+1} rating"></td>
+      <td><input type="number" data-i="${i}" data-key="completion" value="${d.completion}" min="0" max="100" step="0.1" aria-label="Driver ${i+1} completion rate"></td>
+      <td><input type="number" data-i="${i}" data-key="response" value="${d.response}" min="0" step="0.1" aria-label="Driver ${i+1} response time"></td>
+      <td><button class="remove-btn" data-i="${i}" type="button" aria-label="Remove driver ${i+1}">×</button></td>
+    </tr>
+  `;}).join('');
+  root.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const i = parseInt(inp.dataset.i);
+      const k = inp.dataset.key;
+      const val = k === 'name' ? inp.value : (parseFloat(inp.value) || 0);
+      state.drivers[i][k] = val;
+      if (k === 'tenure') {
+        const row = inp.closest('tr');
+        const cell = row && row.querySelector('.tenure-cell');
+        if (cell) cell.classList.toggle('is-new', val < 30);
+      }
+      renderRanking();
+      renderStats();
+      renderDist();
+      renderFirstCall();
+      renderActions();
+      renderMoneyBand();
+    });
+  });
+  root.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.i);
+      state.drivers.splice(i, 1);
+      renderDrivers();
+      renderRanking();
+      renderStats();
+      renderDist();
+      renderFirstCall();
+      renderActions();
+      renderMoneyBand();
+    });
+  });
+}
+
+function emptyRankingMessage() {
+  return `<tr><td colspan="9" style="padding: 1.25rem 1.3rem;"><div class="empty"><strong>Ranking will appear here.</strong>Add drivers above to see the weighted ranking, tier classification, and bias-corrected scores.</div></td></tr>`;
+}
+
+function renderRanking() {
+  const root = document.getElementById('rankingBody');
+  const ranked = computeRanking();
+  if (ranked.length === 0) { root.innerHTML = emptyRankingMessage(); return; }
+  root.innerHTML = ranked.map((d, i) => {
+    const tier = tierClass(i, ranked.length);
+    const scoreClass = `score-${tier}`;
+    const tierLabel = tier === 'AtRisk' ? 'At-Risk' : tier;
+    const rowClass = tier === 'Top' ? 'is-top' : (tier === 'AtRisk' ? 'is-atrisk' : '');
+    const newFlag = d.isNew
+      ? `<span class="new-flag" data-corrected="${d.wasCorrected}" title="${d.wasCorrected ? 'Under 30 days tenure. Score blended toward portfolio median to avoid penalizing thin data.' : 'Under 30 days tenure. Bias correction is off, raw score shown.'}">New ${fmt(d.tenure, 0)}d</span>`
+      : '';
+    return `
+      <tr class="${rowClass}">
+        <td>${i + 1}</td>
+        <td>
+          <span class="driver-name">${escapeHtml(d.name)}${newFlag}</span>
+          <div class="ranking-row-detail">${fmt(d.tenure, 0)}d · ${fmt(d.volume, 0)} deliveries</div>
+        </td>
+        <td><div class="dim-cell"><span class="dim-score">${fmt(d.sAcceptance, 0)}</span><span class="dim-raw">${fmt(d.acceptance, 1)}%</span></div></td>
+        <td><div class="dim-cell"><span class="dim-score">${fmt(d.sOntime, 0)}</span><span class="dim-raw">${fmt(d.ontime, 1)}%</span></div></td>
+        <td><div class="dim-cell"><span class="dim-score">${fmt(d.sRating, 0)}</span><span class="dim-raw">${fmt(d.rating, 1)}★</span></div></td>
+        <td><div class="dim-cell"><span class="dim-score">${fmt(d.sCompletion, 0)}</span><span class="dim-raw">${fmt(d.completion, 1)}%</span></div></td>
+        <td><div class="dim-cell"><span class="dim-score">${fmt(d.sResponse, 0)}</span><span class="dim-raw">${fmt(d.response, 1)}m</span></div></td>
+        <td><span class="score ${scoreClass}">${fmt(d.score, 1)}</span></td>
+        <td><span class="tier-pill tier-${tier}">${tierLabel}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderStats() {
+  const root = document.getElementById('statGrid');
+  const ranked = computeRanking();
+  if (ranked.length === 0) {
+    root.innerHTML = '<div class="empty" style="grid-column: 1 / -1;"><strong>Snapshot is empty.</strong>Add drivers to see fleet KPIs.</div>';
+    return;
+  }
+  const totalVol = ranked.reduce((s, d) => s + d.volume, 0);
+  const top = ranked[0];
+  const avgScore = ranked.reduce((s, d) => s + d.score, 0) / ranked.length;
+  const newDrivers = ranked.filter(d => d.isNew).length;
+  const atRiskCount = ranked.filter((_, i) => tierClass(i, ranked.length) === 'AtRisk').length;
+  const turnoverRisk = ranked.filter(d => d.score < 60 && d.tenure < 90).length;
+  root.innerHTML = `
+    <div class="stat-box">
+      <div class="stat-label">Top Driver</div>
+      <div class="stat-value green">${fmt(top.score, 1)}</div>
+      <div class="stat-detail">${escapeHtml(top.name)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Fleet Avg</div>
+      <div class="stat-value">${fmt(avgScore, 1)}</div>
+      <div class="stat-detail">across ${ranked.length} drivers</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Total Volume (30d)</div>
+      <div class="stat-value blue">${fmt(totalVol, 0)}</div>
+      <div class="stat-detail">deliveries</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">New Drivers</div>
+      <div class="stat-value purple">${newDrivers}</div>
+      <div class="stat-detail">under 30 days tenure</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">At-Risk Tier</div>
+      <div class="stat-value red">${atRiskCount}</div>
+      <div class="stat-detail">${fmt(atRiskCount / ranked.length * 100, 0)}% of fleet</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Turnover Risk</div>
+      <div class="stat-value yellow">${turnoverRisk}</div>
+      <div class="stat-detail">score &lt; 60 + tenure &lt; 90d</div>
+    </div>
+  `;
+}
+
+function renderDist() {
+  const root = document.getElementById('distChart');
+  const ranked = computeRanking();
+  if (ranked.length === 0) {
+    root.innerHTML = '<div class="empty"><strong>No tier distribution yet.</strong>Add drivers to see how volume splits across tiers.</div>';
+    return;
+  }
+  const tiers = ['Top', 'Reliable', 'Watch', 'AtRisk'];
+  const tierData = tiers.map(t => {
+    const rows = ranked.filter((_, i) => tierClass(i, ranked.length) === t);
+    return {
+      tier: t,
+      label: t === 'AtRisk' ? 'At-Risk' : t,
+      count: rows.length,
+      volume: rows.reduce((s, d) => s + d.volume, 0)
+    };
+  });
+  const totalVol = ranked.reduce((s, d) => s + d.volume, 0);
+  const maxVol = Math.max(...tierData.map(t => t.volume), 1);
+  root.innerHTML = tierData.map(t => {
+    const widthPct = (t.volume / maxVol) * 100;
+    const volPct = totalVol > 0 ? (t.volume / totalVol) * 100 : 0;
+    return `
+      <div class="dist-row tier-${t.tier}">
+        <div class="dist-label">${t.label}</div>
+        <div class="dist-bar">
+          <div class="dist-fill ${t.tier}" style="width: ${widthPct}%;"></div>
+        </div>
+        <div class="dist-val">
+          <span class="dist-pct">${fmt(volPct, 0)}%</span>
+          <span class="dist-meta">${t.count}d · ${fmt(t.volume, 0)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderFirstCall() {
+  const root = document.getElementById('firstCallBody');
+  const ranked = computeRanking();
+  if (ranked.length === 0) {
+    root.innerHTML = '<div class="empty" style="margin: 1.25rem 1.4rem;"><strong>Simulation needs drivers.</strong>Add drivers to model the next 100 orders.</div>';
+    return;
+  }
+  // simulate routing 100 orders to top-ranked drivers, capped by each driver's daily volume capacity (deliveries / 30 = daily)
+  const dailyCapacity = ranked.map(d => Math.max(1, Math.ceil(d.volume / 30)));
+  let remaining = 100;
+  const allocation = ranked.map(() => 0);
+  for (let i = 0; i < ranked.length && remaining > 0; i++) {
+    const take = Math.min(dailyCapacity[i], remaining);
+    allocation[i] = take;
+    remaining -= take;
+  }
+
+  const tierAlloc = { Top: 0, Reliable: 0, Watch: 0, AtRisk: 0 };
+  allocation.forEach((vol, i) => {
+    const t = tierClass(i, ranked.length);
+    tierAlloc[t] += vol;
+  });
+  const driversUsed = allocation.filter(v => v > 0).length;
+  const overflow = tierAlloc.Watch + tierAlloc.AtRisk;
+
+  root.innerHTML = `
+    <div class="firstcall-hero">
+      <div class="fc-hero-label">Drivers needed</div>
+      <div class="fc-hero-value">${driversUsed}<span class="fc-of">/ ${ranked.length}</span></div>
+      <div class="fc-hero-detail">to absorb 100 orders across daily capacity, ranked best to worst.</div>
+    </div>
+    <div class="firstcall-tiers">
+      <div class="firstcall-tier Top">
+        <div class="fct-label">Top tier</div>
+        <div class="fct-track"><div class="fct-fill" style="width: ${tierAlloc.Top}%;"></div></div>
+        <div class="fct-val">${tierAlloc.Top}%</div>
+      </div>
+      <div class="firstcall-tier Reliable">
+        <div class="fct-label">Reliable tier</div>
+        <div class="fct-track"><div class="fct-fill" style="width: ${tierAlloc.Reliable}%;"></div></div>
+        <div class="fct-val">${tierAlloc.Reliable}%</div>
+      </div>
+      <div class="firstcall-tier Overflow">
+        <div class="fct-label">Watch + At-Risk</div>
+        <div class="fct-track"><div class="fct-fill" style="width: ${overflow}%;"></div></div>
+        <div class="fct-val">${overflow}%</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderActions() {
+  const root = document.getElementById('actionsGrid');
+  const ranked = computeRanking();
+  if (ranked.length === 0) {
+    root.innerHTML = '<div class="empty"><strong>No actions yet.</strong>Add drivers to see tier-based recommendations.</div>';
+    return;
+  }
+
+  root.innerHTML = ranked.map((d, i) => {
+    const tier = tierClass(i, ranked.length);
+    const tierLabel = tier === 'AtRisk' ? 'At-Risk' : tier;
+    let action = '';
+    if (tier === 'Top') {
+      action = `Top performer. Lock in <strong>first-call priority</strong> on high-value orders. Surface tier publicly to driver (retention signal). Watch for capacity ceiling, you want to give them more work, not less.`;
+    } else if (tier === 'Reliable') {
+      if (d.isNew) {
+        action = `Strong new driver, ramp-up trajectory looks good. Continue normal dispatch. Re-rank at 30 days for full tier placement.`;
+      } else {
+        action = `Reliable middle tier. Maintain normal allocation. Show driver what would move them to Top (usually 1 to 2 dimensions). Visible meritocracy retains.`;
+      }
+    } else if (tier === 'Watch') {
+      if (d.isNew) {
+        action = `New driver with weak early signal. Targeted onboarding support intervention. Identify which dimension is failing (acceptance? rating? response?) and coach. <strong>Decision at day 30: graduate or off-board.</strong>`;
+      } else {
+        action = `Tenured driver in Watch tier. Performance has slipped. 30-day improvement plan with explicit dimension targets. Re-rank at end of cycle.`;
+      }
+    } else {
+      if (d.isNew) {
+        action = `<strong>New driver, At-Risk tier.</strong> Cut early before more onboarding cost is sunk. If the early data is this weak, the trajectory is unlikely to recover.`;
+      } else {
+        action = `<strong>At-Risk tier, tenured.</strong> Final remediation window (14 days, explicit targets) or off-board. The cheap performer is bleeding the platform on refunds and customer feedback.`;
+      }
+    }
+    const newFlag = d.isNew ? `<span class="new-flag" data-corrected="${d.wasCorrected}">New ${fmt(d.tenure, 0)}d</span>` : '';
+    return `
+      <div class="action-row tier-${tier}-bg">
+        <div class="action-driver">
+          <span class="action-driver-name">${escapeHtml(d.name)}${newFlag}</span>
+          <span class="small">Score ${fmt(d.score, 1)} · ${fmt(d.tenure, 0)}d tenure · ${fmt(d.volume, 0)} deliveries · ${tierLabel}</span>
+        </div>
+        <div class="action-text">${action}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMoneyBand() {
+  const root = document.getElementById('moneyBand');
+  const ranked = computeRanking();
+  if (ranked.length < 3) { root.innerHTML = ''; root.style.display = 'none'; return; }
+  // money math: if you cut the bottom 20% and reallocate their volume to top 20%, what's the impact
+  // assumption: each tier difference in score = 0.5% reduction in refund rate, refund rate baseline 3%, avg order $25
+  const atRiskRows = ranked.filter((_, i) => tierClass(i, ranked.length) === 'AtRisk');
+  const topRows = ranked.filter((_, i) => tierClass(i, ranked.length) === 'Top');
+  if (atRiskRows.length === 0 || topRows.length === 0) { root.innerHTML = ''; root.style.display = 'none'; return; }
+  root.style.display = '';
+  const atRiskVol = atRiskRows.reduce((s, d) => s + d.volume, 0);
+  const avgRefundReduction = 0.015; // 1.5% reduction in refund rate when shifting volume to top tier
+  const avgOrderValue = 25;
+  const refundSavings = atRiskVol * avgRefundReduction * avgOrderValue;
+  const annualSavings = refundSavings * 12; // 30-day volume × 12 months
+  const plural = atRiskRows.length === 1 ? '' : 's';
+  root.innerHTML = `
+    <div class="money-label">Money on the table</div>
+    <div class="money-value">If ${atRiskRows.length} At-Risk driver${plural} volume shifts to Top tier: <span class="accent">${fmtMoney(annualSavings)}</span> annualized refund savings</div>
+    <div class="money-detail">Math: ${fmt(atRiskVol, 0)} deliveries/mo at risk × 1.5% refund rate reduction × $25 avg order × 12 months. Adjust avg order value and refund rate to your business. <strong>This is the case for tier-based dispatch, not just tier-based reporting.</strong></div>
+  `;
+}
+
+function syncBiasUI() {
+  const pill = document.getElementById('biasStatusPill');
+  if (pill) {
+    pill.dataset.on = state.biasCorrection ? 'true' : 'false';
+    pill.textContent = state.biasCorrection ? 'On' : 'Off';
+  }
+}
+
+document.getElementById('biasToggle').addEventListener('change', (e) => {
+  state.biasCorrection = e.target.checked;
+  syncBiasUI();
+  renderRanking();
+  renderStats();
+  renderDist();
+  renderFirstCall();
+  renderActions();
+  renderMoneyBand();
+});
+
+document.getElementById('addDriverBtn').addEventListener('click', () => {
+  state.drivers.push({ name: 'New driver', tenure: 5, volume: 20, acceptance: 75, ontime: 80, rating: 4.0, completion: 85, response: 2.5 });
+  renderDrivers();
+  renderRanking();
+  renderStats();
+  renderDist();
+  renderFirstCall();
+  renderActions();
+  renderMoneyBand();
+});
+
+function renderAll() {
+  renderScenarios();
+  renderWeights();
+  renderDrivers();
+  renderRanking();
+  renderStats();
+  renderDist();
+  renderFirstCall();
+  renderActions();
+  renderMoneyBand();
+  syncBiasUI();
+}
+
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vendor Performance Scorecard · Marketplace Ops Toolkit</title>
+<meta name="description" content="Rank vendors against weighted multi-dimensional scorecards. Surface underperformers, defensible vendor conversation data, A/B/C tier classification with sensitivity analysis on weights. Four operator presets for 3PL, kit sourcing, BPO, and generic multi-vendor ops.">
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-elev: #131c33;
+    --bg-card: #131c33;
+    --bg-sunken: #0a1024;
+    --border: #1f2a44;
+    --border-bright: #2e3d5f;
+    --text: #e6ecf5;
+    --text-muted: #8a96b4;
+    --text-faint: #5d6a8a;
+    --accent: #14b8a6;
+    --accent-bright: #2dd4bf;
+    --accent-soft: rgba(20, 184, 166, 0.1);
+    --accent-softer: rgba(20, 184, 166, 0.05);
+    --accent-border: rgba(20, 184, 166, 0.35);
+    --green: #10b981;
+    --green-soft: rgba(16, 185, 129, 0.12);
+    --green-border: rgba(16, 185, 129, 0.32);
+    --yellow: #fbbf24;
+    --yellow-soft: rgba(251, 191, 36, 0.12);
+    --yellow-border: rgba(251, 191, 36, 0.32);
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.12);
+    --red-border: rgba(239, 68, 68, 0.32);
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --orange: #fb923c;
+    --radius-sm: 5px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 1px 2px rgba(0, 0, 0, 0.25);
+    --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+    --t-fast: 90ms ease;
+    --t-base: 140ms ease;
+    --t-slow: 220ms ease;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+    font-feature-settings: "kern", "ss01";
+  }
+  .container { max-width: 1180px; margin: 0 auto; padding: 1.5rem; }
+
+  ::selection { background: var(--accent-soft); color: var(--text); }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  .top-nav { margin-bottom: 1rem; }
+  .top-nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color var(--t-fast);
+  }
+  .top-nav a:hover { color: var(--accent); }
+
+  header { margin-bottom: 1.75rem; }
+  .brand {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.55rem;
+  }
+  header h1 {
+    font-size: 2rem;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    font-weight: 700;
+  }
+  header .tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 820px;
+    line-height: 1.55;
+  }
+  header .tagline strong { color: var(--text); font-weight: 600; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.4rem 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-card);
+  }
+  .card h2 {
+    color: var(--accent);
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.45rem;
+  }
+  .card .sub {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.1rem;
+    max-width: 75ch;
+  }
+
+  /* === SCENARIO PRESETS === */
+  .scenarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.7rem;
+  }
+  .scenario-btn {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.9rem 1rem;
+    border-radius: var(--radius-md);
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color var(--t-base), background var(--t-base), transform var(--t-fast);
+    position: relative;
+  }
+  .scenario-btn:hover {
+    border-color: var(--accent-border);
+    background: var(--accent-softer);
+  }
+  .scenario-btn:active { transform: translateY(0.5px); }
+  .scenario-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 0 0 1px var(--accent-border);
+  }
+  .scenario-btn.active::after {
+    content: "";
+    position: absolute;
+    top: 0.7rem;
+    right: 0.75rem;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .scenario-btn .scn-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 0.22rem;
+    letter-spacing: -0.005em;
+  }
+  .scenario-btn .scn-meta {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  /* === WEIGHTS === */
+  .weights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.7rem;
+    margin-bottom: 0.5rem;
+  }
+  .weight-input {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-md);
+    padding: 0.65rem 0.8rem;
+    transition: border-color var(--t-base);
+  }
+  .weight-input:focus-within { border-color: var(--accent); }
+  .weight-input label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+  }
+  .weight-input .input-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+  }
+  .weight-input input {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 1.2rem;
+    font-weight: 700;
+    width: 100%;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .weight-input input:focus { outline: none; }
+  .weight-input input::-webkit-outer-spin-button,
+  .weight-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .weight-input .unit {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .weight-total {
+    margin-top: 0.7rem;
+    padding: 0.6rem 0.85rem;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-bright);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+  .weight-total .ok { color: var(--green); font-weight: 700; }
+  .weight-total .warn { color: var(--yellow); font-weight: 700; }
+  .weight-total .err { color: var(--red); font-weight: 700; }
+  .weight-total .total-msg { color: var(--text-muted); font-size: 0.82rem; }
+
+  /* === VENDORS TABLE === */
+  .vendors-wrap { overflow-x: auto; margin: 0 -0.25rem; padding: 0 0.25rem; }
+  .vendors-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.88rem;
+  }
+  .vendors-table th, .vendors-table td {
+    padding: 0.55rem 0.5rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .vendors-table th {
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    text-align: right;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border-bright);
+    padding: 0.6rem 0.5rem;
+  }
+  .vendors-table th:first-child, .vendors-table td:first-child {
+    text-align: left;
+    padding-left: 0.75rem;
+  }
+  .vendors-table th:last-child, .vendors-table td:last-child {
+    text-align: center;
+    padding-right: 0.75rem;
+  }
+  .vendors-table th .sub-unit {
+    color: var(--text-faint);
+    font-weight: 500;
+    font-size: 0.62rem;
+    display: block;
+    letter-spacing: 0.04em;
+    margin-top: 0.1rem;
+    text-transform: none;
+  }
+  .vendors-table tbody tr { transition: background var(--t-fast); }
+  .vendors-table tbody tr:hover { background: rgba(255, 255, 255, 0.012); }
+  .vendors-table tr:last-child td { border-bottom: none; }
+  .vendors-table input {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.4rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.85rem;
+    width: 100%;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    transition: border-color var(--t-fast), background var(--t-fast);
+  }
+  .vendors-table input[type="text"] { text-align: left; font-weight: 600; }
+  .vendors-table input:hover { border-color: var(--accent-border); }
+  .vendors-table input:focus { outline: none; border-color: var(--accent); background: var(--bg-sunken); }
+  .vendors-table input::-webkit-outer-spin-button,
+  .vendors-table input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .remove-btn {
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border-bright);
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 1.05rem;
+    line-height: 1;
+    font-family: inherit;
+    transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+  }
+  .remove-btn:hover { color: var(--red); border-color: var(--red); background: var(--red-soft); }
+  .add-btn {
+    background: var(--accent-softer);
+    color: var(--accent);
+    border: 1px dashed var(--accent-border);
+    padding: 0.55rem 1.05rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-top: 0.8rem;
+    letter-spacing: 0.01em;
+    transition: background var(--t-base), border-color var(--t-base), color var(--t-base);
+  }
+  .add-btn:hover { background: var(--accent); color: #042f2e; border-style: solid; border-color: var(--accent); }
+  .add-btn:active { transform: translateY(0.5px); }
+
+  /* === RANKING === */
+  .ranking-card { padding: 0; overflow: hidden; }
+  .ranking-card .ranking-header {
+    padding: 1rem 1.5rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .ranking-card .ranking-header h2 { margin-bottom: 0; }
+  .ranking-card .ranking-header .ranking-note {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .ranking-table-wrap { overflow-x: auto; }
+  .ranking-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .ranking-table th, .ranking-table td {
+    padding: 0.8rem 0.7rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .ranking-table th {
+    color: var(--text-muted);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    font-weight: 700;
+    text-align: right;
+    background: var(--bg);
+    padding: 0.65rem 0.7rem;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .ranking-table th:first-child, .ranking-table td:first-child {
+    text-align: left;
+    padding-left: 1.5rem;
+    width: 42px;
+    color: var(--text-faint);
+    font-weight: 700;
+  }
+  .ranking-table th:nth-child(2), .ranking-table td:nth-child(2) { text-align: left; }
+  .ranking-table th:last-child, .ranking-table td:last-child {
+    padding-right: 1.5rem;
+    text-align: center;
+  }
+  .ranking-table tbody tr { transition: background var(--t-fast); }
+  .ranking-table tbody tr:hover { background: rgba(255, 255, 255, 0.018); }
+  .ranking-table tbody tr[data-tier="A"] { box-shadow: inset 3px 0 0 var(--green); }
+  .ranking-table tbody tr[data-tier="B"] { box-shadow: inset 3px 0 0 var(--yellow); }
+  .ranking-table tbody tr[data-tier="C"] { box-shadow: inset 3px 0 0 var(--red); }
+  .ranking-table tr:last-child td { border-bottom: none; }
+  .ranking-table .rank-num { font-variant-numeric: tabular-nums; }
+  .ranking-table .vendor-name { font-weight: 600; color: var(--text); letter-spacing: -0.005em; }
+  .ranking-table .score {
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .ranking-table .score-cell { display: inline-flex; align-items: baseline; gap: 0.25rem; }
+  .ranking-table .score-cell .score-max {
+    color: var(--text-faint);
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+  .ranking-table .dim-score {
+    font-weight: 600;
+    color: var(--text);
+  }
+  .ranking-table .ranking-row-detail {
+    color: var(--text-faint);
+    font-size: 0.74rem;
+    margin-top: 0.15rem;
+    font-weight: 400;
+  }
+
+  /* Sophisticated tier pills */
+  .tier-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    border: 1px solid transparent;
+    line-height: 1;
+  }
+  .tier-pill::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    margin-right: 0.4rem;
+    box-shadow: 0 0 0 2px currentColor;
+    opacity: 0.4;
+  }
+  .tier-A {
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.1));
+    color: var(--green);
+    border-color: var(--green-border);
+  }
+  .tier-B {
+    background: linear-gradient(180deg, rgba(251, 191, 36, 0.18), rgba(251, 191, 36, 0.1));
+    color: var(--yellow);
+    border-color: var(--yellow-border);
+  }
+  .tier-C {
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.1));
+    color: var(--red);
+    border-color: var(--red-border);
+  }
+  .score-A { color: var(--green); }
+  .score-B { color: var(--yellow); }
+  .score-C { color: var(--red); }
+
+  /* === STAT GRID === */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 0.7rem;
+  }
+  .stat-box {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1.05rem;
+    transition: border-color var(--t-base), background var(--t-base);
+  }
+  .stat-box:hover { border-color: var(--accent-border); background: var(--bg-sunken); }
+  .stat-box .stat-label {
+    color: var(--text-muted);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+  .stat-box .stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+  }
+  .stat-box .stat-detail {
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    margin-top: 0.25rem;
+    line-height: 1.35;
+  }
+  .stat-box .stat-value.green { color: var(--green); }
+  .stat-box .stat-value.yellow { color: var(--yellow); }
+  .stat-box .stat-value.red { color: var(--red); }
+  .stat-box .stat-value.blue { color: var(--blue); }
+
+  /* === SENSITIVITY === */
+  .sensitivity-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+  .sensitivity-row {
+    display: grid;
+    grid-template-columns: 150px 1fr 110px;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.65rem 0.9rem;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-md);
+    transition: border-color var(--t-base);
+  }
+  .sensitivity-row:hover { border-color: var(--accent-border); }
+  .sensitivity-row .sens-label {
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .sensitivity-row .sens-bar {
+    height: 8px;
+    background: var(--bg-sunken);
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .sensitivity-row .sens-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-bright));
+    border-radius: 999px;
+    transition: width var(--t-slow) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .sensitivity-row.changed .sens-fill {
+    background: linear-gradient(90deg, var(--orange), #fdba74);
+  }
+  .sensitivity-row .sens-val {
+    color: var(--text);
+    font-weight: 700;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.3rem;
+  }
+  .sensitivity-row .sens-val.changed { color: var(--orange); }
+  .sensitivity-row .sens-warn {
+    color: var(--orange);
+    font-size: 0.78rem;
+  }
+
+  /* === ACTIONS === */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+  .action-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 1.1rem;
+    align-items: start;
+    padding: 0.95rem 1.1rem 0.95rem 1.25rem;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-md);
+    position: relative;
+    transition: border-color var(--t-base), background var(--t-base);
+  }
+  .action-row::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8%;
+    bottom: 8%;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+  }
+  .action-row.tier-A-bg::before { background: var(--green); }
+  .action-row.tier-B-bg::before { background: var(--yellow); }
+  .action-row.tier-C-bg::before { background: var(--red); }
+  .action-row:hover { border-color: var(--accent-border); background: var(--bg-sunken); }
+  .action-row .action-vendor {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 0.95rem;
+    letter-spacing: -0.005em;
+  }
+  .action-row .action-vendor .meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.55rem;
+    align-items: center;
+    margin-top: 0.35rem;
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .action-row .action-vendor .meta-line .dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    display: inline-block;
+  }
+  .action-row .action-text {
+    color: var(--text);
+    font-size: 0.91rem;
+    line-height: 1.55;
+  }
+  .action-row .action-text strong { color: var(--accent); font-weight: 700; }
+
+  /* === MONEY BAND === */
+  .money-band {
+    position: relative;
+    background:
+      radial-gradient(120% 140% at 0% 0%, rgba(20, 184, 166, 0.16), transparent 50%),
+      radial-gradient(100% 120% at 100% 100%, rgba(96, 165, 250, 0.10), transparent 55%),
+      linear-gradient(180deg, rgba(20, 184, 166, 0.04), rgba(20, 184, 166, 0.02));
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem 1.35rem;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+  .money-band::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.06) inset;
+    pointer-events: none;
+  }
+  .money-band .money-label {
+    color: var(--accent);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 800;
+    margin-bottom: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .money-band .money-label::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .money-band .money-headline {
+    color: var(--text);
+    font-size: 1.02rem;
+    line-height: 1.5;
+    margin-bottom: 0.6rem;
+    font-weight: 500;
+    max-width: 75ch;
+  }
+  .money-band .money-headline strong { font-weight: 600; }
+  .money-band .money-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+    flex-wrap: wrap;
+  }
+  .money-band .money-value {
+    font-size: 2.4rem;
+    color: var(--accent);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+    line-height: 1;
+  }
+  .money-band .money-value-unit {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    font-weight: 500;
+  }
+  .money-band .money-detail {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.55;
+    max-width: 80ch;
+  }
+  .money-band .money-detail strong { color: var(--text); font-weight: 600; }
+
+  /* === EMPTY STATES === */
+  .empty-state {
+    background: var(--bg);
+    border: 1px dashed var(--border-bright);
+    border-radius: var(--radius-md);
+    padding: 1.6rem 1.4rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+  .empty-state .empty-title {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.35rem;
+  }
+  .empty-state .empty-detail {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    max-width: 50ch;
+    margin: 0 auto;
+    line-height: 1.55;
+  }
+
+  /* === USE CASES === */
+  .use-cases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .use-case {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.2rem;
+    transition: border-color var(--t-base);
+  }
+  .use-case:hover { border-color: var(--accent-border); }
+  .use-case-title {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.55rem;
+    letter-spacing: -0.005em;
+  }
+  .use-case-body {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+  .use-case-body strong { color: var(--text); font-weight: 600; }
+
+  .formula {
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    background: var(--bg-sunken);
+    border: 1px solid var(--border-bright);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-md);
+    padding: 0.7rem 0.95rem;
+    color: var(--text);
+    font-size: 0.85rem;
+    margin: 0.6rem 0;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  details.help {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-md);
+    padding: 0.7rem 1rem;
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    transition: border-color var(--t-base);
+  }
+  details.help[open] { border-color: var(--accent-border); }
+  details.help summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 700;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  details.help summary::-webkit-details-marker { display: none; }
+  details.help summary::after {
+    content: "▾";
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    transition: transform var(--t-base);
+  }
+  details.help[open] summary::after { transform: rotate(180deg); }
+  details.help p { color: var(--text-muted); margin-top: 0.6rem; line-height: 1.6; }
+  details.help ul { margin: 0.5rem 0 0 1.2rem; color: var(--text-muted); }
+  details.help li { margin-bottom: 0.35rem; line-height: 1.55; }
+  details.help li strong { color: var(--text); }
+
+  .footer {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding-top: 1.5rem;
+    margin-top: 2rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  .footer a { color: var(--accent); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+  .footer p { margin-bottom: 0.35rem; }
+
+  /* === MOBILE === */
+  @media (max-width: 720px) {
+    .container { padding: 1.1rem; }
+    header h1 { font-size: 1.55rem; }
+    .card { padding: 1.1rem 1.15rem; }
+    .ranking-card .ranking-header { padding: 0.9rem 1.15rem; }
+    .ranking-table th:first-child, .ranking-table td:first-child { padding-left: 1.15rem; }
+    .ranking-table th:last-child, .ranking-table td:last-child { padding-right: 1.15rem; }
+    .money-band { padding: 1.05rem 1.15rem 1.15rem; }
+    .money-band .money-value { font-size: 1.9rem; }
+    .action-row { grid-template-columns: 1fr; gap: 0.5rem; padding-left: 1.15rem; }
+    .sensitivity-row { grid-template-columns: 120px 1fr 80px; gap: 0.55rem; padding: 0.55rem 0.7rem; }
+    .sensitivity-row .sens-label { font-size: 0.78rem; }
+  }
+  @media (max-width: 540px) {
+    .vendors-table { font-size: 0.78rem; }
+    .vendors-table input { font-size: 0.78rem; padding: 0.3rem 0.4rem; }
+    .ranking-table { font-size: 0.8rem; }
+    .ranking-table th, .ranking-table td { padding: 0.6rem 0.45rem; }
+    .ranking-table th:first-child, .ranking-table td:first-child { padding-left: 0.85rem; width: 30px; }
+    .ranking-table th:last-child, .ranking-table td:last-child { padding-right: 0.85rem; }
+    .ranking-table .score { font-size: 1rem; }
+    .stat-box .stat-value { font-size: 1.3rem; }
+  }
+
+  /* === PRINT === */
+  @media print {
+    :root {
+      --bg: #ffffff;
+      --bg-elev: #ffffff;
+      --bg-card: #ffffff;
+      --bg-sunken: #f7f8fa;
+      --border: #d0d6de;
+      --border-bright: #b8c0cc;
+      --text: #0b1220;
+      --text-muted: #4a5466;
+      --text-faint: #6b7686;
+      --accent: #0b8a7e;
+      --accent-soft: rgba(11, 138, 126, 0.08);
+      --accent-softer: rgba(11, 138, 126, 0.04);
+      --accent-border: rgba(11, 138, 126, 0.5);
+      --green: #0a7a52;
+      --yellow: #9a6b00;
+      --red: #b91c1c;
+    }
+    body { background: #fff; color: #0b1220; }
+    .container { max-width: 100%; padding: 0.5rem; }
+    .top-nav, .footer, .add-btn, .remove-btn { display: none !important; }
+    .card, .money-band {
+      break-inside: avoid;
+      box-shadow: none;
+      border: 1px solid #d0d6de;
+      page-break-inside: avoid;
+    }
+    .scenario-btn { break-inside: avoid; }
+    .scenario-btn.active { background: var(--accent-soft); }
+    .ranking-table tbody tr[data-tier="A"] { box-shadow: inset 3px 0 0 var(--green); }
+    .ranking-table tbody tr[data-tier="B"] { box-shadow: inset 3px 0 0 var(--yellow); }
+    .ranking-table tbody tr[data-tier="C"] { box-shadow: inset 3px 0 0 var(--red); }
+    .tier-pill { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .money-band {
+      background: var(--accent-soft);
+      page-break-inside: avoid;
+    }
+    .money-band .money-value { color: var(--accent); }
+    details.help { display: none; }
+    .ranking-table th { position: static; }
+    a { color: var(--text); text-decoration: none; }
+    h1 { font-size: 1.6rem; }
+    .vendors-table input, .weight-input input {
+      border: none;
+      background: transparent;
+      color: var(--text);
+    }
+  }
+
+  /* === REDUCED MOTION === */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top-nav"><a href="./index.html">← marketplace-ops-toolkit</a></div>
+
+  <header>
+    <div class="brand">Tool #12 · marketplace-ops-toolkit</div>
+    <h1>Vendor Performance Scorecard</h1>
+    <div class="tagline">
+      Rank your vendors against a <strong>weighted multi-dimensional scorecard</strong>. Surface underperformers, build defensible vendor conversation data, classify the portfolio into A / B / C tiers with <strong>sensitivity analysis on weights</strong>. Four operator presets for kit sourcing, 3PL last-mile, BPO offshore, and balanced multi-vendor ops.
+    </div>
+  </header>
+
+  <!-- SCENARIO PRESETS -->
+  <div class="card">
+    <h2>Operator preset</h2>
+    <div class="sub">Pick the scenario closest to your stack. Each preset rebalances the dimension weights for the operating context and loads a realistic vendor sample.</div>
+    <div class="scenarios" id="scenarios" role="group" aria-label="Operator presets"></div>
+  </div>
+
+  <!-- WEIGHTS -->
+  <div class="card">
+    <h2>Dimension weights</h2>
+    <div class="sub">Each dimension contributes to the weighted score 0 to 100. Total weights should sum to 100. Adjust to match what matters most for your operation.</div>
+    <div class="weights-grid" id="weightsGrid"></div>
+    <div class="weight-total" id="weightTotal"></div>
+    <details class="help">
+      <summary>How dimension scoring works</summary>
+      <p>Each vendor is scored 0 to 100 on each dimension based on inputs you provide. The weighted total is the sum of (weight × dimension score). Scoring rules:</p>
+      <ul>
+        <li><strong>On-Time Delivery %</strong>: raw % becomes the score directly. 95% on-time = 95 points.</li>
+        <li><strong>Defect Rate %</strong>: inverted. 2% defect = 98 points. Capped at 0 if defect rate above 20%.</li>
+        <li><strong>Cost Variance %</strong>: 0% variance = 100 points. Each 1% over target subtracts 5 points. Each 1% under target adds 1 point (capped at 110, normalized to 100).</li>
+        <li><strong>Lead Time Days</strong>: normalized against the best vendor in the set. Best = 100, others scale down (1 extra lead-time day = 4 point penalty).</li>
+        <li><strong>Response Time Hours</strong>: normalized against the best vendor. Best = 100, others scale down (1 extra hour = 3 point penalty).</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- VENDORS INPUT -->
+  <div class="card">
+    <h2>Vendors</h2>
+    <div class="sub">Enter your vendors' actual performance numbers. Cost variance is % vs your target unit cost. Negative = under budget, positive = over.</div>
+    <div class="vendors-wrap">
+      <table class="vendors-table">
+        <thead>
+          <tr>
+            <th scope="col">Vendor</th>
+            <th scope="col">Volume<span class="sub-unit">units / mo</span></th>
+            <th scope="col">On-Time<span class="sub-unit">%</span></th>
+            <th scope="col">Defect<span class="sub-unit">%</span></th>
+            <th scope="col">Cost Var<span class="sub-unit">% vs target</span></th>
+            <th scope="col">Lead Time<span class="sub-unit">days</span></th>
+            <th scope="col">Response<span class="sub-unit">hours</span></th>
+            <th scope="col" aria-label="Remove"></th>
+          </tr>
+        </thead>
+        <tbody id="vendorsBody"></tbody>
+      </table>
+    </div>
+    <button class="add-btn" id="addVendorBtn" type="button">+ Add vendor</button>
+  </div>
+
+  <!-- MONEY BAND -->
+  <div id="moneyBand"></div>
+
+  <!-- SUMMARY -->
+  <div class="card">
+    <h2>Portfolio snapshot</h2>
+    <div class="stat-grid" id="statGrid"></div>
+  </div>
+
+  <!-- RANKING -->
+  <div class="card ranking-card">
+    <div class="ranking-header">
+      <h2>Ranked scorecard</h2>
+      <div class="ranking-note">Sorted by weighted score, descending. Tier A = top 25%, C = bottom 25%.</div>
+    </div>
+    <div class="ranking-table-wrap">
+      <table class="ranking-table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Vendor</th>
+            <th scope="col">On-Time</th>
+            <th scope="col">Defect</th>
+            <th scope="col">Cost Var</th>
+            <th scope="col">Lead Time</th>
+            <th scope="col">Response</th>
+            <th scope="col">Score</th>
+            <th scope="col">Tier</th>
+          </tr>
+        </thead>
+        <tbody id="rankingBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SENSITIVITY -->
+  <div class="card">
+    <h2>Sensitivity analysis (top vendor score)</h2>
+    <div class="sub">If you shift the weight on each dimension by ± 10 points, how much does your top vendor's score change? Bars show absolute change in points. Orange = change above 3 points (sensitive). Use this to validate weights before taking the scorecard to vendors.</div>
+    <div class="sensitivity-grid" id="sensitivityGrid"></div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="card">
+    <h2>Action recommendations</h2>
+    <div class="sub">Generated from tier classification + cost variance + volume. Use as a starting point for vendor conversations, not the final decision.</div>
+    <div class="actions-grid" id="actionsGrid"></div>
+  </div>
+
+  <!-- USE CASES -->
+  <div class="card">
+    <h2>Use cases I've seen this work</h2>
+    <div class="sub">Patterns from operations I've run before. Adjust the framework to your specific business, but the operating logic transfers.</div>
+    <div class="use-cases-grid">
+
+      <div class="use-case">
+        <div class="use-case-title">Case 1: Multifamily kit sourcing with overseas manufacturers</div>
+        <div class="use-case-body">
+          You're sourcing renovation kits direct from China and Vietnam manufacturers. Eight to fifteen suppliers across cabinets, flooring, lighting, plumbing fixtures, hardware. <strong>Lead times unpredictable, defect rates variable, communication latency from time zones makes everything slower.</strong>
+          <br><br>
+          <strong>How this maps:</strong> use the "Kit sourcing (overseas mfg)" preset. Lead time and defect rate weighted heaviest because a single container delay can blow a unit-turnover schedule. Cost variance also high because your first PO is the negotiation moment.
+          <br><br>
+          <strong>The conversation it enables:</strong> walk into each renegotiation with the vendor's own data. Best performers earn first-call status on the next PO. Worst performers either pivot to remediation plan or get cut in cycle two.
+        </div>
+      </div>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 2: 3PL last-mile carrier portfolio</div>
+        <div class="use-case-body">
+          You're running last-mile delivery with 8 to 15 carrier vendors across regions. Each carrier has different cost-per-handover, SLA performance, defect rate. <strong>Vendor performance drifts month over month and nobody has time to chase it down weekly.</strong>
+          <br><br>
+          <strong>How this maps:</strong> use the "3PL last-mile" preset. On-time and defect rate heaviest. Cost variance is the lever you use in quarterly business reviews.
+          <br><br>
+          <strong>What I built:</strong> a scorecard cadence with carrier data on the table every month. On-time delivery moved from 78% to 91% in two quarters across the carrier base, without losing a single carrier. The conversation gets tighter because the data does the talking.
+        </div>
+      </div>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 3: BPO / offshore support vendor evaluation</div>
+        <div class="use-case-body">
+          You've outsourced part or all of your support operations to an offshore BPO. <strong>Quality drift, response time creep, and escalation gaps show up as customer feedback months later.</strong> Hard to manage from inside the home office without a scorecard rhythm.
+          <br><br>
+          <strong>How this maps:</strong> use the "BPO offshore" preset. Defect rate and response time weighted heaviest because those are your two biggest leaks. Volume matters less here because the BPO is a single contract; you're scoring sub-team performance within it.
+          <br><br>
+          <strong>The reframe:</strong> instead of one weekly call with the BPO lead, you bring this scorecard to a daily 15-minute standup. Drift gets caught in days, not months.
+        </div>
+      </div>
+
+      <div class="use-case">
+        <div class="use-case-title">Case 4: Renegotiation cycle prep ahead of contract renewal</div>
+        <div class="use-case-body">
+          You have a vendor master agreement renewing in 60 to 90 days. <strong>Walking into the renegotiation without numbers is the most expensive thing a procurement leader does.</strong>
+          <br><br>
+          <strong>How this maps:</strong> any preset works. Run the scorecard with the prior 12 months of data, sort by score, then look at which vendors are above the cost-variance line (paying more than they should given their performance).
+          <br><br>
+          <strong>The play:</strong> bring the scorecard to each renewal conversation. Anchor on the vendor's own performance, never on the peer comparison (private). Vendors self-correct because nobody wants their own data to tell the bad story.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Part of <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">marketplace-ops-toolkit</a>. Single-file HTML, no install, no tracking.</p>
+    <p><a href="./index.html">← All tools</a></p>
+  </div>
+
+</div>
+
+<script>
+const DIMENSIONS = [
+  { key: 'ontime', label: 'On-Time Delivery', unit: '%', defaultWeight: 25 },
+  { key: 'defect', label: 'Defect Rate', unit: '%', defaultWeight: 25 },
+  { key: 'cost', label: 'Cost Variance', unit: '%', defaultWeight: 20 },
+  { key: 'leadtime', label: 'Lead Time', unit: 'days', defaultWeight: 15 },
+  { key: 'response', label: 'Response Time', unit: 'hrs', defaultWeight: 15 }
+];
+
+const PRESETS = [
+  {
+    id: 'kit-sourcing',
+    title: 'Kit sourcing (overseas mfg)',
+    meta: 'China / Vietnam manufacturers, multifamily kits',
+    weights: { ontime: 20, defect: 30, cost: 25, leadtime: 20, response: 5 },
+    vendors: [
+      { name: 'Shenzhen Hardware Co.', volume: 1200, ontime: 88, defect: 2.1, cost: -3.5, leadtime: 38, response: 18 },
+      { name: 'Hanoi Lighting Ltd.', volume: 800, ontime: 92, defect: 1.4, cost: 0.0, leadtime: 32, response: 12 },
+      { name: 'Foshan Flooring Group', volume: 2400, ontime: 76, defect: 3.8, cost: -5.0, leadtime: 45, response: 24 },
+      { name: 'Guangzhou Plumbing', volume: 900, ontime: 84, defect: 2.8, cost: 1.2, leadtime: 40, response: 16 },
+      { name: 'Ho Chi Minh Cabinets', volume: 1500, ontime: 95, defect: 0.9, cost: 2.5, leadtime: 35, response: 10 }
+    ]
+  },
+  {
+    id: '3pl-lastmile',
+    title: '3PL last-mile carriers',
+    meta: 'Multi-carrier last-mile delivery portfolio',
+    weights: { ontime: 30, defect: 25, cost: 20, leadtime: 10, response: 15 },
+    vendors: [
+      { name: 'Carrier North', volume: 45000, ontime: 94, defect: 1.2, cost: -2.0, leadtime: 1.2, response: 4 },
+      { name: 'Carrier South', volume: 38000, ontime: 87, defect: 2.1, cost: 0.5, leadtime: 1.5, response: 6 },
+      { name: 'Carrier East', volume: 52000, ontime: 78, defect: 3.4, cost: -1.0, leadtime: 2.1, response: 8 },
+      { name: 'Carrier West', volume: 28000, ontime: 91, defect: 1.6, cost: 3.0, leadtime: 1.4, response: 5 },
+      { name: 'Carrier Metro', volume: 67000, ontime: 82, defect: 2.7, cost: -3.5, leadtime: 1.8, response: 7 }
+    ]
+  },
+  {
+    id: 'bpo-offshore',
+    title: 'BPO offshore support',
+    meta: 'Outsourced support sub-team performance',
+    weights: { ontime: 15, defect: 30, cost: 15, leadtime: 5, response: 35 },
+    vendors: [
+      { name: 'Manila Team A', volume: 18000, ontime: 91, defect: 4.2, cost: -1.0, leadtime: 0.1, response: 2.5 },
+      { name: 'Cebu Team B', volume: 22000, ontime: 86, defect: 5.8, cost: 0.0, leadtime: 0.1, response: 3.2 },
+      { name: 'Bogota Team C', volume: 14000, ontime: 93, defect: 3.1, cost: 2.5, leadtime: 0.1, response: 1.8 },
+      { name: 'Pune Team D', volume: 26000, ontime: 82, defect: 6.5, cost: -3.0, leadtime: 0.1, response: 4.1 }
+    ]
+  },
+  {
+    id: 'balanced',
+    title: 'Balanced (multi-vendor ops)',
+    meta: 'Generic balanced weights, mixed vendor portfolio',
+    weights: { ontime: 25, defect: 25, cost: 20, leadtime: 15, response: 15 },
+    vendors: [
+      { name: 'Vendor A', volume: 5000, ontime: 92, defect: 1.8, cost: -1.5, leadtime: 12, response: 8 },
+      { name: 'Vendor B', volume: 3500, ontime: 85, defect: 3.2, cost: 1.0, leadtime: 15, response: 14 },
+      { name: 'Vendor C', volume: 8200, ontime: 78, defect: 4.5, cost: -3.0, leadtime: 22, response: 18 },
+      { name: 'Vendor D', volume: 4100, ontime: 95, defect: 1.1, cost: 2.5, leadtime: 10, response: 6 },
+      { name: 'Vendor E', volume: 6800, ontime: 88, defect: 2.4, cost: 0.0, leadtime: 14, response: 10 }
+    ]
+  }
+];
+
+let state = {
+  weights: { ...PRESETS[0].weights },
+  vendors: JSON.parse(JSON.stringify(PRESETS[0].vendors)),
+  activePreset: 'kit-sourcing'
+};
+
+function fmt(n, decimals = 1) {
+  if (n === null || n === undefined || isNaN(n)) return '–';
+  return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function fmtMoney(n) {
+  if (Math.abs(n) >= 1000000) return '$' + (n/1000000).toFixed(2) + 'M';
+  if (Math.abs(n) >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+// Dimension scoring functions
+function scoreOntime(v) { return Math.max(0, Math.min(100, v)); }
+function scoreDefect(v) { return Math.max(0, Math.min(100, 100 - v * 5)); }
+function scoreCost(v) {
+  // v = cost variance % vs target. negative = under (good), positive = over (bad).
+  if (v <= 0) return Math.min(100, 100 + v); // 0% = 100, -5% = 95 (but capped at 100 for under)
+  return Math.max(0, 100 - v * 5);
+}
+function scoreLeadtime(v, allValues) {
+  const best = Math.min(...allValues.filter(x => x > 0));
+  if (best === Infinity || best === 0) return 100;
+  const extra = v - best;
+  return Math.max(0, Math.min(100, 100 - extra * 4));
+}
+function scoreResponse(v, allValues) {
+  const best = Math.min(...allValues.filter(x => x > 0));
+  if (best === Infinity || best === 0) return 100;
+  const extra = v - best;
+  return Math.max(0, Math.min(100, 100 - extra * 3));
+}
+
+function vendorScores(vendors) {
+  const allLeadtime = vendors.map(v => v.leadtime);
+  const allResponse = vendors.map(v => v.response);
+  return vendors.map(v => ({
+    ...v,
+    sOntime: scoreOntime(v.ontime),
+    sDefect: scoreDefect(v.defect),
+    sCost: scoreCost(v.cost),
+    sLeadtime: scoreLeadtime(v.leadtime, allLeadtime),
+    sResponse: scoreResponse(v.response, allResponse)
+  }));
+}
+
+function weightedScore(v, weights) {
+  const totalWeight = weights.ontime + weights.defect + weights.cost + weights.leadtime + weights.response;
+  if (totalWeight === 0) return 0;
+  const score = (
+    v.sOntime * weights.ontime +
+    v.sDefect * weights.defect +
+    v.sCost * weights.cost +
+    v.sLeadtime * weights.leadtime +
+    v.sResponse * weights.response
+  ) / totalWeight;
+  return score;
+}
+
+function tierClass(rank, total) {
+  const pct = rank / total;
+  if (pct <= 0.25) return 'A';
+  if (pct <= 0.75) return 'B';
+  return 'C';
+}
+
+function renderScenarios() {
+  const root = document.getElementById('scenarios');
+  root.innerHTML = PRESETS.map(p => `
+    <button type="button" class="scenario-btn ${state.activePreset === p.id ? 'active' : ''}" data-id="${p.id}" aria-pressed="${state.activePreset === p.id}">
+      <div class="scn-title">${escapeHtml(p.title)}</div>
+      <div class="scn-meta">${escapeHtml(p.meta)}</div>
+    </button>
+  `).join('');
+  root.querySelectorAll('.scenario-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = PRESETS.find(x => x.id === btn.dataset.id);
+      state.activePreset = p.id;
+      state.weights = { ...p.weights };
+      state.vendors = JSON.parse(JSON.stringify(p.vendors));
+      renderAll();
+    });
+  });
+}
+
+function renderWeights() {
+  const root = document.getElementById('weightsGrid');
+  root.innerHTML = DIMENSIONS.map(d => `
+    <div class="weight-input">
+      <label for="w-${d.key}">${escapeHtml(d.label)}</label>
+      <div class="input-row">
+        <input id="w-${d.key}" type="number" min="0" max="100" step="1" data-key="${d.key}" value="${state.weights[d.key]}" inputmode="numeric" aria-label="${escapeHtml(d.label)} weight">
+        <span class="unit">%</span>
+      </div>
+    </div>
+  `).join('');
+  root.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const k = inp.dataset.key;
+      const val = parseFloat(inp.value) || 0;
+      state.weights[k] = val;
+      renderWeightTotal();
+      renderRanking();
+      renderStats();
+      renderSensitivity();
+      renderActions();
+      renderMoneyBand();
+    });
+  });
+  renderWeightTotal();
+}
+
+function renderWeightTotal() {
+  const root = document.getElementById('weightTotal');
+  const total = DIMENSIONS.reduce((sum, d) => sum + (state.weights[d.key] || 0), 0);
+  let cls = 'ok', label = 'Sums to 100, ready to go.';
+  if (total !== 100) {
+    if (Math.abs(total - 100) <= 5) { cls = 'warn'; label = 'Close to 100, off by ' + Math.abs(total - 100).toFixed(0) + '. Scores normalize against total.'; }
+    else { cls = 'err'; label = 'Off by ' + Math.abs(total - 100).toFixed(0) + ' points. Scores normalize but adjust for a clean signal.'; }
+  }
+  root.innerHTML = `
+    <span>Weights total: <span class="${cls}">${total.toFixed(0)}%</span></span>
+    <span class="total-msg">${label}</span>
+  `;
+}
+
+function renderVendors() {
+  const root = document.getElementById('vendorsBody');
+  root.innerHTML = state.vendors.map((v, i) => `
+    <tr>
+      <td><input type="text" data-i="${i}" data-key="name" value="${escapeHtml(v.name)}" aria-label="Vendor ${i+1} name"></td>
+      <td><input type="number" data-i="${i}" data-key="volume" value="${v.volume}" step="1" inputmode="numeric" aria-label="Vendor ${i+1} volume"></td>
+      <td><input type="number" data-i="${i}" data-key="ontime" value="${v.ontime}" step="0.1" min="0" max="100" aria-label="Vendor ${i+1} on-time percent"></td>
+      <td><input type="number" data-i="${i}" data-key="defect" value="${v.defect}" step="0.1" min="0" max="50" aria-label="Vendor ${i+1} defect percent"></td>
+      <td><input type="number" data-i="${i}" data-key="cost" value="${v.cost}" step="0.1" aria-label="Vendor ${i+1} cost variance percent"></td>
+      <td><input type="number" data-i="${i}" data-key="leadtime" value="${v.leadtime}" step="0.1" min="0" aria-label="Vendor ${i+1} lead time days"></td>
+      <td><input type="number" data-i="${i}" data-key="response" value="${v.response}" step="0.1" min="0" aria-label="Vendor ${i+1} response hours"></td>
+      <td><button class="remove-btn" data-i="${i}" type="button" aria-label="Remove vendor ${i+1}">×</button></td>
+    </tr>
+  `).join('');
+  root.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const i = parseInt(inp.dataset.i);
+      const k = inp.dataset.key;
+      const val = k === 'name' ? inp.value : (parseFloat(inp.value) || 0);
+      state.vendors[i][k] = val;
+      renderRanking();
+      renderStats();
+      renderSensitivity();
+      renderActions();
+      renderMoneyBand();
+    });
+  });
+  root.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.i);
+      state.vendors.splice(i, 1);
+      renderVendors();
+      renderRanking();
+      renderStats();
+      renderSensitivity();
+      renderActions();
+      renderMoneyBand();
+    });
+  });
+}
+
+function renderRanking() {
+  const root = document.getElementById('rankingBody');
+  if (state.vendors.length === 0) {
+    root.innerHTML = `<tr><td colspan="9" style="padding: 1.4rem;"><div class="empty-state"><div class="empty-title">No vendors yet</div><div class="empty-detail">Add at least one vendor above to see the ranked scorecard. Pick a preset to load a realistic sample portfolio.</div></div></td></tr>`;
+    return;
+  }
+  const scored = vendorScores(state.vendors).map(v => ({
+    ...v,
+    score: weightedScore(v, state.weights)
+  }));
+  scored.sort((a, b) => b.score - a.score);
+  root.innerHTML = scored.map((v, i) => {
+    const tier = tierClass(i, scored.length);
+    const scoreClass = `score-${tier}`;
+    return `
+      <tr data-tier="${tier}">
+        <td class="rank-num">${i + 1}</td>
+        <td><div class="vendor-name">${escapeHtml(v.name)}</div><div class="ranking-row-detail">${fmt(v.volume, 0)} units / mo</div></td>
+        <td><span class="dim-score">${fmt(v.sOntime, 0)}</span><div class="ranking-row-detail">${fmt(v.ontime, 1)}%</div></td>
+        <td><span class="dim-score">${fmt(v.sDefect, 0)}</span><div class="ranking-row-detail">${fmt(v.defect, 1)}%</div></td>
+        <td><span class="dim-score">${fmt(v.sCost, 0)}</span><div class="ranking-row-detail">${v.cost > 0 ? '+' : ''}${fmt(v.cost, 1)}%</div></td>
+        <td><span class="dim-score">${fmt(v.sLeadtime, 0)}</span><div class="ranking-row-detail">${fmt(v.leadtime, 1)} d</div></td>
+        <td><span class="dim-score">${fmt(v.sResponse, 0)}</span><div class="ranking-row-detail">${fmt(v.response, 1)} h</div></td>
+        <td><span class="score-cell"><span class="score ${scoreClass}">${fmt(v.score, 1)}</span><span class="score-max">/ 100</span></span></td>
+        <td><span class="tier-pill tier-${tier}">${tier}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderStats() {
+  const root = document.getElementById('statGrid');
+  const scored = vendorScores(state.vendors).map(v => ({
+    ...v,
+    score: weightedScore(v, state.weights)
+  }));
+  scored.sort((a, b) => b.score - a.score);
+  if (scored.length === 0) {
+    root.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><div class="empty-title">No vendors to score</div><div class="empty-detail">Add vendors above to see portfolio rollups: top performer, average score, tier spread, and total volume share.</div></div>`;
+    return;
+  }
+  if (scored.length === 1) {
+    const v = scored[0];
+    root.innerHTML = `
+      <div class="stat-box">
+        <div class="stat-label">Sole vendor</div>
+        <div class="stat-value green">${fmt(v.score, 1)}</div>
+        <div class="stat-detail">${escapeHtml(v.name)}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Monthly Volume</div>
+        <div class="stat-value blue">${fmt(v.volume, 0)}</div>
+        <div class="stat-detail">units</div>
+      </div>
+      <div class="stat-box" style="grid-column: span 2;">
+        <div class="stat-label">Single-vendor note</div>
+        <div class="stat-value" style="font-size: 0.92rem; line-height: 1.4; font-weight: 600;">Add a peer vendor to surface tier spread, sensitivity, and money on the table.</div>
+      </div>
+    `;
+    return;
+  }
+  const totalVol = scored.reduce((s, v) => s + v.volume, 0);
+  const top = scored[0];
+  const worst = scored[scored.length - 1];
+  const avgScore = scored.reduce((s, v) => s + v.score, 0) / scored.length;
+  const gap = top.score - worst.score;
+  const tierA = scored.filter((_, i) => tierClass(i, scored.length) === 'A').length;
+  const tierC = scored.filter((_, i) => tierClass(i, scored.length) === 'C').length;
+  root.innerHTML = `
+    <div class="stat-box">
+      <div class="stat-label">Top Vendor</div>
+      <div class="stat-value green">${fmt(top.score, 1)}</div>
+      <div class="stat-detail">${escapeHtml(top.name)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Portfolio Avg</div>
+      <div class="stat-value">${fmt(avgScore, 1)}</div>
+      <div class="stat-detail">across ${scored.length} vendors</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Bottom Vendor</div>
+      <div class="stat-value red">${fmt(worst.score, 1)}</div>
+      <div class="stat-detail">${escapeHtml(worst.name)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Top vs Bottom Gap</div>
+      <div class="stat-value yellow">${fmt(gap, 1)}</div>
+      <div class="stat-detail">${fmt(gap / top.score * 100, 0)}% spread</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Tier A Vendors</div>
+      <div class="stat-value green">${tierA}</div>
+      <div class="stat-detail">${fmt(tierA / scored.length * 100, 0)}% of portfolio</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Tier C Vendors</div>
+      <div class="stat-value red">${tierC}</div>
+      <div class="stat-detail">${fmt(tierC / scored.length * 100, 0)}% of portfolio</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Total Monthly Volume</div>
+      <div class="stat-value blue">${fmt(totalVol, 0)}</div>
+      <div class="stat-detail">units across portfolio</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Tier A Volume Share</div>
+      <div class="stat-value green">${fmt(scored.filter((_, i) => tierClass(i, scored.length) === 'A').reduce((s, v) => s + v.volume, 0) / totalVol * 100, 0)}%</div>
+      <div class="stat-detail">how much volume goes to top</div>
+    </div>
+  `;
+}
+
+function renderSensitivity() {
+  const root = document.getElementById('sensitivityGrid');
+  const baseScored = vendorScores(state.vendors).map(v => ({ ...v, score: weightedScore(v, state.weights) }));
+  baseScored.sort((a, b) => b.score - a.score);
+  if (baseScored.length === 0) {
+    root.innerHTML = `<div class="empty-state"><div class="empty-title">No vendors to test</div><div class="empty-detail">Sensitivity analysis needs at least one vendor to score against. Add vendors above.</div></div>`;
+    return;
+  }
+  if (baseScored.length === 1) {
+    root.innerHTML = `<div class="empty-state"><div class="empty-title">Only one vendor</div><div class="empty-detail">Weight shifts cancel out when there is a single vendor (no peer to outrank). Add at least two vendors to see meaningful sensitivity.</div></div>`;
+    return;
+  }
+  const top = baseScored[0];
+  const baseScore = top.score;
+
+  const results = DIMENSIONS.map(d => {
+    const upWeights = { ...state.weights, [d.key]: state.weights[d.key] + 10 };
+    const downWeights = { ...state.weights, [d.key]: Math.max(0, state.weights[d.key] - 10) };
+    const upScored = vendorScores(state.vendors).map(v => ({ ...v, score: weightedScore(v, upWeights) }));
+    upScored.sort((a, b) => b.score - a.score);
+    const downScored = vendorScores(state.vendors).map(v => ({ ...v, score: weightedScore(v, downWeights) }));
+    downScored.sort((a, b) => b.score - a.score);
+    const topNameUp = upScored[0].name;
+    const topNameDown = downScored[0].name;
+    const deltaUp = upScored.find(v => v.name === top.name).score - baseScore;
+    const deltaDown = downScored.find(v => v.name === top.name).score - baseScore;
+    const absDelta = Math.max(Math.abs(deltaUp), Math.abs(deltaDown));
+    return {
+      label: d.label,
+      delta: absDelta,
+      topUnchanged: topNameUp === top.name && topNameDown === top.name
+    };
+  });
+  const maxDelta = Math.max(...results.map(r => r.delta), 1);
+
+  root.innerHTML = results.map(r => {
+    const widthPct = (r.delta / maxDelta) * 100;
+    const sensitive = r.delta > 3;
+    const cls = sensitive ? 'changed' : '';
+    return `
+      <div class="sensitivity-row ${cls}">
+        <div class="sens-label">${escapeHtml(r.label)}</div>
+        <div class="sens-bar" role="progressbar" aria-valuenow="${r.delta.toFixed(1)}" aria-valuemin="0" aria-valuemax="${maxDelta.toFixed(1)}" aria-label="${escapeHtml(r.label)} sensitivity">
+          <div class="sens-fill" style="width: ${widthPct}%;"></div>
+        </div>
+        <div class="sens-val ${cls}">±${fmt(r.delta, 1)}${r.topUnchanged ? '' : '<span class="sens-warn" title="Top vendor changes under this weight shift">⚠</span>'}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderActions() {
+  const root = document.getElementById('actionsGrid');
+  const scored = vendorScores(state.vendors).map(v => ({ ...v, score: weightedScore(v, state.weights) }));
+  scored.sort((a, b) => b.score - a.score);
+  if (scored.length === 0) {
+    root.innerHTML = `<div class="empty-state"><div class="empty-title">No actions to recommend</div><div class="empty-detail">Add vendors above to generate per-vendor action recommendations based on tier, cost variance, and volume.</div></div>`;
+    return;
+  }
+
+  root.innerHTML = scored.map((v, i) => {
+    const tier = tierClass(i, scored.length);
+    let action = '';
+    if (tier === 'A') {
+      if (v.cost < -2) {
+        action = `Top performer at <strong>${fmt(Math.abs(v.cost), 1)}% under target cost</strong>. Lock in first-call status. Consider volume expansion if capacity allows.`;
+      } else if (v.cost > 2) {
+        action = `Top performer but <strong>${fmt(v.cost, 1)}% over target cost</strong>. Renegotiate price on volume commitment. They want to keep your business.`;
+      } else {
+        action = `Top performer at fair cost. Lock in first-call status. Highlight as a portfolio anchor in QBR.`;
+      }
+    } else if (tier === 'B') {
+      if (v.defect > 3) {
+        action = `Middle tier with <strong>${fmt(v.defect, 1)}% defect rate</strong>. Run a 60-day quality improvement plan with clear scorecard targets. Re-rank after.`;
+      } else if (v.ontime < 85) {
+        action = `Middle tier with on-time at <strong>${fmt(v.ontime, 1)}%</strong>. Address the lead-time gap first. Confirm capacity vs commitment.`;
+      } else {
+        action = `Steady middle tier. Maintain current allocation. Watch for tier movement quarterly.`;
+      }
+    } else {
+      if (v.cost < -3) {
+        action = `Bottom tier but <strong>${fmt(Math.abs(v.cost), 1)}% under target cost</strong>. The cheap vendor is bleeding you elsewhere. Run remediation plan or replace.`;
+      } else {
+        action = `Bottom tier across most dimensions. Structured remediation (30-day SLA improvement plan) or replacement in next cycle. Document the gap before the conversation.`;
+      }
+    }
+    return `
+      <div class="action-row tier-${tier}-bg">
+        <div>
+          <div class="action-vendor">${escapeHtml(v.name)}</div>
+          <div class="meta-line">
+            <span>Score ${fmt(v.score, 1)}</span>
+            <span class="dot"></span>
+            <span>${fmt(v.volume, 0)} units / mo</span>
+            <span class="dot"></span>
+            <span class="tier-pill tier-${tier}" style="font-size: 0.62rem; padding: 0.15rem 0.5rem;">Tier ${tier}</span>
+          </div>
+        </div>
+        <div class="action-text">${action}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMoneyBand() {
+  const root = document.getElementById('moneyBand');
+  const scored = vendorScores(state.vendors).map(v => ({ ...v, score: weightedScore(v, state.weights) }));
+  scored.sort((a, b) => b.score - a.score);
+  if (scored.length < 2) { root.innerHTML = ''; return; }
+  const top = scored[0];
+  const worst = scored[scored.length - 1];
+  const totalVol = scored.reduce((s, v) => s + v.volume, 0);
+  const worstShareVol = worst.volume;
+  // money-on-table assumption: bringing worst vendor's defect rate to top's defect rate
+  // each 1% defect reduction on volume V at $50 unit cost = V * 0.01 * 50
+  const defectGap = Math.max(0, worst.defect - top.defect);
+  const assumedUnitCost = 50; // illustrative
+  const monthlyImpact = worstShareVol * (defectGap / 100) * assumedUnitCost;
+  const annualImpact = monthlyImpact * 12;
+  root.innerHTML = `
+    <div class="money-band" role="region" aria-label="Money on the table">
+      <div class="money-label">Money on the table</div>
+      <div class="money-headline">If <strong>${escapeHtml(worst.name)}</strong> matched <strong>${escapeHtml(top.name)}</strong>'s defect rate.</div>
+      <div class="money-value-row">
+        <div class="money-value">${fmtMoney(annualImpact)}</div>
+        <div class="money-value-unit">annualized impact</div>
+      </div>
+      <div class="money-detail">Math: ${fmt(worstShareVol, 0)} units / mo × ${fmt(defectGap, 1)}% defect gap × $50 assumed unit cost × 12 months. Adjust the unit cost in your head to your actual product. The point: the gap between top and bottom vendors is rarely a rounding error. <strong>This is the number you bring to the renegotiation.</strong></div>
+    </div>
+  `;
+}
+
+function renderAll() {
+  renderScenarios();
+  renderWeights();
+  renderVendors();
+  renderRanking();
+  renderStats();
+  renderSensitivity();
+  renderActions();
+  renderMoneyBand();
+}
+
+document.getElementById('addVendorBtn').addEventListener('click', () => {
+  state.vendors.push({ name: 'New vendor', volume: 1000, ontime: 90, defect: 2.0, cost: 0.0, leadtime: 10, response: 8 });
+  renderVendors();
+  renderRanking();
+  renderStats();
+  renderSensitivity();
+  renderActions();
+  renderMoneyBand();
+});
+
+renderAll();
+</script>
+</body>
+</html>

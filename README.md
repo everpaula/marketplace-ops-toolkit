@@ -389,6 +389,107 @@ priority_score       = (w_risk × risk/100) + (w_age × age_factor) + (w_value �
 
 ---
 
+### Tool #12: Vendor Performance Scorecard
+
+**[→ Open the scorecard](./vendor-scorecard.html)**
+
+Rank your vendors against a **weighted multi-dimensional scorecard** across 5 dimensions: on-time delivery, defect rate, cost variance, lead time, and response time. A/B/C tier classification with sensitivity analysis on weights, per-vendor action recommendations, and money-on-the-table math.
+
+**The math:**
+
+```
+dimension_score    = function(raw_input)        // each dimension scored 0-100
+weighted_score     = Σ (weight_i × score_i) / Σ weights
+tier               = A if rank ≤ 25%, C if rank ≥ 75%, B otherwise
+sensitivity        = |weighted_score(weight ± 10) − weighted_score(weight)|
+money_on_table     = bottom_vendor_volume × defect_gap × unit_cost × 12 months
+```
+
+**Four operator presets:**
+
+| Preset | Weights focus | Use case |
+|---|---|---|
+| Kit sourcing (overseas mfg) | Defect 30%, Lead time 20%, Cost 25% | China/Vietnam manufacturers, multifamily renovation kits, container-based supply |
+| 3PL last-mile | On-time 30%, Defect 25%, Cost 20% | Multi-carrier last-mile portfolio, monthly scorecard cadence |
+| BPO offshore support | Response time 35%, Defect 30% | Outsourced support sub-team performance, drift detection |
+| Balanced multi-vendor | Equal weighting | Generic multi-vendor portfolio, default starting point |
+
+**Sensitivity analysis:** for each dimension, the tool shifts the weight by +/- 10 points and reports the absolute change in your top vendor's score. Bars above 3 points get an orange warning. This validates your weights before you take the scorecard to a vendor conversation. If a small weight shift flips the ranking, your weights are not the right ones.
+
+**Action recommendations:** generated from tier + cost variance + volume. Tier A vendors get first-call status. Tier B middle gets targeted improvement plans. Tier C bottom gets structured remediation or replacement. The cheap vendor that is bleeding you on defects is the most expensive vendor in the portfolio, and the scorecard makes that visible.
+
+**Real-world impact** *(illustrative scenarios drawn from operator practice)*
+
+**Case 1: Multifamily kit sourcing with overseas manufacturers**
+- *Setup:* Multifamily renovation supply firm sourcing 8-15 manufacturers across cabinets, flooring, lighting, plumbing fixtures, hardware out of China and Vietnam.
+- *Problem:* Lead times unpredictable, defect rates variable, communication latency from time zones made everything slower. No scorecard rhythm meant vendor conversations were anecdotal.
+- *Tool surfaced:* Kit sourcing preset ranked top 3 vendors (score 80+) holding 65% of volume, surfaced 2 bottom-tier vendors with combined volume drag of $180K annualized.
+- *Outcome:* Renegotiated 2 bottom-tier vendors on volume commitment, 30-day improvement plans, cycle-2 PO shifted 18% of volume to top performers. Cost-per-unit down 4% in one cycle.
+
+**Case 2: 3PL last-mile carrier renegotiation cycle**
+- *Setup:* Logistics operator with 15+ last-mile carriers across regions, vendor performance drifting month over month.
+- *Problem:* On-time delivery had dropped from 91% to 78% across the carrier base over two quarters and nobody had time to investigate carrier by carrier.
+- *Tool surfaced:* 3PL preset ranked all carriers, surfaced 3 bottom-tier carriers driving most of the on-time drop, generated peer-relative scorecards for each.
+- *Outcome:* Walked into each renegotiation with the carrier's own data. Zero carriers lost from the network. On-time recovered from 78% to 91% in two quarters, cost-per-handover down 6% on the bottom-tier renegotiations.
+
+---
+
+### Tool #13: Driver / Courier Performance Scorecard
+
+**[→ Open the scorecard](./driver-scorecard.html)**
+
+Rank drivers and couriers on **weighted multi-dimensional performance** with optional **tenure-based bias correction** so new drivers are not unfairly penalized by thin data. Five dimensions: acceptance rate, on-time delivery, customer rating, completion rate, response time. Four-tier classification (Top / Reliable / Watch / At-Risk), best-gets-first-call simulation, turnover risk surfacing, and per-driver action recommendations.
+
+**The math:**
+
+```
+dimension_score      = function(raw_input)      // 0-100 per dimension
+raw_score            = Σ (weight_i × score_i) / Σ weights
+bias_corrected       = raw_score × (1 − blend) + median × blend     // for tenure < 30 days
+                       where blend = max(0, (30 − tenure) / 30) × 0.5
+tier                 = Top (top 20%), Reliable (next 40%), Watch (next 20%), At-Risk (bottom 20%)
+first_call_sim       = allocate next 100 orders to ranked drivers, capped by daily capacity
+turnover_risk        = score < 60 AND tenure < 90 days
+money_on_table       = at_risk_volume × refund_rate_reduction × avg_order_value × 12 months
+```
+
+**Tenure-based bias correction (the differentiator):**
+
+Most fleet scorecards penalize new drivers with thin data. A driver with 5 deliveries and one bad rating looks worse than a driver with 500 deliveries and 4 bad ratings. That is a math artifact, not a quality signal.
+
+When bias correction is ON (default), drivers with under 30 days tenure get their score blended toward the portfolio median. The shorter the tenure, the more weight on the median. Drivers with 30+ days get their full raw score. **You stop firing drivers your scorecard could not measure yet.**
+
+The same principle applies to vendor scorecards, content moderator QA, fraud analyst ranking, and anywhere you score people on early data. Bias correction is the line between data-driven decisions and structural unfairness.
+
+**Four operator presets:**
+
+| Preset | Weights focus | Use case |
+|---|---|---|
+| Instant delivery (Gopuff-style) | On-time 30%, Completion 30% | 30-min delivery network, SLA-critical, W2 + 1099 mix |
+| Gig courier platform (Rappi-style) | Balanced across 5 dimensions | Gig courier ops, multi-country, hypergrowth |
+| Ride-hail (inDrive-style) | Rating 30%, Acceptance 25% | Driver-rider matching, trip ETA in response time |
+| 3PL last-mile (route-based) | Completion 35%, On-time 30% | Route-based delivery, larger volume per driver, multi-stop |
+
+**Best-gets-first-call simulation:** the simplest way to model what supply allocation looks like under performance-based dispatch. Routes the next 100 orders to top-ranked drivers in order, capped by each driver's daily capacity, and reports what % goes to each tier. Top tier should absorb 60-80% in a healthy fleet. If your Top tier only absorbs 30%, your dispatch is not concentrated enough on your best supply.
+
+**Action recommendations:** different for new drivers vs tenured drivers. New drivers get onboarding intervention or structured cuts before more onboarding cost gets sunk. Tenured drivers get remediation plans with explicit dimension targets. The dashboard says you onboarded 500 drivers this month. The P&L says 220 of them never delivered a second order. **That gap is where the money disappears**, and the scorecard surfaces it.
+
+**Real-world impact** *(illustrative scenarios drawn from operator practice)*
+
+**Case 1: Instant delivery driver onboarding leak**
+- *Setup:* Instant-needs delivery platform onboarding ~500 drivers per month across markets.
+- *Problem:* Dashboard reported 500 onboardings, P&L showed 220 never delivered a second order. Average cost per onboarding around $180. That was $40K per month of sunk onboarding cost on drivers who churned in week 1.
+- *Tool surfaced:* Instant delivery preset with bias correction ON identified 38% of new drivers (under 30 days) in Watch or At-Risk tier despite limited data. Targeted intervention list ready by week 2.
+- *Outcome:* Week-2 intervention recovered 24% of Watch-tier new drivers to Reliable by day 30. At-Risk new drivers cut early before more onboarding investment. Net effect: onboarding-to-second-order rate moved from 56% to 71% in one quarter, ~$95K annualized.
+
+**Case 2: Gig courier supply during peak event**
+- *Setup:* Gig courier platform running 8,000 active couriers, Black Friday surge incoming.
+- *Problem:* Routing high-value orders to wrong courier during peak meant refunds, churn, customer feedback. Historical pattern: peak refund rate 2.1x normal week refund rate, with most of the spike on tail-tier couriers.
+- *Tool surfaced:* Gig courier preset + best-gets-first-call sim confirmed Top tier could absorb 78% of peak volume across daily capacity. At-Risk tier paused for peak window, Reliable tier got high-value orders, At-Risk got low-stakes.
+- *Outcome:* Peak refund rate stayed within 1.3x normal week (vs 2.1x prior peak). Avoided losses ~$220K across the peak event. Tier-based dispatch became the peak-event playbook going forward.
+
+---
+
 ## Roadmap
 
 Other tools planned for this toolkit (inspired by community feedback, especially from Ricardo Vieira-Gomes):
@@ -397,7 +498,6 @@ Other tools planned for this toolkit (inspired by community feedback, especially
 - **Tool #9: QA Sampling Optimizer** *(coming)*. How many cases to audit per agent for statistically meaningful accuracy without over-sampling.
 - **Tool #10: Shift Handoff Impact Analyzer** *(coming)*. Quantifies the hidden cost of handoffs across shifts and the real productivity loss.
 - **Tool #11: BizOps Monthly Review Dashboard** *(coming)*. Three-layer KPI scorecard with anomaly detection and decision-items tracker.
-- **Tool #12: Vendor Performance Scorecard** *(coming)*. Multi-dimensional vendor scoring with SLA tracking and contract renegotiation calculator.
 
 If a particular tool would be useful for your team, open an issue and I'll prioritize it.
 
