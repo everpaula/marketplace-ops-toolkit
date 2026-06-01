@@ -1,0 +1,51 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Variant B</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:1792px; height:1024px; overflow:hidden; }
+body {
+  /* Cool pale blue dominant, single warm horizon accent (lower-right) */
+  background:
+    /* warm horizon accent — single soft pink/gold bloom lower right */
+    radial-gradient(ellipse 800px 240px at 80% 88%, rgba(255, 200, 170, 0.55) 0%, rgba(255, 200, 170, 0) 70%),
+    /* main vertical gradient: deep pale blue top → near white horizon */
+    linear-gradient(180deg,
+      #b8d4e8 0%,
+      #cce0f0 35%,
+      #e5eef5 65%,
+      #f4f6f8 90%,
+      #f9f7f3 100%);
+  position:relative;
+  overflow:hidden;
+}
+
+/* Cirrus streaks — feathered horizontal lines, asymmetric, evoking flight paths without depicting them */
+.cirrus { position:absolute; left:-200px; right:-200px; height:18px; filter: blur(8px); opacity:0.55; }
+.cirrus.c1 { top:22%; transform: rotate(-1.5deg); background: linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.95) 30%, rgba(255,255,255,0.55) 70%, transparent 95%); }
+.cirrus.c2 { top:31%; transform: rotate(-0.8deg); background: linear-gradient(90deg, transparent 15%, rgba(255,255,255,0.85) 45%, rgba(255,255,255,0.4) 80%, transparent 100%); opacity:0.45; }
+.cirrus.c3 { top:38%; transform: rotate(-2deg); height:12px; background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.7) 55%, transparent 90%); opacity:0.4; }
+.cirrus.c4 { top:48%; transform: rotate(0.5deg); height:10px; background: linear-gradient(90deg, transparent 10%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.3) 80%, transparent 100%); opacity:0.35; }
+.cirrus.c5 { top:54%; transform: rotate(-0.3deg); height:8px; background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.5) 60%, transparent 95%); opacity:0.3; }
+
+/* Soft warm cloud bloom lower left to balance composition (negative space stays dominant in center/upper) */
+.bloom-warm {
+  position:absolute; left:-100px; bottom:-50px; width:600px; height:280px;
+  background: radial-gradient(ellipse, rgba(255, 220, 195, 0.4) 0%, rgba(255, 220, 195, 0) 70%);
+  filter: blur(20px);
+}
+
+/* Subtle vignette to keep edges clean for typography */
+.vignette {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 1400px 700px at 50% 45%, transparent 0%, rgba(255,255,255,0.15) 90%);
+}
+</style></head>
+<body>
+  <div class="cirrus c1"></div>
+  <div class="cirrus c2"></div>
+  <div class="cirrus c3"></div>
+  <div class="cirrus c4"></div>
+  <div class="cirrus c5"></div>
+  <div class="bloom-warm"></div>
+  <div class="vignette"></div>
+</body></html>

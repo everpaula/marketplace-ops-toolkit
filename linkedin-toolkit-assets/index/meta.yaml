@@ -1,0 +1,15 @@
+tool_id: index
+tool_url: https://everpaula.github.io/marketplace-ops-toolkit/index.html
+variant: D
+mood: premium cover
+background_file: _assets/backgrounds/variant-d-portfolio.png
+background_treatment: portfolio dual-tone panorama (most differentiated, per user request, as it represents the whole portfolio; slate-blue zenith + warm gold horizon, max negative space)
+background_source: CSS-rendered (squad default)
+hero_html: hero.html
+hero_png: hero.png
+rendered_at: 2026-05-30T14:16:38-04:00
+viewport: 1200x627
+post_angle: Portfolio hub launch (first-person origin story; no single formula/case per Scout GAP)
+auditor_verdict: APPROVE
+audit_log: audit.md
+run_id: 2026-05-30-124010

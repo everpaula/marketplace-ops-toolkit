@@ -1,0 +1,54 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Variant A — gold honey dawn (agent-roi)</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:1792px; height:1024px; overflow:hidden; }
+body {
+  /* Warm-dawn family, golden/honey signature. Distinct from variant-a-warm and variant-a-rosegold.
+     Pale blue zenith -> rich warm gold/amber horizon. Sun bloom lower-center-right. */
+  background:
+    radial-gradient(ellipse 1150px 380px at 66% 94%, rgba(255, 196, 120, 0.62) 0%, rgba(255, 196, 120, 0) 72%),
+    linear-gradient(180deg,
+      rgba(255,255,255,0) 48%,
+      rgba(255, 214, 150, 0.34) 72%,
+      rgba(255, 198, 130, 0.5) 88%,
+      rgba(255, 206, 145, 0.6) 100%),
+    linear-gradient(180deg,
+      #aacae6 0%,
+      #c2d9ec 26%,
+      #dfe8ee 50%,
+      #f3ecdc 78%,
+      #fdf0d8 100%);
+  position:relative; overflow:hidden;
+}
+.cloud { position:absolute; filter: blur(14px); border-radius:50%; }
+.cloud.k1 {
+  top:28%; left:16%; width:430px; height:120px;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.92) 0%, rgba(255,247,228,0.5) 55%, rgba(255,247,228,0) 78%);
+}
+.cloud.k2 {
+  top:23%; left:58%; width:310px; height:90px;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.85) 0%, rgba(255,243,222,0.42) 55%, rgba(255,243,222,0) 80%);
+  opacity:0.9;
+}
+.cloud.k1::after {
+  content:""; position:absolute; top:8%; left:10%; width:78%; height:36%;
+  background: radial-gradient(ellipse, rgba(255, 208, 130, 0.66) 0%, rgba(255,208,130,0) 70%);
+  filter: blur(10px);
+}
+.bloom-horizon {
+  position:absolute; left:0; right:0; bottom:-80px; height:310px;
+  background: radial-gradient(ellipse 1450px 270px at 58% 100%, rgba(255, 184, 100, 0.46) 0%, rgba(255,184,100,0) 72%);
+  filter: blur(24px);
+}
+.vignette {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 1450px 720px at 50% 42%, transparent 0%, rgba(255,255,255,0.13) 92%);
+}
+</style></head>
+<body>
+  <div class="cloud k1"></div>
+  <div class="cloud k2"></div>
+  <div class="bloom-horizon"></div>
+  <div class="vignette"></div>
+</body></html>

@@ -1,0 +1,14 @@
+tool_id: logistics-supply
+tool_url: https://everpaula.github.io/marketplace-ops-toolkit/logistics-supply.html
+variant: B
+mood: flow
+background_file: _assets/backgrounds/variant-b-cirrus.png
+background_source: CSS-rendered (Unsplash photo-IDs returned off-spec; CSS fallback path adopted)
+hero_html: hero.html
+hero_png: hero.png
+rendered_at: 2026-05-29T18:35:28-04:00
+viewport: 1200x627
+post_body_word_count: 200
+auditor_verdict: APPROVE
+audit_log: audit.md
+run_id: 2026-05-29-180403

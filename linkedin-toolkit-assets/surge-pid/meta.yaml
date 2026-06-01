@@ -1,0 +1,15 @@
+tool_id: surge-pid
+tool_url: https://everpaula.github.io/marketplace-ops-toolkit/surge-pid.html
+variant: C
+mood: vigilance
+background_file: _assets/backgrounds/variant-c-twilight.png
+background_treatment: cool lavender/mauve twilight (kept pale in central typography zone for dark-text legibility)
+background_source: CSS-rendered (squad default)
+hero_html: hero.html
+hero_png: hero.png
+rendered_at: 2026-05-30T14:16:38-04:00
+viewport: 1200x627
+post_angle: City-average vs polygon-level PID (nine controllers on a 3x3 grid)
+auditor_verdict: APPROVE
+audit_log: audit.md
+run_id: 2026-05-30-124010

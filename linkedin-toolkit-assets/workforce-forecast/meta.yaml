@@ -1,0 +1,16 @@
+tool_id: workforce-forecast
+tool_url: https://everpaula.github.io/marketplace-ops-toolkit/workforce-forecast.html
+variant: A
+mood: optimistic
+background_file: _assets/backgrounds/variant-a-rosegold.png
+background_treatment: rose-gold lavender (warm-dawn family, per-tool color variation chosen by user to avoid identical Variant-A heroes)
+background_source: CSS-rendered (squad default per run 1 learning; Unsplash photo-IDs unreliable for spec compositions)
+hero_html: hero.html
+hero_png: hero.png
+rendered_at: 2026-05-30T12:03:00-04:00
+viewport: 1200x627
+post_body_word_count: 199
+post_angle: Case 2 (vendor-heavy footprint, cost-per-case crossover)
+auditor_verdict: APPROVE
+audit_log: audit.md
+run_id: 2026-05-29-184759

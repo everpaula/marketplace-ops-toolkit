@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Variant C — twilight vigilance (surge-pid)</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:1792px; height:1024px; overflow:hidden; }
+body {
+  /* Variant C, vigilance/precision. Cool twilight: periwinkle/lavender zenith with a deeper blue
+     top edge, transitioning to a soft mauve-pink horizon. More contrast and intensity than the
+     dawn variants, but kept pale enough in the central typography zone for dark text legibility. */
+  background:
+    /* deeper blue band at the very top edge */
+    linear-gradient(180deg, rgba(86, 104, 168, 0.55) 0%, rgba(86,104,168,0) 26%),
+    /* mauve-pink horizon glow */
+    radial-gradient(ellipse 1200px 360px at 50% 96%, rgba(214, 150, 180, 0.5) 0%, rgba(214, 150, 180, 0) 72%),
+    linear-gradient(180deg,
+      rgba(255,255,255,0) 50%,
+      rgba(206, 168, 200, 0.32) 74%,
+      rgba(214, 158, 188, 0.45) 90%,
+      rgba(220, 168, 196, 0.55) 100%),
+    /* base: periwinkle/lavender zenith -> soft lilac mid -> pale blush horizon */
+    linear-gradient(180deg,
+      #a9b6e0 0%,
+      #becae6 24%,
+      #d6d6ea 50%,
+      #e9dde9 76%,
+      #f6e6ec 100%);
+  position:relative; overflow:hidden;
+}
+/* high cirrus streaks catching last light, faint pink, upper third */
+.cirrus { position:absolute; left:-200px; right:-200px; height:14px; filter: blur(8px); }
+.cirrus.c1 { top:20%; transform: rotate(-1.4deg); background: linear-gradient(90deg, transparent 8%, rgba(255,236,244,0.9) 34%, rgba(255,224,238,0.5) 72%, transparent 96%); opacity:0.6; }
+.cirrus.c2 { top:28%; transform: rotate(-0.7deg); height:11px; background: linear-gradient(90deg, transparent 18%, rgba(255,240,248,0.78) 48%, rgba(255,228,242,0.36) 82%, transparent 100%); opacity:0.5; }
+.cirrus.c3 { top:35%; transform: rotate(-1.8deg); height:9px; background: linear-gradient(90deg, transparent 26%, rgba(255,238,246,0.62) 56%, transparent 92%); opacity:0.42; }
+.vignette {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 1450px 720px at 50% 42%, transparent 0%, rgba(255,255,255,0.14) 92%);
+}
+</style></head>
+<body>
+  <div class="cirrus c1"></div>
+  <div class="cirrus c2"></div>
+  <div class="cirrus c3"></div>
+  <div class="vignette"></div>
+</body></html>

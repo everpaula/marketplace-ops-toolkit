@@ -1160,6 +1160,17 @@
     <div class="scenarios" id="scenariosGrid"></div>
   </div>
 
+  <!-- SHARE BAND -->
+  <div class="card" style="display:flex; align-items:center; gap:0.9rem; flex-wrap:wrap;">
+    <div style="flex:1; min-width:220px; font-size:0.92rem; color:var(--text-muted);">
+      <strong style="color:var(--text);">Share this forecast.</strong> Copy a link with your scenario, persona, granularity, settings, and levers. Anyone with the link sees the same configuration.
+    </div>
+    <button type="button" id="shareLinkBtn" style="padding:0.6rem 1.1rem; background:rgba(16, 185, 129, 0.12); color:#10b981; border:1px solid #10b981; border-radius:6px; font-weight:600; cursor:pointer; font-size:0.92rem;">
+      Copy share link
+    </button>
+    <span id="shareFeedback" aria-live="polite" style="font-size:0.85rem; color:#10b981; opacity:0; transition:opacity 0.2s; min-width:120px;">Copied to clipboard</span>
+  </div>
+
   <div class="card">
     <h2>Forecast input <span class="card-context-tag" id="forecastTag">3PL &middot; DAILY</span></h2>
     <p class="sub" id="forecastSub">14-day daily package volume. Weekends auto-tagged. Enter zeros to skip a day.</p>
@@ -3132,7 +3143,82 @@ function bindGlobalEvents() {
 
 ensureForecastSeeded();
 bindGlobalEvents();
-loadScenario('br-blackfriday');
+// Share-by-URL: read state from URL hash if present, otherwise load default scenario
+(function initFromUrlOrDefault() {
+  const raw = location.hash || '';
+  const match = raw.match(/^#s=(.+)$/);
+  let urlState = null;
+  if (match) {
+    try {
+      urlState = JSON.parse(decodeURIComponent(match[1]));
+    } catch (e) {
+      urlState = null;
+    }
+  }
+  if (urlState && typeof urlState === 'object') {
+    const scenarioId = SCENARIOS.find(x => x.id === urlState.s) ? urlState.s : 'br-blackfriday';
+    loadScenario(scenarioId);
+    if (urlState.p === 'A' || urlState.p === 'B') state.persona = urlState.p;
+    if (urlState.g === 'D' || urlState.g === 'H') state.granularity = urlState.g;
+    if (urlState.cfg && typeof urlState.cfg === 'object') {
+      state.settings = { ...state.settings, ...urlState.cfg };
+    }
+    if (typeof urlState.at === 'number' && isFinite(urlState.at)) {
+      state.alertThreshold = urlState.at;
+    }
+    if (urlState.om && typeof urlState.om === 'object') {
+      state.originMix = { ...state.originMix, ...urlState.om };
+    }
+    if (urlState.lv && typeof urlState.lv === 'object') {
+      state.levers = { ...state.levers, ...urlState.lv };
+    }
+    recomputeAll();
+  } else {
+    loadScenario('br-blackfriday');
+  }
+})();
+
+// Share button: serialize current state to URL hash, copy link, update browser address bar
+document.getElementById('shareLinkBtn').addEventListener('click', async () => {
+  const compact = {
+    s: state.scenarioId,
+    p: state.persona,
+    g: state.granularity,
+    cfg: state.settings,
+    at: state.alertThreshold,
+    om: state.originMix,
+    lv: state.levers
+  };
+  const hash = '#s=' + encodeURIComponent(JSON.stringify(compact));
+  const url = location.origin + location.pathname + hash;
+  const feedback = document.getElementById('shareFeedback');
+  const showFeedback = (text, ok = true) => {
+    feedback.textContent = text;
+    feedback.style.color = ok ? '#10b981' : '#ef4444';
+    feedback.style.opacity = '1';
+    setTimeout(() => { feedback.style.opacity = '0'; }, 2200);
+  };
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    history.replaceState(null, '', hash);
+    showFeedback('Copied to clipboard');
+  } catch (e) {
+    showFeedback('Copy failed, see browser URL', false);
+    history.replaceState(null, '', hash);
+  }
+});
 </script>
 </body>
 </html>

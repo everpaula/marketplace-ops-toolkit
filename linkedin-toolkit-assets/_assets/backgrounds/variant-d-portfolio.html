@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Variant D — portfolio premium cover (index)</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:1792px; height:1024px; overflow:hidden; }
+body {
+  /* Variant D, premium editorial cover for the WHOLE portfolio hub. Most differentiated:
+     a wide panoramic dual-tone gradient. Warm pale gold low-left horizon meeting a cool
+     slate-blue zenith, the broadest and most minimal composition in the set. Maximum negative
+     space. Kept pale through the center for dark-text legibility. A single small cloud lower-right. */
+  background:
+    /* cool slate-blue accent upper-right corner (premium depth) */
+    radial-gradient(ellipse 1100px 640px at 88% -8%, rgba(120, 142, 180, 0.4) 0%, rgba(120,142,180,0) 60%),
+    /* warm pale gold horizon bloom, lower-left, anchoring the panorama */
+    radial-gradient(ellipse 1300px 420px at 26% 100%, rgba(248, 214, 158, 0.55) 0%, rgba(248, 214, 158, 0) 70%),
+    /* a faint cool counter-glow lower-right for balance */
+    radial-gradient(ellipse 900px 320px at 86% 98%, rgba(180, 200, 224, 0.4) 0%, rgba(180,200,224,0) 72%),
+    /* base wide panorama: slate-blue zenith -> near-white mid -> pale warm horizon */
+    linear-gradient(165deg,
+      #b3c2dc 0%,
+      #c8d5e6 22%,
+      #e2e9f0 46%,
+      #f1efe9 70%,
+      #fbf3e4 100%);
+  position:relative; overflow:hidden;
+}
+/* single small soft cloud, lower-right third, very minimal */
+.cloud {
+  position:absolute; top:58%; left:70%; width:300px; height:78px;
+  filter: blur(15px); border-radius:50%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.82) 0%, rgba(252,247,238,0.4) 55%, rgba(252,247,238,0) 82%);
+}
+.cloud::after {
+  content:""; position:absolute; top:10%; left:14%; width:68%; height:34%;
+  background: radial-gradient(ellipse, rgba(255, 222, 178, 0.5) 0%, rgba(255,222,178,0) 70%);
+  filter: blur(10px);
+}
+.vignette {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 1500px 760px at 50% 44%, transparent 0%, rgba(255,255,255,0.12) 92%);
+}
+</style></head>
+<body>
+  <div class="cloud"></div>
+  <div class="vignette"></div>
+</body></html>

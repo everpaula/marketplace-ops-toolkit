@@ -389,6 +389,71 @@ priority_score       = (w_risk × risk/100) + (w_age × age_factor) + (w_value �
 
 ---
 
+### Tool #10: Customer Feedback Cost Analyzer
+
+**[→ Open the analyzer](./customer-feedback-cost.html)**
+
+Most ops orgs report aggregate NPS, CSAT, or ticket volume. Almost none quantify the **dollar value of preventable customer feedback** (refunds, credits, handling cost, churn risk) coming from operational issues already mapped but not fixed upstream. This tool turns that gap into a single number the CFO can act on.
+
+The conversation it enables: walking into the fix-it vs absorb-it meeting with the payback period and 12-month NPV already on the page. CFOs do not greenlight ops fixes from anecdote. They greenlight them from math.
+
+**The math:**
+
+```
+monthly_leak    = volume × preventable_rate × (refund + handling + churn)     // aggregate path
+                = Σ (category_volume × category_avg_cost)                      // category path overrides when populated
+annual_leak     = monthly_leak × 12
+payback_months  = one_time_fix ÷ (monthly_leak × reduction)
+year_1_npv      = (monthly_leak × reduction × 12) − one_time_fix − maintenance
+year_3_cum      = (monthly_leak × reduction × 36) − one_time_fix − (maintenance × 3)
+```
+
+**Two personas, same math, different framing:**
+
+- **Operations Manager view** surfaces monthly leak, payback period, recovered-per-month, plus a live ticker counting dollars leaking since the page loaded. The number you bring to your weekly standup.
+- **CFO / Finance view** surfaces annualized leak, 12-month NPV, 3-year cumulative savings, and the full sensitivity card at +/- 15% and +/- 30%. The numbers you bring to the budget meeting.
+
+**Two granularities:**
+
+- **Aggregate mode** (default): single volume, single preventable rate, single avg cost per case. Fast first-pass.
+- **Category breakdown** (auto-engages when at least one row has data): issue-level math (order delays, defects, refund processing, address issues, account errors). The Pareto chart sorts categories by $ leak descending, highlights the top 3, marks anything below as rounding error until the top 3 are addressed.
+
+**Five operator presets:**
+
+| Preset | Volume / month | Avg case cost | Use case |
+|---|---|---|---|
+| Marketplace BR · Black Friday week | 25,000 | ~$44 | High volume, mid-low avg cost, high churn risk. Loads a populated category breakdown. |
+| Fintech US · payments errors | 8,000 | ~$152 | Medium volume, very high avg cost. Financial errors carry weight. |
+| Last-mile courier · peak season | 35,000 | ~$54 | High volume, defects + late delivery dominate. |
+| DTC e-commerce · quality issues | 6,500 | ~$79 | Medium volume, repeat-purchase exposure. |
+| Education / SaaS · onboarding failures | 1,200 | ~$215 | Low volume, very high avg cost. Annual contract churn is the loss. |
+
+**Sensitivity card:** annual leak at -30%, -15%, base, +15%, +30%. Use this to defend the headline when the CFO pushes back on volume or avg-cost assumptions. If the +30% case still pays back inside 6 months, the headline holds. If the -30% case breaks the payback math, your assumptions need work before the meeting.
+
+**Real-world impact** *(illustrative scenarios drawn from operator practice, numbers are realistic order-of-magnitude, not measurements from a specific deployment)*
+
+**Case 1: Self-service eligibility analysis at a top-3 BR insurer**
+- *Setup:* Inbound call center handling 1M+ contacts per quarter. Calls were being treated as fixed demand.
+- *Problem:* Aggregate call volume was the only KPI reported up. No taxonomy meant no fix.
+- *Tool surfaced:* Mapping calls by motive showed 42% were self-service eligible. The user had a question or request the IVR or app could absorb if the flow existed. Quantified preventable leak across the top 10 motives, payback period inside 4 months.
+- *Outcome:* Built 3 new self-service channels (IVR menu redesign, app self-service flow, WhatsApp bot for top motives). Calls down 42% in 9 months, retention up 9 points on the affected cohort.
+
+**Case 2: NPS taxonomy and two operating squads at a hypergrowth courier platform**
+- *Setup:* Marketplace was treating NPS as a single number reported to the C-level. Trend was getting worse but the source was opaque.
+- *Problem:* The number told you the leak was getting worse. It did not tell you where to fix.
+- *Tool surfaced:* Categorized feedback into motive × sub-motive × root cause. The Pareto chart concentrated 60-70% of dollar leak in two categories: defect rate (damaged items, wrong items) and late delivery. The fix-it vs absorb-it math made the engineering case.
+- *Outcome:* Two operating squads stood up (defect rate squad and late delivery squad) with the taxonomy as their operating system. Defect rate moved from 6% to 3%. Late delivery moved from 5.5% to 3.6% in 6 months. NPS up 11 points, per-order cost down meaningfully.
+
+**Case 3: The CFO conversation that unlocked the engineering budget**
+- *Setup:* Ops leader at a marketplace knew the upstream cause of half the support volume. Engineering was booked for two quarters. The fix was competing with 18 features in the backlog.
+- *Problem:* Anecdotes lose to features. The fix needed a dollar number and a payback period.
+- *Tool surfaced:* Annual leak at $1.4M, payback period 4.2 months, year-1 NPV positive by $480K. Sensitivity card showed even the -30% case still paid back inside 6 months.
+- *Outcome:* Engineering slot approved at the next planning cycle. The taxonomy + the math became the standard framing for every subsequent ops fix request inside the org.
+
+**Why this exists:** Most ops teams report aggregate NPS and CSAT to leadership. Almost none report the dollar leak from preventable feedback by category. The first version of this metric I built ran on a spreadsheet at a top-3 BR insurer in 2019. Every operations org I have built since has rebuilt it. This tool is that spreadsheet, cleaned up, with the personas and presets that took the longest to get right.
+
+---
+
 ### Tool #12: Vendor Performance Scorecard
 
 **[→ Open the scorecard](./vendor-scorecard.html)**
@@ -495,9 +560,8 @@ The same principle applies to vendor scorecards, content moderator QA, fraud ana
 Other tools planned for this toolkit (inspired by community feedback, especially from Ricardo Vieira-Gomes):
 
 - **Tool #8: Escalation Decision Calculator** *(coming)*. When does it make sense to escalate vs close at agent level? Cost-benefit of the escalation layer.
-- **Tool #9: QA Sampling Optimizer** *(coming)*. How many cases to audit per agent for statistically meaningful accuracy without over-sampling.
-- **Tool #10: Shift Handoff Impact Analyzer** *(coming)*. Quantifies the hidden cost of handoffs across shifts and the real productivity loss.
-- **Tool #11: BizOps Monthly Review Dashboard** *(coming)*. Three-layer KPI scorecard with anomaly detection and decision-items tracker.
+- **Tool #9: PO + Delivery Tracking Template** *(coming)*. Procurement workflow that becomes a tracking layer: PO logged, vendor SLA, delivery validation, defect-drag, cost-per-unit reconciliation.
+- **Tool #11: 90-Day Operating Plan Generator** *(coming)*. Input role title + JD priorities + company context, output a structured 30/60/90 one-pager with metrics and deliverables.
 
 If a particular tool would be useful for your team, open an issue and I'll prioritize it.
 

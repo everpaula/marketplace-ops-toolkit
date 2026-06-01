@@ -1,0 +1,15 @@
+tool_id: agent-roi
+tool_url: https://everpaula.github.io/marketplace-ops-toolkit/agent-roi.html
+variant: A
+mood: optimistic
+background_file: _assets/backgrounds/variant-a-gold.png
+background_treatment: warm honey-gold dawn (per-tool color variation; distinct from workforce-forecast rose-gold and the canonical variant-a-warm)
+background_source: CSS-rendered (squad default)
+hero_html: hero.html
+hero_png: hero.png
+rendered_at: 2026-05-30T14:16:38-04:00
+viewport: 1200x627
+post_angle: Portfolio mode + false-positive cost flipping a fundable gross queue to net-negative
+auditor_verdict: APPROVE
+audit_log: audit.md
+run_id: 2026-05-30-124010

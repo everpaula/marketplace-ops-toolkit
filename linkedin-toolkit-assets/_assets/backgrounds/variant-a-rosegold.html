@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Variant A3 — rose-gold lavender dawn</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:1792px; height:1024px; overflow:hidden; }
+body {
+  /* Warm-dawn family, cooler & softer. Lavender/periwinkle zenith, rose-gold blush horizon.
+     Maximum minimalism, a single high wispy cloud upper-right. */
+  background:
+    radial-gradient(ellipse 1100px 340px at 55% 96%, rgba(255, 190, 175, 0.5) 0%, rgba(255, 190, 175, 0) 72%),
+    linear-gradient(180deg,
+      rgba(255,255,255,0) 48%,
+      rgba(248, 205, 200, 0.32) 74%,
+      rgba(250, 200, 195, 0.46) 90%,
+      rgba(252, 212, 205, 0.55) 100%);
+  position:relative; overflow:hidden;
+}
+.base {
+  position:absolute; inset:0; z-index:-1;
+  background: linear-gradient(180deg,
+      #bcc3e2 0%,
+      #cdd2e6 24%,
+      #e0dde9 48%,
+      #f0e6e6 76%,
+      #fbeee9 100%);
+}
+/* single high wispy cloud, upper-right, very soft */
+.cloud {
+  position:absolute; top:22%; left:62%; width:360px; height:90px;
+  filter: blur(15px); border-radius:50%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.8) 0%, rgba(250,240,242,0.4) 55%, rgba(250,240,242,0) 82%);
+}
+.cloud::after {
+  content:""; position:absolute; top:8%; left:12%; width:70%; height:34%;
+  background: radial-gradient(ellipse, rgba(255, 210, 190, 0.5) 0%, rgba(255,210,190,0) 70%);
+  filter: blur(10px);
+}
+.bloom-horizon {
+  position:absolute; left:0; right:0; bottom:-90px; height:320px;
+  background: radial-gradient(ellipse 1500px 270px at 52% 100%, rgba(248, 178, 168, 0.4) 0%, rgba(248,178,168,0) 72%);
+  filter: blur(26px);
+}
+.vignette {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 1450px 720px at 50% 42%, transparent 0%, rgba(255,255,255,0.12) 92%);
+}
+</style></head>
+<body>
+  <div class="base"></div>
+  <div class="cloud"></div>
+  <div class="bloom-horizon"></div>
+  <div class="vignette"></div>
+</body></html>

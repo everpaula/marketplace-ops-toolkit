@@ -1,0 +1,71 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Variant A — warm dawn</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:1792px; height:1024px; overflow:hidden; }
+body {
+  /* Variant A spec: warmer dawn palette. Amber/rose horizon → pale blue at top.
+     Sunrise atmosphere, negative space dominant, clean center for typography. */
+  background:
+    /* soft sunrise bloom rising from the horizon, slightly right of center */
+    radial-gradient(ellipse 1100px 360px at 62% 92%, rgba(255, 200, 150, 0.55) 0%, rgba(255, 200, 150, 0) 72%),
+    /* warm amber/rose band hugging the lower horizon */
+    linear-gradient(180deg,
+      rgba(255,255,255,0) 55%,
+      rgba(255, 214, 178, 0.30) 78%,
+      rgba(255, 196, 176, 0.45) 90%,
+      rgba(255, 210, 196, 0.55) 100%),
+    /* main vertical gradient: pale cerulean zenith → warm near-white horizon */
+    linear-gradient(180deg,
+      #aecde6 0%,
+      #c4dcef 28%,
+      #dceaf3 52%,
+      #f1eee8 80%,
+      #fbf2e8 100%);
+  position:relative;
+  overflow:hidden;
+}
+
+/* Sparse soft cumulus clouds, asymmetric, warm golden highlight on upper edges */
+.cloud { position:absolute; filter: blur(14px); border-radius:50%; }
+.cloud.k1 {
+  top:30%; left:14%; width:420px; height:120px;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.92) 0%, rgba(255,248,236,0.5) 55%, rgba(255,248,236,0) 78%);
+}
+.cloud.k2 {
+  top:24%; left:60%; width:300px; height:90px;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.85) 0%, rgba(255,244,228,0.42) 55%, rgba(255,244,228,0) 80%);
+  opacity:0.9;
+}
+.cloud.k3 {
+  top:46%; left:38%; width:240px; height:70px;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.7) 0%, rgba(255,240,222,0.35) 55%, rgba(255,240,222,0) 82%);
+  opacity:0.8;
+}
+/* warm golden highlight skimming the top edge of the lead cloud */
+.cloud.k1::after {
+  content:""; position:absolute; top:8%; left:10%; width:75%; height:34%;
+  background: radial-gradient(ellipse, rgba(255, 222, 170, 0.6) 0%, rgba(255,222,170,0) 70%);
+  filter: blur(10px);
+}
+
+/* low warm horizon bloom to ground the dawn feel without clutter */
+.bloom-horizon {
+  position:absolute; left:0; right:0; bottom:-80px; height:300px;
+  background: radial-gradient(ellipse 1400px 260px at 55% 100%, rgba(255, 188, 150, 0.4) 0%, rgba(255,188,150,0) 72%);
+  filter: blur(24px);
+}
+
+/* subtle vignette keeps center/upper clean for typography overlay */
+.vignette {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 1450px 720px at 50% 42%, transparent 0%, rgba(255,255,255,0.14) 92%);
+}
+</style></head>
+<body>
+  <div class="cloud k1"></div>
+  <div class="cloud k2"></div>
+  <div class="cloud k3"></div>
+  <div class="bloom-horizon"></div>
+  <div class="vignette"></div>
+</body></html>

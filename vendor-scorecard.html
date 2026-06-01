@@ -932,6 +932,17 @@
     <div class="scenarios" id="scenarios" role="group" aria-label="Operator presets"></div>
   </div>
 
+  <!-- SHARE BAND -->
+  <div class="card" style="display:flex; align-items:center; gap:0.9rem; flex-wrap:wrap;">
+    <div style="flex:1; min-width:220px; font-size:0.92rem; color:var(--text-muted);">
+      <strong style="color:var(--text);">Share this scorecard.</strong> Copy a link with your current weights and vendors. Anyone with the link sees the same configuration.
+    </div>
+    <button type="button" id="shareLinkBtn" style="padding:0.6rem 1.1rem; background:var(--accent-soft, rgba(16, 185, 129, 0.1)); color:var(--accent, #10b981); border:1px solid var(--accent, #10b981); border-radius:6px; font-weight:600; cursor:pointer; font-size:0.92rem;">
+      Copy share link
+    </button>
+    <span id="shareFeedback" aria-live="polite" style="font-size:0.85rem; color:var(--accent, #10b981); opacity:0; transition:opacity 0.2s; min-width:120px;">Copied to clipboard</span>
+  </div>
+
   <!-- WEIGHTS -->
   <div class="card">
     <h2>Dimension weights</h2>
@@ -1586,6 +1597,95 @@ document.getElementById('addVendorBtn').addEventListener('click', () => {
   renderSensitivity();
   renderActions();
   renderMoneyBand();
+});
+
+// Share-by-URL: compact state encoded in the URL hash so a single link reproduces the full scorecard
+function encodeStateToHash() {
+  const compact = {
+    w: state.weights,
+    v: state.vendors.map(x => [x.name, x.volume, x.ontime, x.defect, x.cost, x.leadtime, x.response]),
+    p: state.activePreset || ''
+  };
+  return encodeURIComponent(JSON.stringify(compact));
+}
+
+function decodeStateFromHash(hash) {
+  try {
+    const decoded = JSON.parse(decodeURIComponent(hash));
+    if (!decoded || !decoded.w || !Array.isArray(decoded.v)) return null;
+    const num = (x, fallback = 0) => {
+      const n = Number(x);
+      return Number.isFinite(n) ? n : fallback;
+    };
+    return {
+      weights: {
+        ontime: num(decoded.w.ontime, 20),
+        defect: num(decoded.w.defect, 20),
+        cost: num(decoded.w.cost, 20),
+        leadtime: num(decoded.w.leadtime, 20),
+        response: num(decoded.w.response, 20)
+      },
+      vendors: decoded.v
+        .filter(arr => Array.isArray(arr) && arr.length >= 7)
+        .map(arr => ({
+          name: String(arr[0] || 'Vendor'),
+          volume: num(arr[1], 1000),
+          ontime: num(arr[2], 90),
+          defect: num(arr[3], 2),
+          cost: num(arr[4], 0),
+          leadtime: num(arr[5], 10),
+          response: num(arr[6], 8)
+        })),
+      activePreset: String(decoded.p || '')
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+// Apply state from URL hash on load (must run before the first renderAll)
+(function loadStateFromHash() {
+  const raw = location.hash || '';
+  const match = raw.match(/^#s=(.+)$/);
+  if (!match) return;
+  const decoded = decodeStateFromHash(match[1]);
+  if (decoded && decoded.vendors.length > 0) {
+    state = decoded;
+  }
+})();
+
+// Share link button: copy current state as URL, update browser address bar
+document.getElementById('shareLinkBtn').addEventListener('click', async () => {
+  const hash = '#s=' + encodeStateToHash();
+  const url = location.origin + location.pathname + hash;
+  const feedback = document.getElementById('shareFeedback');
+  const showFeedback = (text, ok = true) => {
+    feedback.textContent = text;
+    feedback.style.color = ok ? 'var(--accent, #10b981)' : 'var(--red, #ef4444)';
+    feedback.style.opacity = '1';
+    setTimeout(() => { feedback.style.opacity = '0'; }, 2200);
+  };
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      // Fallback for older browsers or non-secure contexts
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    history.replaceState(null, '', hash);
+    showFeedback('Copied to clipboard');
+  } catch (e) {
+    showFeedback('Copy failed, see browser URL', false);
+    history.replaceState(null, '', hash);
+  }
 });
 
 renderAll();
