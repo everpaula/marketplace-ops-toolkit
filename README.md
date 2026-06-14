@@ -454,6 +454,70 @@ year_3_cum      = (monthly_leak × reduction × 36) − one_time_fix − (mainte
 
 ---
 
+### Tool #11: 90-Day Operating Plan Generator
+
+**[→ Open the generator](./operating-plan-generator.html)**
+
+The structured one-pager every new operations leader needs. New role, day one. The hiring manager wants to know what your first 90 days look like. You can either send the generic "I'll listen, then design, then execute" answer, or you can send a one-pager with priorities mapped to phases, north star metrics, a risk register, and three concrete asks. This tool generates the second one.
+
+The point: scaffold, not content. Your priorities and context drive what shows up. The tool gives you the shape that reads like an operating leader writing for their new boss, not a template.
+
+**Inputs:**
+
+- **Role title** (free text, e.g. *Director of Operations, Florida + LATAM cluster*)
+- **Function focus** (operations, supply quality, quality & defect ops, growth, fraud, last-mile logistics). Shapes verbs and metric phrasing.
+- **Time horizon** (30/60/90 or 60/90/180)
+- **Company context** (3-5 lines on stage, vertical, current state)
+- **JD priorities** (top 5, ordered)
+
+**Transcript mining (optional):**
+
+Paste raw meeting notes, onboarding 1:1 transcripts, JD walkthrough calls, or stakeholder kickoff sessions into the mining textarea. The tool runs client-side heuristic extraction (no AI, no API, no upload) and surfaces:
+
+- **Candidate priorities**: top 10 sentences scored by priority keywords, action verbs, metric mentions, and length. Click any slot button (#1 through #5) to drop the candidate into a priority field.
+- **Stakeholders mentioned**: named people and role titles (CEO, VP, Director, Head, etc.) detected in the text.
+- **Metrics & numbers mentioned**: dollar amounts, percentages, time spans, counts. Useful to seed the north star metrics conversation.
+
+This bridges the gap between scaffold and content. You can drop a 30-minute onboarding transcript in, get back the 10 priority candidates your new boss actually surfaced, then refine them and generate the plan.
+
+**Output structure:**
+
+1. **Executive summary** with what changes, what stays, principal risk
+2. **Priorities mapped to phases**: each priority gets a Discover & Diagnose phase (interview, baseline, document), a Decide & Design phase (pilot, validate, commit), and a Deploy & Measure phase (ship, cadence, metric tracking)
+3. **North star metrics**: 3 to 5 numeric, time-bounded, named
+4. **Risk register**: 3 risks with mitigation, function-specific
+5. **What I would want from you (the leader)**: 3 concrete asks specific to the function
+
+Output formats: copy as Markdown, copy as plain text, download as `.md` file.
+
+**Five operator presets:**
+
+| Preset | Role | Function | Use case |
+|---|---|---|---|
+| Series A marketplace ops | Head of Operations | Operations | Small team, fast iteration, no playbook yet. Build the operating system. |
+| Scale-up CPG ops | Director of Operations | Operations | Process maturity build. Vendor management, fulfillment, defect tracking. |
+| Mature marketplace supply | Sr Manager, Supply Quality & Relationship | Supply | Cross-functional supply quality. Scorecards, tiered partner relationships. |
+| Fintech fraud lead | Head of Fraud Operations | Fraud | Zero-to-one or rebuild. Detection rules, false positive balance, escalation tiers. |
+| Last-mile logistics director | Director of Last-Mile Operations | Logistics | Geographic expansion, courier network, on-time delivery, defect categories. |
+
+**Real-world impact** *(illustrative scenarios drawn from operator practice)*
+
+**Case 1: The post-panel follow-up that moved a candidate to offer**
+- *Setup:* Director ops candidate at a B2B marketplace had a strong case panel but partial answers on two execution-specific questions. The hiring manager liked the diagnosis, was unsure about the operating side.
+- *Problem:* A thank-you email could not re-litigate the answers. The candidate needed to demonstrate operating depth on paper without restating the panel.
+- *Tool surfaced:* Generated a 90-day plan mapped to the actual JD priorities the candidate had memorized. Included the dispatch mechanism the candidate had drifted on in the panel, with the SLA + routing model + volume guarantees fully spelled out as a Day 60 deliverable.
+- *Outcome:* Sent as the post-panel artifact. The hiring manager forwarded to two skip-level stakeholders. Offer at 12% above initial range.
+
+**Case 2: The internal scaffold that compresses 90-day planning to one day**
+- *Setup:* Newly hired ops director at a scale-up CPG. Three direct reports waiting for the operating plan. CEO wanted it by end of week 1.
+- *Problem:* Writing the plan from blank page across 5 priorities means a lot of structural decisions about phasing, owner-of-record, metric definitions, before any content.
+- *Tool surfaced:* Loaded the scale-up CPG preset, swapped priorities to the actual JD list, generated the scaffold in 90 seconds. The director then spent the rest of the day editing for company-specific context (vendor names, site numbers, real metrics they could track).
+- *Outcome:* Final plan landed Thursday of week 1. Three pages, mapped to JD priorities, with named owners. CEO greenlit at the Friday review with two specific edits, both on metric targets, not structure.
+
+**Why this exists:** The 90-day operating plan is the single most reused artifact across senior operations interview prep. Every Director+ role asks some version of "walk me through your first 90 days." Every offer conversation references some version of "what would you ship in your first quarter." The pattern repeats. The structure is the same. The content changes. This tool productizes the pattern so the structure work happens in 90 seconds, leaving the operating leader to focus on context, specificity, and priorities. It also doubles as a follow-up asset post-panel, post-recruiter call, or post-skip-level meeting.
+
+---
+
 ### Tool #12: Vendor Performance Scorecard
 
 **[→ Open the scorecard](./vendor-scorecard.html)**
