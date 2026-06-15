@@ -1,8 +1,8 @@
 # Marketplace Ops Toolkit — Roadmap
 
-Last updated: 2026-06-12
+Last updated: 2026-06-14
 
-## Current state (12 tools live)
+## Current state (13 tools live)
 
 All shipped, deployed to GitHub Pages, indexed in `sitemap.xml`, documented in `README.md`.
 
@@ -15,6 +15,7 @@ All shipped, deployed to GitHub Pages, indexed in `sitemap.xml`, documented in `
 | 5 | Workforce Forecast Calculator | `workforce-forecast.html` | Workforce planning |
 | 6 | Logistics Supply Forecaster V2 ★ | `logistics-supply.html` | Supply chain |
 | 7 | Queue Operations Command Center | `queue-ops-center.html` | Ops triage |
+| 8 | Escalation Decision Calculator ◇ | `escalation-calculator.html` | Ops triage / Decision support |
 | 10 | Customer Feedback Cost Analyzer ✦ | `customer-feedback-cost.html` | Customer ops / Finance |
 | 11 | 90-Day Operating Plan Generator ◆ | `operating-plan-generator.html` | Director+ interview prep |
 | 12 | Vendor Performance Scorecard ★ | `vendor-scorecard.html` | Supply chain |
@@ -24,8 +25,9 @@ All shipped, deployed to GitHub Pages, indexed in `sitemap.xml`, documented in `
 ★ = demoed live and validated in pipeline (BySupply R2 panel, 2026-05-28, Robert Peay CFO: "this looks super impressive")
 ✦ = built around the "cost of preventable feedback" metric cited across Gopuff R2, TFD, FNF, Lume preps
 ◆ = productizes the 30/60/90 day operating plan pattern used in every Director+ interview prep since 2026-05
+◇ = productizes the escalation taxonomy gap surfaced by Ricardo Vieira-Gomes and Harsh Baranwal: most auto-escalate AI tools surface alerts but cannot say which deserves a human
 
-Why the gap between #7 and #10: tools #8 and #9 are planned but still in the Tier 2 backlog below. #10 shipped 2026-06-01 because the "cost of preventable feedback" metric was the most-cited frame in interview preps. #11 shipped 2026-06-12 because the 30/60/90 day plan is the most reused artifact across Director-level prep work, and productizing it lets it ship as a follow-up asset to any panel.
+Why the gap between #8 and #10: tool #9 is planned but still in the Tier 2 backlog below. #10 shipped 2026-06-01 because the "cost of preventable feedback" metric was the most-cited frame in interview preps. #11 shipped 2026-06-12 because the 30/60/90 day plan is the most reused artifact across Director-level prep work. #8 shipped 2026-06-14 because most "auto-escalate" AI tools (Emma, Gratero, etc.) skip the decision taxonomy, and 80% of stuck-movement alerts self-resolve without intervention if the operator can tell which 80%.
 
 ## Tier 1 — Active priorities (next 1-2 weeks)
 
@@ -46,7 +48,7 @@ Operators have surfaced clear gaps. These fill them.
 
 | # | Tool | Why | Source of insight |
 |---|---|---|---|
-| 8 | **Escalation Decision Calculator** | Most "auto-escalate" AI tools (Emma/Gratero etc.) skip the taxonomy: which exception warrants escalation vs which self-resolves. 80% of "stuck movement" alerts self-resolve within 4-6h. Tool maps exception types → SLA decay → escalation decision logic. | Comment on Harsh Baranwal post (2026-05-29), conversations with Ricardo Vieira-Gomes |
+| ~~8~~ | ~~**Escalation Decision Calculator**~~ | **Shipped 2026-06-14.** See `escalation-calculator.html`. 5 presets (stuck shipment, payment failure, partner non-response, quality drift, fraud-flagged high-value), 9 exception types, 4-tier recommendation (auto-resolve / wait / review / page), score breakdown across 6 factors, cost-of-escalating vs cost-of-waiting comparison, recommendation curve across alert age, per-tier action checklist. | Comment on Harsh Baranwal post (2026-05-29), conversations with Ricardo Vieira-Gomes |
 | 9 | **PO + Delivery Tracking Template** | JD priority #1 in many ops director roles (ROI BySupply 2026-05-28 most recent). Spreadsheet template that becomes a workflow: PO logged, vendor SLA, delivery validation, defect-drag, cost-per-unit reconciliation. | ROI BySupply R2 panel, multifamily kits use case |
 | ~~10~~ | ~~**Customer Feedback Cost Analyzer**~~ | **Shipped 2026-06-01.** See `customer-feedback-cost.html`. Two personas (Ops Manager + CFO), 5 presets, Pareto category breakdown, sensitivity card. | Used in Gopuff R2, TFD prep, FNF prep |
 | ~~11~~ | ~~**90-Day Operating Plan Generator**~~ | **Shipped 2026-06-12.** See `operating-plan-generator.html`. 5 presets (Series A marketplace, scale-up CPG, mature marketplace supply, fintech fraud, last-mile logistics), 6 function focus areas, 30-60-90 or 60-90-180 horizons, per-priority discover/decide/deploy breakdown, north star metrics, risk register, asks to the leader. Markdown + plain text export, download .md. | Used in every Director/Head interview prep since 2026-05 |

@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escalation Decision Calculator · Marketplace Ops Toolkit</title>
+<meta name="description" content="Decide what to do with an operational alert: auto-resolve, wait and monitor, route to human review, or page on-call. Maps exception type, alert age, SLA budget, customer impact, volume, and dollar exposure into a recommendation tier. Five operator presets covering stuck shipments, payment failures, partner non-response, quality drift, and fraud-flagged transactions.">
+<link rel="canonical" href="https://everpaula.github.io/marketplace-ops-toolkit/escalation-calculator.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://everpaula.github.io/marketplace-ops-toolkit/escalation-calculator.html">
+<meta property="og:title" content="Escalation Decision Calculator · auto-resolve, wait, review, or page">
+<meta property="og:description" content="80% of stuck movement alerts self-resolve within 4-6 hours. The remaining 20% need real intervention. This tool tells you which is which before you burn an analyst on the wrong one.">
+<meta property="og:site_name" content="Marketplace Ops Toolkit">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Escalation Decision Calculator">
+<meta name="twitter:description" content="Decide what to do with an operational alert: auto-resolve, wait and monitor, route to human review, or page on-call.">
+<meta name="author" content="Everton Paula">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Escalation Decision Calculator","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://everpaula.github.io/marketplace-ops-toolkit/escalation-calculator.html","description":"Decide what to do with an operational alert. Maps exception type, alert age, SLA budget, customer impact, volume, and dollar exposure into a recommendation tier: auto-resolve, wait and monitor, human review, or page on-call.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Everton Paula","url":"https://linkedin.com/in/evertonpaula"},"license":"https://opensource.org/licenses/MIT"}</script>
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-elev: #131c33;
+    --bg-card: #131c33;
+    --bg-sunken: #0a1024;
+    --border: #1f2a44;
+    --border-bright: #2e3d5f;
+    --text: #e6ecf5;
+    --text-muted: #8a96b4;
+    --text-faint: #5d6a8a;
+    --accent: #14b8a6;
+    --accent-bright: #2dd4bf;
+    --accent-soft: rgba(20, 184, 166, 0.1);
+    --accent-softer: rgba(20, 184, 166, 0.05);
+    --accent-border: rgba(20, 184, 166, 0.35);
+    --green: #10b981;
+    --green-soft: rgba(16, 185, 129, 0.14);
+    --green-border: rgba(16, 185, 129, 0.36);
+    --yellow: #fbbf24;
+    --yellow-soft: rgba(251, 191, 36, 0.14);
+    --yellow-border: rgba(251, 191, 36, 0.36);
+    --orange: #fb923c;
+    --orange-soft: rgba(251, 146, 60, 0.16);
+    --orange-border: rgba(251, 146, 60, 0.38);
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.14);
+    --red-border: rgba(239, 68, 68, 0.38);
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --radius-sm: 5px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --t-fast: 90ms ease;
+    --t-base: 140ms ease;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1180px; margin: 0 auto; padding: 1.5rem; }
+  ::selection { background: var(--accent-soft); color: var(--text); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+  .top-nav { margin-bottom: 1rem; }
+  .top-nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color var(--t-fast);
+  }
+  .top-nav a:hover { color: var(--accent); }
+
+  header { margin-bottom: 1.6rem; }
+  .brand {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.55rem;
+  }
+  header h1 {
+    font-size: 2rem;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    font-weight: 700;
+  }
+  header .tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 820px;
+    line-height: 1.55;
+  }
+  header .tagline strong { color: var(--text); font-weight: 600; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.35rem 1.5rem;
+    margin-bottom: 1.2rem;
+  }
+  .card h2 {
+    color: var(--accent);
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.45rem;
+  }
+  .card .sub {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.05rem;
+    max-width: 78ch;
+  }
+
+  /* Presets */
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.7rem;
+  }
+  .preset-btn {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-md);
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color var(--t-base), background var(--t-base);
+    position: relative;
+  }
+  .preset-btn:hover {
+    border-color: var(--accent-border);
+    background: var(--accent-softer);
+  }
+  .preset-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 0 0 1px var(--accent-border);
+  }
+  .preset-btn.active::after {
+    content: "";
+    position: absolute;
+    top: 0.7rem;
+    right: 0.75rem;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .preset-btn .pre-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 0.22rem;
+  }
+  .preset-btn .pre-meta {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 1.2rem;
+    align-items: start;
+  }
+  @media (max-width: 980px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  /* Form fields */
+  .field {
+    margin-bottom: 1.05rem;
+  }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    margin-bottom: 0.42rem;
+  }
+  .field label .hint {
+    color: var(--text-faint);
+    font-size: 0.66rem;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+    margin-left: 0.4rem;
+    font-style: italic;
+  }
+  .field input[type="number"],
+  .field input[type="text"],
+  .field select {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.94rem;
+    width: 100%;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+    transition: border-color var(--t-base);
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .field select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238a96b4' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    padding-right: 2.2rem;
+    cursor: pointer;
+  }
+  .input-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+  .input-row .prefix, .input-row .suffix {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .input-row input { text-align: right; }
+
+  .radio-row {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .radio-row label {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 0.55rem 0.85rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin: 0;
+    transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .radio-row label:hover { border-color: var(--accent-border); }
+  .radio-row input[type="radio"] { display: none; }
+  .radio-row label.active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Output / Recommendation */
+  .reco-band {
+    border-radius: var(--radius-lg);
+    padding: 1.4rem 1.5rem;
+    margin-bottom: 1.2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .reco-band .reco-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .reco-band .reco-label::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .reco-band .reco-tier {
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    margin-bottom: 0.7rem;
+  }
+  .reco-band .reco-reason {
+    color: var(--text);
+    font-size: 0.96rem;
+    line-height: 1.6;
+    max-width: 70ch;
+  }
+
+  .reco-band[data-tier="auto"] {
+    background: linear-gradient(180deg, var(--green-soft), rgba(16, 185, 129, 0.04));
+    border: 1px solid var(--green-border);
+  }
+  .reco-band[data-tier="auto"] .reco-label,
+  .reco-band[data-tier="auto"] .reco-tier { color: var(--green); }
+  .reco-band[data-tier="auto"] .reco-label::before {
+    background: var(--green); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22);
+  }
+  .reco-band[data-tier="wait"] {
+    background: linear-gradient(180deg, var(--yellow-soft), rgba(251, 191, 36, 0.04));
+    border: 1px solid var(--yellow-border);
+  }
+  .reco-band[data-tier="wait"] .reco-label,
+  .reco-band[data-tier="wait"] .reco-tier { color: var(--yellow); }
+  .reco-band[data-tier="wait"] .reco-label::before {
+    background: var(--yellow); box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.22);
+  }
+  .reco-band[data-tier="review"] {
+    background: linear-gradient(180deg, var(--orange-soft), rgba(251, 146, 60, 0.04));
+    border: 1px solid var(--orange-border);
+  }
+  .reco-band[data-tier="review"] .reco-label,
+  .reco-band[data-tier="review"] .reco-tier { color: var(--orange); }
+  .reco-band[data-tier="review"] .reco-label::before {
+    background: var(--orange); box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.22);
+  }
+  .reco-band[data-tier="page"] {
+    background: linear-gradient(180deg, var(--red-soft), rgba(239, 68, 68, 0.04));
+    border: 1px solid var(--red-border);
+  }
+  .reco-band[data-tier="page"] .reco-label,
+  .reco-band[data-tier="page"] .reco-tier { color: var(--red); }
+  .reco-band[data-tier="page"] .reco-label::before {
+    background: var(--red); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22);
+  }
+
+  /* Score breakdown */
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.55rem;
+    margin-bottom: 1.2rem;
+  }
+  .score-cell {
+    background: var(--bg-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.7rem 0.85rem;
+  }
+  .score-cell .sc-label {
+    color: var(--text-muted);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .score-cell .sc-value {
+    color: var(--text);
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .score-cell .sc-detail {
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    margin-top: 0.15rem;
+  }
+  .score-cell .sc-bar {
+    background: var(--border);
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+  .score-cell .sc-bar > div {
+    background: var(--accent);
+    height: 100%;
+    transition: width var(--t-base);
+  }
+
+  /* SLA decay curve */
+  .curve-wrap {
+    background: var(--bg-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+  .curve-title {
+    color: var(--text);
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 0.85rem;
+  }
+  .curve-title small {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.78rem;
+    margin-left: 0.4rem;
+  }
+  .curve-svg {
+    width: 100%;
+    height: 130px;
+    overflow: visible;
+  }
+  .curve-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1.2rem;
+    margin-top: 0.6rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .curve-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .curve-legend .swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
+  .curve-legend .swatch.auto { background: var(--green); }
+  .curve-legend .swatch.wait { background: var(--yellow); }
+  .curve-legend .swatch.review { background: var(--orange); }
+  .curve-legend .swatch.page { background: var(--red); }
+
+  /* Action checklist */
+  .action-list { counter-reset: act; padding: 0; margin: 0; list-style: none; }
+  .action-list li {
+    counter-increment: act;
+    padding: 0.6rem 0.6rem 0.6rem 2.4rem;
+    position: relative;
+    color: var(--text);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    border-bottom: 1px dashed var(--border-bright);
+  }
+  .action-list li:last-child { border-bottom: none; }
+  .action-list li::before {
+    content: counter(act);
+    position: absolute;
+    left: 0.55rem;
+    top: 0.65rem;
+    width: 22px;
+    height: 22px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 50%;
+    border: 1px solid var(--accent-border);
+    font-weight: 800;
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
+
+  /* Cost band */
+  .cost-band {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+  }
+  @media (max-width: 580px) { .cost-band { grid-template-columns: 1fr; } }
+  .cost-cell {
+    background: var(--bg-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 1rem;
+  }
+  .cost-cell .cc-label {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+  }
+  .cost-cell .cc-value {
+    color: var(--text);
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.015em;
+  }
+  .cost-cell .cc-detail {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+    line-height: 1.45;
+  }
+  .cost-cell.escalate { border-left: 3px solid var(--orange); }
+  .cost-cell.wait { border-left: 3px solid var(--blue); }
+  .cost-cell.escalate .cc-value { color: var(--orange); }
+  .cost-cell.wait .cc-value { color: var(--blue); }
+
+  /* Footer */
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { color: var(--accent-bright); }
+  footer .footer-grid {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.7rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <nav class="top-nav">
+    <a href="index.html">&larr; Toolkit</a>
+  </nav>
+
+  <header>
+    <div class="brand">Marketplace Ops Toolkit</div>
+    <h1>Escalation Decision Calculator</h1>
+    <p class="tagline">Most "auto-escalate" AI tools skip the taxonomy. They surface alerts but cannot say which deserves a human, which should wait, and which would self-resolve if you ignored it for four more hours. <strong>This tool maps exception type, alert age, SLA budget, customer impact, volume, and dollar exposure into a single recommendation: auto-resolve, wait, review, or page.</strong></p>
+  </header>
+
+  <div class="card">
+    <h2>Presets</h2>
+    <p class="sub">Pick a starting profile, then adjust the inputs. Each preset captures a common alert shape with realistic self-resolve baselines.</p>
+    <div class="presets" id="presets">
+      <button class="preset-btn" data-preset="stuck-shipment">
+        <div class="pre-title">Stuck shipment</div>
+        <div class="pre-meta">No movement scan in 12 hours. E-commerce / 3PL last-mile. High self-resolve baseline.</div>
+      </button>
+      <button class="preset-btn" data-preset="payment-fail">
+        <div class="pre-title">Payment failure (recoverable)</div>
+        <div class="pre-meta">Card declined, customer retry path open. Fintech / SaaS billing.</div>
+      </button>
+      <button class="preset-btn" data-preset="partner-quiet">
+        <div class="pre-title">Partner non-response</div>
+        <div class="pre-meta">Marketplace vendor missed acceptance SLA. Pre-booked window matters.</div>
+      </button>
+      <button class="preset-btn" data-preset="quality-drift">
+        <div class="pre-title">Quality drift signal</div>
+        <div class="pre-meta">LSP or vendor scorecard slipped a band. Leading indicator, not customer impact yet.</div>
+      </button>
+      <button class="preset-btn" data-preset="fraud-flag">
+        <div class="pre-title">Fraud-flagged high-value transaction</div>
+        <div class="pre-meta">Single transaction above threshold. Low self-resolve, high cost of false hold.</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <div>
+      <div class="card">
+        <h2>Inputs</h2>
+        <p class="sub">Adjust to match the alert in front of you. The recommendation updates live.</p>
+
+        <div class="field">
+          <label for="exceptionType">Exception type</label>
+          <select id="exceptionType">
+            <option value="stuck-movement">Stuck movement / no progress signal</option>
+            <option value="payment-recoverable">Payment failure (recoverable)</option>
+            <option value="payment-fraud">Payment failure (suspected fraud)</option>
+            <option value="address-validation">Address validation issue</option>
+            <option value="inventory-mismatch">Inventory mismatch</option>
+            <option value="partner-non-response">Partner non-response</option>
+            <option value="system-timeout">System / API timeout</option>
+            <option value="customer-complaint">Customer complaint</option>
+            <option value="quality-drift">Quality drift signal</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="alertAge">Alert age <span class="hint">hours since detection</span></label>
+          <div class="input-row">
+            <input type="number" id="alertAge" min="0" step="0.5" value="2">
+            <span class="suffix">hours</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="slaBudget">SLA budget <span class="hint">hours total before customer-facing impact</span></label>
+          <div class="input-row">
+            <input type="number" id="slaBudget" min="1" step="0.5" value="24">
+            <span class="suffix">hours</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Customer impact</label>
+          <div class="radio-row" id="impactRow">
+            <label class="active"><input type="radio" name="impact" value="none" checked>None yet</label>
+            <label><input type="radio" name="impact" value="pending">Pending</label>
+            <label><input type="radio" name="impact" value="experienced">Experienced</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="volumeAffected">Volume affected <span class="hint">orders, tickets, users</span></label>
+          <div class="input-row">
+            <input type="number" id="volumeAffected" min="1" step="1" value="1">
+            <span class="suffix">units</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="dollarExposure">Dollar exposure <span class="hint">total $ at risk if alert mishandled</span></label>
+          <div class="input-row">
+            <span class="prefix">$</span>
+            <input type="number" id="dollarExposure" min="0" step="10" value="500">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="selfResolveRate">Self-resolve baseline <span class="hint">% of these alerts that resolve without action</span></label>
+          <div class="input-row">
+            <input type="number" id="selfResolveRate" min="0" max="100" step="1" value="70">
+            <span class="suffix">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Why this exists</h2>
+        <p class="sub">A typical fraud or ops queue surfaces 200 to 500 alerts per analyst per day. About 70 to 80% of "stuck movement" or "non-response" alerts self-resolve within 4 to 6 hours without any intervention.</p>
+        <p style="font-size: 0.87rem; color: var(--text-muted); margin-bottom: 0.55rem; line-height: 1.65;">If your team escalates every alert to a human within the first hour, you burn analyst capacity on alerts that would have cleared themselves. If you wait too long on the wrong alert, you pay in customer impact, SLA penalties, or fraud loss.</p>
+        <p style="font-size: 0.87rem; color: var(--text-muted); margin-bottom: 0; line-height: 1.65;">The decision is not "escalate or not." It is "what is the cost of escalating now vs the cost of waiting, given how this alert type usually decays." This tool makes that cost comparison explicit.</p>
+      </div>
+    </div>
+
+    <div>
+
+      <div class="reco-band" id="recoBand" data-tier="wait">
+        <div class="reco-label">Recommendation</div>
+        <div class="reco-tier" id="recoTier">Wait and monitor</div>
+        <div class="reco-reason" id="recoReason">Adjust the inputs on the left to see how the recommendation shifts.</div>
+      </div>
+
+      <div class="card">
+        <h2>Decision factors</h2>
+        <p class="sub">Each factor scored 0 to 100, weighted into the overall escalation pressure score.</p>
+        <div class="score-grid" id="scoreGrid"></div>
+
+        <div class="cost-band">
+          <div class="cost-cell escalate">
+            <div class="cc-label">Cost of escalating now</div>
+            <div class="cc-value" id="costEscalate">$0</div>
+            <div class="cc-detail" id="costEscalateDetail">analyst time + opportunity cost on real fires</div>
+          </div>
+          <div class="cost-cell wait">
+            <div class="cc-label">Expected cost of waiting</div>
+            <div class="cc-value" id="costWait">$0</div>
+            <div class="cc-detail" id="costWaitDetail">probability of impact x exposure</div>
+          </div>
+        </div>
+
+        <div class="curve-wrap">
+          <div class="curve-title">Recommendation across alert age <small>same inputs, hours 0 to SLA</small></div>
+          <svg class="curve-svg" id="curveSvg" viewBox="0 0 600 130" preserveAspectRatio="none" aria-label="Recommendation tier across alert age"></svg>
+          <div class="curve-legend">
+            <span><span class="swatch auto"></span>Auto-resolve</span>
+            <span><span class="swatch wait"></span>Wait and monitor</span>
+            <span><span class="swatch review"></span>Human review</span>
+            <span><span class="swatch page"></span>Page on-call</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>What to do next</h2>
+        <p class="sub">Action steps tied to the current recommendation.</p>
+        <ol class="action-list" id="actionList"></ol>
+      </div>
+
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="footer-grid">
+      <a href="index.html">All tools</a>
+      <a href="case-studies.html">Case studies</a>
+      <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">GitHub repo</a>
+      <a href="https://linkedin.com/in/evertonpaula" target="_blank" rel="noopener">Built by Everton Paula</a>
+    </div>
+    <div>MIT License. No tracking. No login. Open source.</div>
+  </footer>
+
+</div>
+
+<script>
+'use strict';
+
+const EXCEPTION_PROFILES = {
+  'stuck-movement': { selfResolve: 78, severity: 0.45, urgency: 0.4, label: 'stuck movement' },
+  'payment-recoverable': { selfResolve: 55, severity: 0.55, urgency: 0.5, label: 'recoverable payment failure' },
+  'payment-fraud': { selfResolve: 15, severity: 0.85, urgency: 0.85, label: 'suspected fraud' },
+  'address-validation': { selfResolve: 65, severity: 0.5, urgency: 0.55, label: 'address validation' },
+  'inventory-mismatch': { selfResolve: 35, severity: 0.6, urgency: 0.55, label: 'inventory mismatch' },
+  'partner-non-response': { selfResolve: 60, severity: 0.55, urgency: 0.6, label: 'partner non-response' },
+  'system-timeout': { selfResolve: 70, severity: 0.65, urgency: 0.7, label: 'system timeout' },
+  'customer-complaint': { selfResolve: 20, severity: 0.75, urgency: 0.65, label: 'customer complaint' },
+  'quality-drift': { selfResolve: 50, severity: 0.45, urgency: 0.3, label: 'quality drift signal' }
+};
+
+const PRESETS = {
+  'stuck-shipment': {
+    type: 'stuck-movement',
+    age: 6,
+    sla: 48,
+    impact: 'none',
+    volume: 1,
+    dollar: 120,
+    selfResolve: 78
+  },
+  'payment-fail': {
+    type: 'payment-recoverable',
+    age: 1.5,
+    sla: 8,
+    impact: 'pending',
+    volume: 1,
+    dollar: 85,
+    selfResolve: 55
+  },
+  'partner-quiet': {
+    type: 'partner-non-response',
+    age: 4,
+    sla: 12,
+    impact: 'pending',
+    volume: 1,
+    dollar: 280,
+    selfResolve: 60
+  },
+  'quality-drift': {
+    type: 'quality-drift',
+    age: 2,
+    sla: 168,
+    impact: 'none',
+    volume: 1,
+    dollar: 0,
+    selfResolve: 50
+  },
+  'fraud-flag': {
+    type: 'payment-fraud',
+    age: 0.5,
+    sla: 4,
+    impact: 'pending',
+    volume: 1,
+    dollar: 3500,
+    selfResolve: 15
+  }
+};
+
+const STATE = {
+  preset: null,
+  type: 'stuck-movement',
+  age: 2,
+  sla: 24,
+  impact: 'none',
+  volume: 1,
+  dollar: 500,
+  selfResolve: 70
+};
+
+const ANALYST_HOURLY = 65;
+const ESCALATION_TIME_HOURS = 0.5;
+const PAGE_PENALTY = 240;
+
+function impactMultiplier(impact) {
+  if (impact === 'experienced') return 1.0;
+  if (impact === 'pending') return 0.55;
+  return 0.15;
+}
+
+function ageScore(age, sla) {
+  if (sla <= 0) return 100;
+  const used = Math.min(1, age / sla);
+  return Math.round(used * 100);
+}
+
+function exposureScore(dollar) {
+  if (dollar <= 0) return 0;
+  if (dollar <= 50) return 15;
+  if (dollar <= 200) return 30;
+  if (dollar <= 500) return 50;
+  if (dollar <= 2000) return 70;
+  if (dollar <= 10000) return 85;
+  return 95;
+}
+
+function volumeScore(v) {
+  if (v <= 1) return 10;
+  if (v <= 10) return 30;
+  if (v <= 50) return 55;
+  if (v <= 200) return 75;
+  return 90;
+}
+
+function selfResolveScore(pct) {
+  return Math.max(0, 100 - Number(pct));
+}
+
+function computePressureForAge(age, state) {
+  const profile = EXCEPTION_PROFILES[state.type] || EXCEPTION_PROFILES['stuck-movement'];
+  const ageSc = ageScore(age, state.sla);
+  const expSc = exposureScore(state.dollar);
+  const volSc = volumeScore(state.volume);
+  const srSc = selfResolveScore(state.selfResolve);
+  const impactSc = Math.round(impactMultiplier(state.impact) * 100);
+
+  const weights = {
+    age: 0.22,
+    exposure: 0.20,
+    volume: 0.12,
+    selfResolve: 0.18,
+    impact: 0.18,
+    severity: 0.10
+  };
+
+  const severitySc = Math.round(profile.severity * 100);
+
+  const pressure =
+    ageSc * weights.age +
+    expSc * weights.exposure +
+    volSc * weights.volume +
+    srSc * weights.selfResolve +
+    impactSc * weights.impact +
+    severitySc * weights.severity;
+
+  return {
+    pressure,
+    factors: {
+      age: ageSc,
+      exposure: expSc,
+      volume: volSc,
+      selfResolve: srSc,
+      impact: impactSc,
+      severity: severitySc
+    }
+  };
+}
+
+function tierFromPressure(pressure, state) {
+  if (pressure < 25) return 'auto';
+  if (pressure < 50) return 'wait';
+  if (pressure < 72) return 'review';
+  return 'page';
+}
+
+function tierLabel(tier) {
+  return {
+    auto: 'Auto-resolve',
+    wait: 'Wait and monitor',
+    review: 'Route to human review',
+    page: 'Page on-call'
+  }[tier];
+}
+
+function reasonForTier(tier, state, factors) {
+  const profile = EXCEPTION_PROFILES[state.type];
+  const ageHrs = state.age;
+  const slaHrs = state.sla;
+  const remaining = Math.max(0, slaHrs - ageHrs);
+  const srPct = Math.round(state.selfResolve);
+  const exposure = state.dollar;
+
+  if (tier === 'auto') {
+    return 'This alert profile self-resolves about ' + srPct + '% of the time without intervention. Dollar exposure is low ($' + exposure + '), customer impact has not landed, and the SLA budget has ' + remaining.toFixed(1) + ' hours of runway. Touching this now costs more analyst time than the expected loss from waiting.';
+  }
+  if (tier === 'wait') {
+    return 'The escalation pressure is rising but not yet decisive. ' + remaining.toFixed(1) + ' hours of SLA budget remain. Set a check-in for ' + Math.min(2, remaining / 2).toFixed(1) + ' hours from now and re-evaluate. If pressure crosses 50, route to human review then.';
+  }
+  if (tier === 'review') {
+    return 'The combination of ' + (state.impact === 'experienced' ? 'customer impact already landed' : 'pending customer exposure') + ', dollar value at risk ($' + exposure + '), and ' + (100 - srPct) + '% non-self-resolve rate for ' + profile.label + ' alerts puts this in the human-review window. Assign to an analyst with a 4-hour SLA.';
+  }
+  return 'Severity, exposure, and time pressure all point to immediate on-call attention. ' + profile.label + ' at this volume with ' + remaining.toFixed(1) + ' hours of SLA remaining means the cost of waiting now exceeds the cost of a page. Get a human on it.';
+}
+
+function actionsForTier(tier, state) {
+  const profile = EXCEPTION_PROFILES[state.type];
+  if (tier === 'auto') {
+    return [
+      'Tag the alert as low-priority in queue, with auto-resolve flag.',
+      'Set a downstream verification check at the SLA midpoint (' + (state.sla / 2).toFixed(1) + ' hours from detection) to confirm it did self-resolve.',
+      'If at the midpoint check the underlying signal still shows, the recommendation will shift. Re-run the calculator with the updated age.',
+      'Track outcome in your alert taxonomy. If self-resolve baseline drifts below ' + (state.selfResolve - 10) + '%, the auto-resolve rule needs re-calibration.'
+    ];
+  }
+  if (tier === 'wait') {
+    return [
+      'Park in a watch queue with a named owner.',
+      'Set a check-in for ' + Math.min(2, Math.max(0.5, (state.sla - state.age) / 3)).toFixed(1) + ' hours from now.',
+      'If customer impact shifts from "' + state.impact + '" toward experienced, route to human review immediately without waiting for the check-in.',
+      'Log dollar exposure and volume affected. Aggregate these against other watch-queue alerts to spot patterns.'
+    ];
+  }
+  if (tier === 'review') {
+    return [
+      'Assign to an available analyst with a 4-hour first-touch SLA.',
+      'Brief includes: alert type (' + profile.label + '), age (' + state.age + 'h), SLA budget (' + state.sla + 'h), customer impact (' + state.impact + '), exposure ($' + state.dollar + '), volume affected (' + state.volume + ').',
+      'Analyst is empowered to take one of three actions: resolve directly, escalate to specialist, or push back to wait queue with documented reason.',
+      'Document the resolution path. Used later to calibrate the self-resolve baseline and refine the routing rule.'
+    ];
+  }
+  return [
+    'Page the on-call ops or fraud lead immediately. SLA: first acknowledgement within 15 minutes.',
+    'Provide brief with full context: ' + profile.label + ' at age ' + state.age + 'h, $' + state.dollar + ' exposure, volume ' + state.volume + ', customer impact ' + state.impact + '.',
+    'Pre-stage rollback or freeze actions if applicable. Do not wait for on-call to ask.',
+    'Schedule a post-incident review within 48 hours regardless of outcome. The page itself is a signal that the upstream rule architecture missed an escalation path.'
+  ];
+}
+
+function costEscalateValue(state) {
+  return Math.round(ANALYST_HOURLY * ESCALATION_TIME_HOURS + PAGE_PENALTY * 0.1);
+}
+
+function costWaitValue(state) {
+  const impactProb = (1 - state.selfResolve / 100) * impactMultiplier(state.impact);
+  return Math.round(impactProb * state.dollar);
+}
+
+function fmtMoney(n) {
+  if (n >= 1000) return '$' + Math.round(n / 100) / 10 + 'K';
+  return '$' + Math.round(n);
+}
+
+function tierColor(tier) {
+  return {
+    auto: '#10b981',
+    wait: '#fbbf24',
+    review: '#fb923c',
+    page: '#ef4444'
+  }[tier];
+}
+
+function renderScoreGrid(factors) {
+  const grid = document.getElementById('scoreGrid');
+  const cells = [
+    { key: 'age', label: 'Age vs SLA', value: factors.age },
+    { key: 'exposure', label: 'Exposure', value: factors.exposure },
+    { key: 'volume', label: 'Volume', value: factors.volume },
+    { key: 'selfResolve', label: 'Non-self-resolve', value: factors.selfResolve },
+    { key: 'impact', label: 'Impact', value: factors.impact },
+    { key: 'severity', label: 'Type severity', value: factors.severity }
+  ];
+
+  grid.innerHTML = cells.map(c => {
+    const pct = Math.max(0, Math.min(100, c.value));
+    return '<div class="score-cell"><div class="sc-label">' + c.label + '</div><div class="sc-value">' + Math.round(c.value) + '<span style="color: var(--text-muted); font-size: 0.7rem; font-weight: 600;"> / 100</span></div><div class="sc-bar"><div style="width: ' + pct + '%"></div></div></div>';
+  }).join('');
+}
+
+function renderCurve(state) {
+  const svg = document.getElementById('curveSvg');
+  const w = 600, h = 130, padX = 20, padY = 15;
+  const innerW = w - padX * 2;
+  const innerH = h - padY * 2;
+  const points = 60;
+  const maxAge = Math.max(state.sla, state.age + 1);
+
+  let bg = '';
+  let dots = '';
+  let lastTier = null;
+  for (let i = 0; i <= points; i++) {
+    const age = (i / points) * maxAge;
+    const { pressure } = computePressureForAge(age, state);
+    const tier = tierFromPressure(pressure, state);
+    const x = padX + (i / points) * innerW;
+    const y = padY + innerH - (pressure / 100) * innerH;
+    if (i === 0) {
+      bg += 'M ' + x + ' ' + y + ' ';
+    } else {
+      bg += 'L ' + x + ' ' + y + ' ';
+    }
+    if (lastTier !== tier) {
+      dots += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="' + tierColor(tier) + '" />';
+      lastTier = tier;
+    }
+  }
+
+  const currX = padX + (Math.min(state.age, maxAge) / maxAge) * innerW;
+
+  let bands = '';
+  const bandSpec = [
+    { tier: 'auto', top: 75, bot: 100 },
+    { tier: 'wait', top: 50, bot: 75 },
+    { tier: 'review', top: 28, bot: 50 },
+    { tier: 'page', top: 0, bot: 28 }
+  ];
+  bandSpec.forEach(b => {
+    const yTop = padY + (b.top / 100) * innerH;
+    const yBot = padY + (b.bot / 100) * innerH;
+    bands += '<rect x="' + padX + '" y="' + yTop + '" width="' + innerW + '" height="' + (yBot - yTop) + '" fill="' + tierColor(b.tier) + '" opacity="0.06" />';
+  });
+
+  svg.innerHTML =
+    bands +
+    '<path d="' + bg + '" fill="none" stroke="rgba(20, 184, 166, 0.55)" stroke-width="2" />' +
+    dots +
+    '<line x1="' + currX + '" y1="' + padY + '" x2="' + currX + '" y2="' + (padY + innerH) + '" stroke="rgba(232, 236, 245, 0.45)" stroke-width="1" stroke-dasharray="3 3" />' +
+    '<text x="' + currX + '" y="' + (padY + innerH + 12) + '" fill="#8a96b4" font-size="10" font-family="ui-monospace, Menlo, Consolas, monospace" text-anchor="middle">now</text>' +
+    '<text x="' + padX + '" y="' + (padY + innerH + 12) + '" fill="#8a96b4" font-size="10" font-family="ui-monospace, Menlo, Consolas, monospace">0h</text>' +
+    '<text x="' + (w - padX) + '" y="' + (padY + innerH + 12) + '" fill="#8a96b4" font-size="10" font-family="ui-monospace, Menlo, Consolas, monospace" text-anchor="end">' + maxAge.toFixed(0) + 'h</text>';
+}
+
+function render() {
+  const { pressure, factors } = computePressureForAge(STATE.age, STATE);
+  const tier = tierFromPressure(pressure, STATE);
+
+  const band = document.getElementById('recoBand');
+  band.dataset.tier = tier;
+  document.getElementById('recoTier').textContent = tierLabel(tier);
+  document.getElementById('recoReason').textContent = reasonForTier(tier, STATE, factors);
+
+  renderScoreGrid(factors);
+
+  const ce = costEscalateValue(STATE);
+  const cw = costWaitValue(STATE);
+  document.getElementById('costEscalate').textContent = fmtMoney(ce);
+  document.getElementById('costWait').textContent = fmtMoney(cw);
+  document.getElementById('costEscalateDetail').textContent = ESCALATION_TIME_HOURS + 'h analyst time at $' + ANALYST_HOURLY + '/h plus prorated page risk';
+  document.getElementById('costWaitDetail').textContent = Math.round((1 - STATE.selfResolve / 100) * 100) + '% non-self-resolve x ' + Math.round(impactMultiplier(STATE.impact) * 100) + '% impact probability x $' + STATE.dollar + ' exposure';
+
+  renderCurve(STATE);
+
+  const list = document.getElementById('actionList');
+  list.innerHTML = '';
+  actionsForTier(tier, STATE).forEach(action => {
+    const li = document.createElement('li');
+    li.textContent = action;
+    list.appendChild(li);
+  });
+}
+
+function loadPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
+  STATE.preset = key;
+  STATE.type = p.type;
+  STATE.age = p.age;
+  STATE.sla = p.sla;
+  STATE.impact = p.impact;
+  STATE.volume = p.volume;
+  STATE.dollar = p.dollar;
+  STATE.selfResolve = p.selfResolve;
+
+  document.getElementById('exceptionType').value = p.type;
+  document.getElementById('alertAge').value = p.age;
+  document.getElementById('slaBudget').value = p.sla;
+  document.getElementById('volumeAffected').value = p.volume;
+  document.getElementById('dollarExposure').value = p.dollar;
+  document.getElementById('selfResolveRate').value = p.selfResolve;
+
+  document.querySelectorAll('input[name="impact"]').forEach(r => {
+    r.checked = r.value === p.impact;
+    if (r.checked) {
+      document.querySelectorAll('#impactRow label').forEach(l => l.classList.remove('active'));
+      r.closest('label').classList.add('active');
+    }
+  });
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.preset === key);
+  });
+  render();
+}
+
+function setupExceptionTypeListener() {
+  document.getElementById('exceptionType').addEventListener('change', e => {
+    STATE.type = e.target.value;
+    const profile = EXCEPTION_PROFILES[STATE.type];
+    if (profile && (!document.activeElement || document.activeElement.id !== 'selfResolveRate')) {
+      STATE.selfResolve = profile.selfResolve;
+      document.getElementById('selfResolveRate').value = profile.selfResolve;
+    }
+    render();
+  });
+}
+
+function init() {
+  setupExceptionTypeListener();
+
+  document.getElementById('alertAge').addEventListener('input', e => {
+    STATE.age = Number(e.target.value) || 0;
+    render();
+  });
+  document.getElementById('slaBudget').addEventListener('input', e => {
+    STATE.sla = Number(e.target.value) || 1;
+    render();
+  });
+  document.getElementById('volumeAffected').addEventListener('input', e => {
+    STATE.volume = Number(e.target.value) || 1;
+    render();
+  });
+  document.getElementById('dollarExposure').addEventListener('input', e => {
+    STATE.dollar = Number(e.target.value) || 0;
+    render();
+  });
+  document.getElementById('selfResolveRate').addEventListener('input', e => {
+    STATE.selfResolve = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+    render();
+  });
+
+  document.querySelectorAll('input[name="impact"]').forEach(input => {
+    input.addEventListener('change', e => {
+      STATE.impact = e.target.value;
+      document.querySelectorAll('#impactRow label').forEach(l => l.classList.remove('active'));
+      e.target.closest('label').classList.add('active');
+      render();
+    });
+  });
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => loadPreset(btn.dataset.preset));
+  });
+
+  render();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>

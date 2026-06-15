@@ -389,6 +389,83 @@ priority_score       = (w_risk × risk/100) + (w_age × age_factor) + (w_value �
 
 ---
 
+### Tool #8: Escalation Decision Calculator
+
+**[→ Open the calculator](./escalation-calculator.html)**
+
+Most "auto-escalate" AI tools skip the taxonomy. They surface alerts but cannot say which deserves a human, which should wait, and which would self-resolve in four more hours. About 70 to 80% of stuck-movement and partner-non-response alerts clear themselves within 4 to 6 hours if you ignore them. The other 20 to 30% need real intervention. This tool tells you which is which before you burn an analyst on the wrong one.
+
+The conversation it enables: walking into a triage decision with the cost of escalating now and the expected cost of waiting both on the page. Not gut, not policy, math.
+
+**The math:**
+
+```
+age_score          = (alert_age / sla_budget) × 100                              // 0-100, rises with time
+exposure_score     = f(dollar_at_risk)                                           // tiered scale
+volume_score       = f(units_affected)                                           // tiered scale
+self_resolve_score = 100 − self_resolve_baseline                                 // inverse
+impact_score       = customer_impact_multiplier × 100                            // none/pending/experienced
+severity_score     = exception_type_profile × 100                                // fixed per type
+
+pressure = 0.22×age + 0.20×exposure + 0.12×volume + 0.18×self_resolve + 0.18×impact + 0.10×severity
+
+cost_escalate = analyst_hourly × 0.5h + 10% × $240 page penalty
+cost_wait     = (1 − self_resolve_pct) × impact_probability × dollar_exposure
+```
+
+**The four tiers:**
+
+| Pressure | Tier | Reasoning |
+|---|---|---|
+| < 25 | **Auto-resolve** | Touching this now costs more analyst time than the expected loss from waiting. Tag low-priority, set midpoint verification. |
+| 25 – 50 | **Wait and monitor** | Pressure is rising but not decisive. Park in watch queue with named owner, check in at SLA midpoint. |
+| 50 – 72 | **Route to human review** | Cost of waiting now exceeds analyst time. 4-hour first-touch SLA with structured brief. |
+| ≥ 72 | **Page on-call** | Severity, exposure, and time pressure all critical. 15-minute first-acknowledgement SLA, pre-stage rollback. |
+
+**Nine exception types with profile defaults:**
+
+| Exception | Self-resolve baseline | Severity | Typical use case |
+|---|---|---|---|
+| Stuck movement / no progress | 78% | Low | E-commerce tracking signal missing |
+| Payment failure (recoverable) | 55% | Medium | Card declined, retry path open |
+| Payment failure (suspected fraud) | 15% | High | Single high-value flag, fraud detection |
+| Address validation issue | 65% | Medium | Last-mile delivery address fix |
+| Inventory mismatch | 35% | Medium | Warehouse pick vs system count gap |
+| Partner non-response | 60% | Medium | Marketplace vendor missed acceptance SLA |
+| System / API timeout | 70% | Medium-high | Downstream service slow or unavailable |
+| Customer complaint | 20% | High | Customer already raised issue |
+| Quality drift signal | 50% | Low | LSP scorecard slipped a band, leading indicator |
+
+**Five operator presets:**
+
+| Preset | Exception type | Self-resolve baseline | Use case |
+|---|---|---|---|
+| Stuck shipment | Stuck movement | 78% | E-commerce / 3PL last-mile, no movement scan in 12 hours |
+| Payment failure | Recoverable payment | 55% | Fintech / SaaS billing, card declined |
+| Partner non-response | Partner non-response | 60% | Marketplace vendor missed acceptance SLA |
+| Quality drift | Quality drift | 50% | LSP or vendor scorecard slipped, no customer impact yet |
+| Fraud-flagged high-value | Suspected fraud | 15% | Single transaction above threshold, low self-resolve |
+
+**Recommendation curve:** the tool plots pressure across alert age from 0 to SLA budget, with bands showing where each tier kicks in. You can see how the recommendation evolves as the alert ages, which is the same alert getting more urgent without anyone touching it. The "now" marker shows current state. The dots show tier transitions.
+
+**Real-world impact** *(illustrative scenarios drawn from operator practice)*
+
+**Case 1: Fraud queue analyst pulling 6-hour shifts on stuck shipment alerts**
+- *Setup:* Fraud ops team at a marketplace operates a multi-queue triage with 4 analysts handling roughly 350 alerts per shift across stuck shipment, payment fraud, address validation, and partner non-response. Auto-escalate rule was "any alert past 1 hour, page analyst."
+- *Problem:* Analysts were getting paged into low-value stuck-shipment alerts (78% self-resolve baseline) within the first hour, while real fraud alerts ($3K+ exposure) sat behind 6 to 10 stuck-shipment pages in the queue. Cost: 2 missed fraud holds in a single week, $11K combined.
+- *Tool surfaced:* Stuck shipment preset at age 2h, SLA 48h, exposure $120 returned Auto-resolve recommendation (pressure 21). Fraud-flagged preset at age 0.5h, exposure $3,500 returned Page on-call (pressure 78). Cost-of-waiting math made the routing logic explicit.
+- *Outcome:* Auto-escalate rule rewritten by exception type. Stuck shipment moved to watch queue with midpoint verification, fraud flagged kept on-call paging. Analyst capacity freed up roughly 18 hours per week, missed fraud holds dropped to zero across the next month.
+
+**Case 2: New ops manager calibrating the team's escalation taxonomy in week 2**
+- *Setup:* New senior manager at a B2B logistics platform inherited a triage process where 90% of alerts went through a single shared queue with no decision logic. Inheriting team morale was low and on-call rotation was burning people out.
+- *Problem:* The team did not have a shared mental model for which alerts deserved attention. Senior analysts overworked, junior analysts under-deployed, real fires often missed under noise.
+- *Tool surfaced:* Calculator used in a 90-minute team workshop. Each analyst brought 3 recent alerts they had handled, ran them through the tool. Resulting calibration showed the team had been escalating 40% too aggressively on quality drift signals and 30% under-aggressively on customer complaints.
+- *Outcome:* Team adopted the four-tier model as the shared taxonomy. Page rate dropped 28% over the next month while real fraud catch rate held steady. On-call rotation burnout complaints disappeared from skip-level 1:1s. The recommendation curve became the standard slide in monthly ops reviews.
+
+**Why this exists:** Tool #7 (Queue Operations Command Center) tells you which alerts the queue should work first. This tool tells you whether the alert belongs in the queue at all. Together they cover the two sides of triage. The escalation decision is a separate problem from prioritization, and most teams collapse them into one. The collapse is where capacity gets wasted.
+
+---
+
 ### Tool #10: Customer Feedback Cost Analyzer
 
 **[→ Open the analyzer](./customer-feedback-cost.html)**
