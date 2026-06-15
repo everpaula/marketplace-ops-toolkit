@@ -102,6 +102,163 @@
     max-width: 680px;
   }
 
+  /* Featured hero band */
+  .featured-label {
+    color: var(--accent);
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .featured-label::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.18);
+  }
+  .featured-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 720px) { .featured-grid { grid-template-columns: 1fr; } }
+  .featured-card {
+    background:
+      radial-gradient(120% 140% at 0% 0%, rgba(20, 184, 166, 0.10), transparent 50%),
+      linear-gradient(180deg, var(--bg-elev), #131c33);
+    border: 1px solid rgba(20, 184, 166, 0.28);
+    border-radius: 10px;
+    padding: 1.3rem 1.4rem 1.2rem;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 170px;
+    transition: border-color 0.18s ease, transform 0.12s ease;
+  }
+  .featured-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .featured-card .feat-num {
+    color: var(--accent);
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .featured-card .feat-num .new-pill {
+    background: var(--accent);
+    color: #042f2e;
+    padding: 0.1rem 0.45rem;
+    border-radius: 3px;
+    margin-left: 0.5rem;
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+  }
+  .featured-card .feat-title {
+    font-size: 1.18rem;
+    font-weight: 700;
+    margin-bottom: 0.55rem;
+    color: var(--text);
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+  .featured-card .feat-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+  }
+  .featured-card .feat-cta {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .featured-card:hover .feat-cta { color: var(--accent-bright, #2dd4bf); }
+  .featured-card .feat-cta::after { content: "\2192"; }
+
+  /* Case studies banner */
+  .cases-banner {
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.10), rgba(96, 165, 250, 0.06));
+    border: 1px solid rgba(167, 139, 250, 0.32);
+    border-radius: 10px;
+    padding: 1.1rem 1.5rem;
+    margin-bottom: 2.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.18s ease;
+  }
+  .cases-banner:hover { border-color: #a78bfa; }
+  .cases-banner .cases-icon {
+    color: #a78bfa;
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 1.1rem;
+    font-weight: 800;
+    background: rgba(167, 139, 250, 0.18);
+    border: 1px solid rgba(167, 139, 250, 0.35);
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .cases-banner .cases-text {
+    flex: 1;
+    min-width: 220px;
+  }
+  .cases-banner .cases-text strong {
+    color: var(--text);
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.18rem;
+  }
+  .cases-banner .cases-text span {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+  .cases-banner .cases-cta {
+    color: #a78bfa;
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+  }
+  .cases-banner .cases-cta::after { content: "\2192"; }
+  .cases-banner:hover .cases-cta { color: #c4b5fd; }
+
+  .all-tools-label {
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 0.85rem;
+  }
+
   .tools { display: grid; gap: 1rem; margin-bottom: 3rem; }
   .tool-card {
     background: var(--bg-elev);
@@ -209,6 +366,53 @@
   <p class="tagline">
     Fraud, supply chain, workforce planning, vendor management, driver performance, dispute investigation. Anywhere an ops decision deserves the actual numbers, not intuition. Open-source methodologies and simulators built from years of hands-on multi-country marketplace and consumer fintech operations.
   </p>
+
+  <div class="featured-label">Featured tools</div>
+  <div class="featured-grid">
+    <a class="featured-card" href="./operating-plan-generator.html">
+      <div>
+        <div class="feat-num">Tool #11<span class="new-pill">New</span></div>
+        <div class="feat-title">90-Day Operating Plan Generator</div>
+        <div class="feat-desc">Generate the 30-60-90 day plan every new ops leader needs. Per-priority deliverables, north star metrics, risk register, asks to the leader. Paste meeting transcripts to mine candidate priorities. Output as Markdown.</div>
+      </div>
+      <span class="feat-cta">Open</span>
+    </a>
+    <a class="featured-card" href="./vendor-scorecard.html">
+      <div>
+        <div class="feat-num">Tool #12</div>
+        <div class="feat-title">Vendor Performance Scorecard</div>
+        <div class="feat-desc">Rank vendors on a weighted multi-dimensional scorecard. A/B/C tier classification, sensitivity analysis on weights, action recommendations per vendor, money-on-the-table math. Share-by-URL state encoding.</div>
+      </div>
+      <span class="feat-cta">Open</span>
+    </a>
+    <a class="featured-card" href="./logistics-supply.html">
+      <div>
+        <div class="feat-num">Tool #6</div>
+        <div class="feat-title">Logistics Supply Forecaster</div>
+        <div class="feat-desc">Translate a marketplace forecast into required couriers, vehicles, sorters, dock capacity. V2 backlog cascade, two-layer capacity, operational levers. Two personas, side-by-side operational and financial output. Share-by-URL.</div>
+      </div>
+      <span class="feat-cta">Open</span>
+    </a>
+    <a class="featured-card" href="./workforce-forecast.html">
+      <div>
+        <div class="feat-num">Tool #5</div>
+        <div class="feat-title">Workforce Forecast Calculator</div>
+        <div class="feat-desc">Multi-case-type forecast based on volume, complexity, productivity, shrinkage. 100% in-house vs vendor-split scenarios with cost comparison. The math behind quarterly capacity planning made explicit.</div>
+      </div>
+      <span class="feat-cta">Open</span>
+    </a>
+  </div>
+
+  <a class="cases-banner" href="./case-studies.html">
+    <span class="cases-icon">22</span>
+    <div class="cases-text">
+      <strong>Case studies</strong>
+      <span>Real operator decisions mapped to the tool that surfaced the answer. Fraud, supply, workforce, customer ops, logistics, last-mile.</span>
+    </div>
+    <span class="cases-cta">Browse cases</span>
+  </a>
+
+  <div class="all-tools-label">All tools</div>
 
   <div class="tools">
 
