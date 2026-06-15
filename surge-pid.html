@@ -1724,14 +1724,21 @@ const GRID_LAT_HALF = 0.06;
 const GRID_LNG_HALF = 0.075;
 
 function cellCenterLatLng(row, col) {
-  // Center of each 3x3 cell in geographic space (used as hex centers)
-  const cellLat = (GRID_LAT_HALF * 2) / 3;
-  const cellLng = (GRID_LNG_HALF * 2) / 3;
-  const south = AUSTIN_CENTER[0] + GRID_LAT_HALF - (row + 1) * cellLat;
-  const north = south + cellLat;
-  const west = AUSTIN_CENTER[1] - GRID_LNG_HALF + col * cellLng;
-  const east = west + cellLng;
-  return [(south + north) / 2, (west + east) / 2];
+  // Proper honeycomb tiling for pointy-top hexes (Uber H3 style).
+  // Horizontal hex-center spacing = sqrt(3) * size, vertical = 1.5 * size.
+  // Odd row (row 1) is shifted right by half a hex width so the cells tile cleanly.
+  // The whole grid is centered around AUSTIN_CENTER regardless of hex size.
+  const sizeDeg = state.hexSize;
+  const w = Math.sqrt(3) * sizeDeg;
+  const h = 1.5 * sizeDeg;
+  const lngScale = 1 / Math.cos(AUSTIN_CENTER[0] * Math.PI / 180);
+
+  const rowOffset = (row === 1) ? w / 2 : 0;
+  // Shift by -w/4 so the overall grid bounding box is centered horizontally on AUSTIN
+  const xLocal = (col - 1) * w + rowOffset - w / 4;
+  const yLocal = -(row - 1) * h;  // row 0 is north
+
+  return [AUSTIN_CENTER[0] + yLocal, AUSTIN_CENTER[1] + xLocal * lngScale];
 }
 
 function hexagonAt(centerLat, centerLng, sizeDeg) {
@@ -1898,13 +1905,16 @@ function rebuildLeafletPolygons() {
 
   if (!leafletState.hasInitView) {
     leafletState.hasInitView = true;
-    // Fit to the full 3x3 grid bounds at the default hex size, plus margin
+    // Fit so the 3x3 honeycomb plus some breathing room is visible.
+    // Scale the padding with hex size so the framing stays consistent across sizes.
     const allCells = state.polygonResults.map(r => cellCenterLatLng(r.polygon.row, r.polygon.col));
     const lats = allCells.map(c => c[0]);
     const lngs = allCells.map(c => c[1]);
+    const latPad = state.hexSize * 2;
+    const lngPad = state.hexSize * 2.5;
     const fitBounds = L.latLngBounds(
-      [Math.min(...lats) - 0.03, Math.min(...lngs) - 0.03],
-      [Math.max(...lats) + 0.03, Math.max(...lngs) + 0.03]
+      [Math.min(...lats) - latPad, Math.min(...lngs) - lngPad],
+      [Math.max(...lats) + latPad, Math.max(...lngs) + lngPad]
     );
     leafletState.map.fitBounds(fitBounds, { padding: [16, 16] });
   }
@@ -1932,7 +1942,8 @@ function updateLeafletPolygonColors() {
 }
 
 function updateLeafletPolygonShapes() {
-  // Called when hexSize changes. Rebuild the geometry of each polygon in place.
+  // Called when hexSize changes. Both the cell centers and the hex shapes scale
+  // together so the honeycomb tiling stays clean at any size.
   if (!leafletState.map || !window.L) return;
   state.polygonResults.forEach(r => {
     const p = r.polygon;
