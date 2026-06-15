@@ -602,24 +602,24 @@
 
   /* Custom Leaflet tooltip for hex zones */
   .leaflet-zone-tip {
-    background: rgba(15, 28, 51, 0.96) !important;
-    color: #e6ecf5 !important;
-    border: 1px solid #2e3d5f !important;
+    background: var(--bg-elev) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border-bright) !important;
     border-radius: 8px !important;
     padding: 0.55rem 0.8rem !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35) !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     font-size: 0.82rem !important;
     line-height: 1.5 !important;
   }
-  .leaflet-zone-tip::before { border-top-color: #2e3d5f !important; }
+  .leaflet-zone-tip::before { border-top-color: var(--border-bright) !important; }
   .leaflet-zone-tip .tip-name {
-    color: #2dd4bf;
+    color: var(--accent-bright);
     font-weight: 800;
     font-size: 0.9rem;
     margin-bottom: 0.4rem;
     padding-bottom: 0.32rem;
-    border-bottom: 1px dashed #2e3d5f;
+    border-bottom: 1px dashed var(--border-bright);
   }
   .leaflet-zone-tip .tip-row {
     display: flex;
@@ -628,11 +628,11 @@
     margin: 0.15rem 0;
     font-variant-numeric: tabular-nums;
   }
-  .leaflet-zone-tip .tip-row .tip-key { color: #8a96b4; font-size: 0.78rem; }
-  .leaflet-zone-tip .tip-row .tip-val { color: #e6ecf5; font-weight: 600; }
-  .leaflet-zone-tip .tip-row .tip-val.good { color: #2dd4bf; }
-  .leaflet-zone-tip .tip-row .tip-val.warn { color: #fbbf24; }
-  .leaflet-zone-tip .tip-row .tip-val.alert { color: #ef4444; }
+  .leaflet-zone-tip .tip-row .tip-key { color: var(--text-muted); font-size: 0.78rem; }
+  .leaflet-zone-tip .tip-row .tip-val { color: var(--text); font-weight: 600; }
+  .leaflet-zone-tip .tip-row .tip-val.good { color: var(--green); }
+  .leaflet-zone-tip .tip-row .tip-val.warn { color: var(--yellow); }
+  .leaflet-zone-tip .tip-row .tip-val.alert { color: var(--red); }
 
   /* Leaflet map container */
   .leaflet-map-wrap {
@@ -658,32 +658,33 @@
     pointer-events: none;
   }
   .leaflet-map-wrap .map-loading.hidden { display: none; }
-  /* Leaflet style overrides to match toolkit theme */
+  /* Leaflet style overrides to match toolkit theme (theme-aware via CSS variables) */
   .leaflet-popup-content-wrapper {
-    background: #131c33 !important;
-    color: #e6ecf5 !important;
-    border: 1px solid #2e3d5f !important;
+    background: var(--bg-elev) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border-bright) !important;
     border-radius: 8px !important;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
   }
-  .leaflet-popup-tip { background: #131c33 !important; border: 1px solid #2e3d5f !important; }
+  .leaflet-popup-tip { background: var(--bg-elev) !important; border: 1px solid var(--border-bright) !important; }
   .leaflet-popup-content { margin: 0.65rem 0.85rem !important; line-height: 1.5 !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; font-size: 0.85rem !important; }
-  .leaflet-popup-content strong { color: #2dd4bf; }
-  .leaflet-popup-close-button { color: #97a3b8 !important; padding: 4px 6px 0 0 !important; }
+  .leaflet-popup-content strong { color: var(--accent-bright); }
+  .leaflet-popup-close-button { color: var(--text-muted) !important; padding: 4px 6px 0 0 !important; }
   .leaflet-control-attribution {
-    background: rgba(15, 31, 26, 0.85) !important;
-    color: #97a3b8 !important;
+    background: var(--bg-elev) !important;
+    color: var(--text-muted) !important;
     font-size: 0.66rem !important;
     border-radius: 4px 0 0 0 !important;
     padding: 0.18rem 0.5rem !important;
+    opacity: 0.92 !important;
   }
-  .leaflet-control-attribution a { color: #14b8a6 !important; }
+  .leaflet-control-attribution a { color: var(--accent) !important; }
   .leaflet-control-zoom a {
-    background: #131c33 !important;
-    color: #e6ecf5 !important;
-    border-color: #2e3d5f !important;
+    background: var(--bg-elev) !important;
+    color: var(--text) !important;
+    border-color: var(--border-bright) !important;
   }
-  .leaflet-control-zoom a:hover { background: #14b8a6 !important; color: #042f2e !important; }
+  .leaflet-control-zoom a:hover { background: var(--accent) !important; color: #ffffff !important; }
 
   .polygon-map-card {
     background: var(--bg-card);
@@ -1852,9 +1853,32 @@ let leafletState = {
   loaded: false,
   loading: false,
   map: null,
+  tileLayer: null,
   polygonLayers: {},
   hasInitView: false
 };
+
+function syncLeafletTilesToTheme() {
+  if (!leafletState.map || !leafletState.tileLayer || !window.L) return;
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const url = isLight
+    ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  leafletState.tileLayer.setUrl(url);
+}
+
+// Watch for theme changes (the toolkit-wide toggle button sets data-theme on html)
+(function watchTheme() {
+  if (typeof MutationObserver === 'undefined') return;
+  const obs = new MutationObserver(muts => {
+    for (const m of muts) {
+      if (m.attributeName === 'data-theme') {
+        syncLeafletTilesToTheme();
+      }
+    }
+  });
+  obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+})();
 
 function ensureLeafletLoaded(cb) {
   if (leafletState.loaded || window.L) {
@@ -1908,7 +1932,11 @@ function initLeafletMap() {
     attributionControl: true,
     scrollWheelZoom: false
   });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const tileUrl = isLight
+    ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  leafletState.tileLayer = L.tileLayer(tileUrl, {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19
