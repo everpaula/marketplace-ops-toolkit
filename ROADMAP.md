@@ -33,12 +33,12 @@ Capture more value from what is already converting. These compound the proven to
 
 | Priority | Item | Effort | Why now |
 |---|---|---|---|
-| 1 | **ROADMAP.md refresh** (this doc) | 30 min | Removes 5-month-stale `NEXT_STEPS.md` that still references "Tool #1 only" |
-| 2 | **Share-by-URL state encoding** on `vendor-scorecard.html` | 2-3h | Enables sending pre-configured scorecards in follow-up emails. Demoed live at BySupply, can be pre-configured for them async if it advances. |
-| 3 | **Share-by-URL state encoding** on `logistics-supply.html` | 2-3h | Same as above. Two tools that landed in the BySupply demo. |
-| 4 | **Walkthrough videos** (Loom-style, 90-120s each) for `vendor-scorecard.html` and `logistics-supply.html` | 1h per tool to record after scripts ready | Async demo for panels where screen share is not possible. Footer link "Watch 90s walkthrough" per tool. |
+| ~~1~~ | ~~**ROADMAP.md refresh**~~ | ✅ Shipped 2026-06-01 + 2026-06-12. |
+| ~~2~~ | ~~**Share-by-URL state encoding** on `vendor-scorecard.html`~~ | ✅ Shipped. UI band "Share this scorecard" + Copy share link button. State encoded in `#s=` hash, decoded on load. Fallback for non-secure contexts. |
+| ~~3~~ | ~~**Share-by-URL state encoding** on `logistics-supply.html`~~ | ✅ Shipped. UI band "Share this forecast" + Copy share link button. Same hash encoding pattern. |
+| 4 | **Walkthrough videos** (Loom-style, 90-120s each) for `vendor-scorecard.html`, `logistics-supply.html`, and `operating-plan-generator.html` | 1h per tool to record after scripts ready | Async demo for panels where screen share is not possible. Footer link "Watch 90s walkthrough" per tool. Requires Everton to record. |
 | 5 | **Case studies page** (`/case-studies.html`) | 1-2h | Surfaces the impact narratives that already exist in the README, in a dedicated SEO-indexed page. Anchored from each tool. |
-| 6 | **`index.html` evolution** to surface the 3 most-demoed tools (workforce-forecast, vendor-scorecard, logistics-supply) in a hero band | 1h | Drives clicks to the tools that convert in interviews and outreach. |
+| 6 | **`index.html` evolution** to surface the 3 most-demoed tools (workforce-forecast, vendor-scorecard, logistics-supply) in a hero band, plus operating-plan-generator as the newest | 1h | Drives clicks to the tools that convert in interviews and outreach. |
 
 ## Tier 2 — New tools (next 2-4 weeks)
 
