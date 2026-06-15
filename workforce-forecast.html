@@ -36,6 +36,67 @@
     --blue: #60a5fa;
     --purple: #a78bfa;
   }
+  :root[data-theme="light"] {
+    --bg: #ffffff;
+    --bg-elev: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-sunken: #f1f5f9;
+    --border: #e2e8f0;
+    --border-bright: #cbd5e1;
+    --text: #0f172a;
+    --text-muted: #475569;
+    --text-faint: #64748b;
+    --accent: #0d9488;
+    --accent-bright: #0f766e;
+    --accent-soft: rgba(13, 148, 136, 0.08);
+    --accent-softer: rgba(13, 148, 136, 0.04);
+    --accent-border: rgba(13, 148, 136, 0.35);
+    --green: #059669;
+    --green-soft: rgba(5, 150, 105, 0.10);
+    --green-border: rgba(5, 150, 105, 0.32);
+    --yellow: #ca8a04;
+    --yellow-soft: rgba(202, 138, 4, 0.10);
+    --yellow-border: rgba(202, 138, 4, 0.32);
+    --orange: #ea580c;
+    --orange-soft: rgba(234, 88, 12, 0.10);
+    --orange-border: rgba(234, 88, 12, 0.32);
+    --red: #dc2626;
+    --red-soft: rgba(220, 38, 38, 0.10);
+    --red-border: rgba(220, 38, 38, 0.32);
+    --blue: #2563eb;
+    --purple: #7c3aed;
+    --purple-soft: rgba(124, 58, 237, 0.10);
+  }
+  /* Theme toggle button (light/dark) */
+  #theme-toggle {
+    position: fixed;
+    top: 0.85rem;
+    right: 0.85rem;
+    z-index: 9999;
+    background: var(--bg-elev);
+    color: var(--text);
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+    padding: 0;
+  }
+  #theme-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  #theme-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  #theme-toggle svg { display: block; }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; font-size: 17px; }
   body {
@@ -873,6 +934,36 @@ function renderSplitComparison(finalFTE) {
 
 // INIT
 loadScenario('steady');
+</script>
+<script>
+(function() {
+  var stored = null;
+  try { stored = localStorage.getItem('toolkit-theme'); } catch(e) {}
+  var theme = stored === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  var SUN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="m17.66 6.34 1.41-1.41"/></svg>';
+  var MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  function makeToggle() {
+    var btn = document.createElement('button');
+    btn.id = 'theme-toggle';
+    btn.type = 'button';
+    btn.title = 'Toggle light/dark theme';
+    btn.setAttribute('aria-label', 'Toggle light/dark theme');
+    btn.innerHTML = theme === 'light' ? MOON : SUN;
+    btn.addEventListener('click', function() {
+      theme = theme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+      try { localStorage.setItem('toolkit-theme', theme); } catch(e) {}
+      btn.innerHTML = theme === 'light' ? MOON : SUN;
+    });
+    document.body.appendChild(btn);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', makeToggle);
+  } else {
+    makeToggle();
+  }
+})();
 </script>
 </body>
 </html>
