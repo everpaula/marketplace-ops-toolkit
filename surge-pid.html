@@ -480,6 +480,99 @@
   }
   .view-toggle-btn.active .new-pill { background: rgba(0, 0, 0, 0.22); color: #042f2e; }
 
+  /* Map controls (hex size slider, etc.) */
+  .map-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: rgba(15, 31, 26, 0.6);
+    border: 1px solid #2e3d5f;
+    border-radius: 8px;
+    padding: 0.5rem 0.85rem;
+    margin-left: 0.75rem;
+    margin-bottom: 1rem;
+    vertical-align: top;
+  }
+  .map-controls .ctrl-label {
+    color: var(--text-muted, #97a3b8);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .map-controls input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 130px;
+    height: 4px;
+    background: linear-gradient(90deg, #2e3d5f, #14b8a6);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .map-controls input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent, #14b8a6);
+    border: 2px solid #042f2e;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+  .map-controls input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  .map-controls input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent, #14b8a6);
+    border: 2px solid #042f2e;
+    cursor: pointer;
+  }
+  .map-controls .ctrl-value {
+    color: var(--accent, #14b8a6);
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    min-width: 56px;
+    text-align: right;
+  }
+
+  /* Custom Leaflet tooltip for hex zones */
+  .leaflet-zone-tip {
+    background: rgba(15, 28, 51, 0.96) !important;
+    color: #e6ecf5 !important;
+    border: 1px solid #2e3d5f !important;
+    border-radius: 8px !important;
+    padding: 0.55rem 0.8rem !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+  }
+  .leaflet-zone-tip::before { border-top-color: #2e3d5f !important; }
+  .leaflet-zone-tip .tip-name {
+    color: #2dd4bf;
+    font-weight: 800;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+    padding-bottom: 0.32rem;
+    border-bottom: 1px dashed #2e3d5f;
+  }
+  .leaflet-zone-tip .tip-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0.15rem 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .leaflet-zone-tip .tip-row .tip-key { color: #8a96b4; font-size: 0.78rem; }
+  .leaflet-zone-tip .tip-row .tip-val { color: #e6ecf5; font-weight: 600; }
+  .leaflet-zone-tip .tip-row .tip-val.good { color: #2dd4bf; }
+  .leaflet-zone-tip .tip-row .tip-val.warn { color: #fbbf24; }
+  .leaflet-zone-tip .tip-row .tip-val.alert { color: #ef4444; }
+
   /* Leaflet map container */
   .leaflet-map-wrap {
     border-radius: 10px;
@@ -908,6 +1001,11 @@
         <button class="view-toggle-btn active" data-view="grid" role="tab" aria-selected="true">Grid view</button>
         <button class="view-toggle-btn" data-view="map" role="tab" aria-selected="false">Map view <span class="new-pill">Austin</span></button>
       </div>
+      <div class="map-controls" id="mapControls" style="display: none;">
+        <span class="ctrl-label">Hex size</span>
+        <input type="range" id="hexSizeSlider" min="0.006" max="0.045" step="0.001" value="0.015" aria-label="Hexagon size">
+        <span class="ctrl-value" id="hexSizeValue">~1.7 km</span>
+      </div>
       <div class="polygon-svg-wrap" id="polygonGridView">
         <svg class="polygon-svg" id="polygonSvg" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg"></svg>
       </div>
@@ -1309,6 +1407,7 @@ const state = {
   scrubTick: 144,         // start at midday
   selectedPolygonId: null,
   polygonView: 'grid',    // 'grid' or 'map'
+  hexSize: 0.015,         // degrees lat, ~1.7 km at Austin latitude
   isPlaying: false,
   playInterval: null
 };
@@ -1624,14 +1723,61 @@ const AUSTIN_CENTER = [30.2672, -97.7431];
 const GRID_LAT_HALF = 0.06;
 const GRID_LNG_HALF = 0.075;
 
-function polygonLatLngBounds(row, col) {
+function cellCenterLatLng(row, col) {
+  // Center of each 3x3 cell in geographic space (used as hex centers)
   const cellLat = (GRID_LAT_HALF * 2) / 3;
   const cellLng = (GRID_LNG_HALF * 2) / 3;
   const south = AUSTIN_CENTER[0] + GRID_LAT_HALF - (row + 1) * cellLat;
   const north = south + cellLat;
   const west = AUSTIN_CENTER[1] - GRID_LNG_HALF + col * cellLng;
   const east = west + cellLng;
-  return [[south, west], [south, east], [north, east], [north, west]];
+  return [(south + north) / 2, (west + east) / 2];
+}
+
+function hexagonAt(centerLat, centerLng, sizeDeg) {
+  // Pointy-top hexagon: vertices at 90°, 30°, 330°, 270°, 210°, 150° (clockwise from top)
+  // sizeDeg is the circumradius in degrees of latitude.
+  // Longitude is compensated for latitude (1° lng != 1° lat in distance).
+  const lngScale = 1 / Math.cos(centerLat * Math.PI / 180);
+  const verts = [];
+  for (let i = 0; i < 6; i++) {
+    const angleRad = (90 - 60 * i) * Math.PI / 180;
+    const dLat = sizeDeg * Math.sin(angleRad);
+    const dLng = sizeDeg * Math.cos(angleRad) * lngScale;
+    verts.push([centerLat + dLat, centerLng + dLng]);
+  }
+  return verts;
+}
+
+function fmtFulfillment(s, d) {
+  const rate = d > 0 ? Math.min(s, d) / d * 100 : 100;
+  return rate;
+}
+
+function tierForFulfillment(rate) {
+  if (rate >= 92) return 'good';
+  if (rate >= 80) return 'warn';
+  return 'alert';
+}
+
+function tooltipForPolygon(p, r) {
+  const t = state.scrubTick;
+  const demand = Math.round(r.demand[t]);
+  const supply = Math.round(r.supply[t]);
+  const mape = r.mape[t];
+  const surge = r.surge[t];
+  const fulfill = fmtFulfillment(r.supply[t], r.demand[t]);
+  const mapeTier = getMapeTier(mape);
+  const mapeTierName = mapeTier === 'green' ? 'good' : mapeTier === 'yellow' ? 'warn' : 'alert';
+  const fillTier = tierForFulfillment(fulfill);
+  const surgeTier = surge >= 1.8 ? 'alert' : surge >= 1.3 ? 'warn' : 'good';
+  return '' +
+    '<div class="tip-name">' + p.name + '</div>' +
+    '<div class="tip-row"><span class="tip-key">Orders (demand)</span><span class="tip-val">' + demand.toLocaleString('en-US') + '</span></div>' +
+    '<div class="tip-row"><span class="tip-key">Active drivers</span><span class="tip-val">' + supply.toLocaleString('en-US') + '</span></div>' +
+    '<div class="tip-row"><span class="tip-key">Fulfillment rate</span><span class="tip-val ' + fillTier + '">' + fulfill.toFixed(1) + '%</span></div>' +
+    '<div class="tip-row"><span class="tip-key">MAPE</span><span class="tip-val ' + mapeTierName + '">' + mape.toFixed(0) + '%</span></div>' +
+    '<div class="tip-row"><span class="tip-key">Surge</span><span class="tip-val ' + surgeTier + '">' + surge.toFixed(2) + 'x</span></div>';
 }
 
 let leafletState = {
@@ -1720,37 +1866,47 @@ function rebuildLeafletPolygons() {
 
   state.polygonResults.forEach(r => {
     const p = r.polygon;
-    const latLngs = polygonLatLngBounds(p.row, p.col);
+    const [cLat, cLng] = cellCenterLatLng(p.row, p.col);
+    const verts = hexagonAt(cLat, cLng, state.hexSize);
     const mapeNow = r.mape[state.scrubTick];
-    const surgeNow = r.surge[state.scrubTick];
     const tier = getMapeTier(mapeNow);
     const fillColor = tierColor(tier);
-    const fillOpacity = 0.42 + Math.min(mapeNow / 50, 0.45);
+    // Lower opacity to let the map base show through.
+    const fillOpacity = 0.22 + Math.min(mapeNow / 60, 0.28);
 
-    const polygon = L.polygon(latLngs, {
+    const polygon = L.polygon(verts, {
       color: state.selectedPolygonId === p.id ? '#2dd4bf' : fillColor,
       weight: state.selectedPolygonId === p.id ? 3 : 1.5,
+      opacity: 0.85,
       fillColor,
       fillOpacity,
-      smoothFactor: 1
+      smoothFactor: 0.5
     }).addTo(leafletState.map);
 
-    polygon.bindTooltip(
-      '<strong>' + p.name + '</strong><br>MAPE ' + mapeNow.toFixed(0) + '% • Surge ' + surgeNow.toFixed(2) + 'x',
-      { permanent: false, direction: 'top', className: 'leaflet-zone-tip', sticky: true }
-    );
-
-    polygon.on('click', () => {
-      selectPolygon(p.id);
+    polygon.bindTooltip(tooltipForPolygon(p, r), {
+      permanent: false,
+      direction: 'top',
+      className: 'leaflet-zone-tip',
+      sticky: true,
+      offset: [0, -6]
     });
+
+    polygon.on('click', () => selectPolygon(p.id));
 
     leafletState.polygonLayers[p.id] = polygon;
   });
 
   if (!leafletState.hasInitView) {
     leafletState.hasInitView = true;
-    const allBounds = L.latLngBounds(state.polygonResults.flatMap(r => polygonLatLngBounds(r.polygon.row, r.polygon.col)));
-    leafletState.map.fitBounds(allBounds, { padding: [20, 20] });
+    // Fit to the full 3x3 grid bounds at the default hex size, plus margin
+    const allCells = state.polygonResults.map(r => cellCenterLatLng(r.polygon.row, r.polygon.col));
+    const lats = allCells.map(c => c[0]);
+    const lngs = allCells.map(c => c[1]);
+    const fitBounds = L.latLngBounds(
+      [Math.min(...lats) - 0.03, Math.min(...lngs) - 0.03],
+      [Math.max(...lats) + 0.03, Math.max(...lngs) + 0.03]
+    );
+    leafletState.map.fitBounds(fitBounds, { padding: [16, 16] });
   }
 }
 
@@ -1761,18 +1917,36 @@ function updateLeafletPolygonColors() {
     const layer = leafletState.polygonLayers[p.id];
     if (!layer) return;
     const mapeNow = r.mape[state.scrubTick];
-    const surgeNow = r.surge[state.scrubTick];
     const tier = getMapeTier(mapeNow);
     const fillColor = tierColor(tier);
-    const fillOpacity = 0.42 + Math.min(mapeNow / 50, 0.45);
+    const fillOpacity = 0.22 + Math.min(mapeNow / 60, 0.28);
     layer.setStyle({
       color: state.selectedPolygonId === p.id ? '#2dd4bf' : fillColor,
       weight: state.selectedPolygonId === p.id ? 3 : 1.5,
+      opacity: 0.85,
       fillColor,
       fillOpacity
     });
-    layer.setTooltipContent('<strong>' + p.name + '</strong><br>MAPE ' + mapeNow.toFixed(0) + '% • Surge ' + surgeNow.toFixed(2) + 'x');
+    layer.setTooltipContent(tooltipForPolygon(p, r));
   });
+}
+
+function updateLeafletPolygonShapes() {
+  // Called when hexSize changes. Rebuild the geometry of each polygon in place.
+  if (!leafletState.map || !window.L) return;
+  state.polygonResults.forEach(r => {
+    const p = r.polygon;
+    const layer = leafletState.polygonLayers[p.id];
+    if (!layer) return;
+    const [cLat, cLng] = cellCenterLatLng(p.row, p.col);
+    const verts = hexagonAt(cLat, cLng, state.hexSize);
+    layer.setLatLngs(verts);
+  });
+}
+
+function approxKmFromDeg(deg) {
+  // 1 degree of latitude ≈ 111 km. Hex circumradius in km.
+  return deg * 111;
 }
 
 function switchPolygonView(view) {
@@ -1783,9 +1957,11 @@ function switchPolygonView(view) {
   });
   const gridEl = $('polygonGridView');
   const mapEl = $('polygonMapView');
+  const ctrlEl = $('mapControls');
   if (view === 'map') {
     gridEl.style.display = 'none';
     mapEl.style.display = 'block';
+    if (ctrlEl) ctrlEl.style.display = 'inline-flex';
     ensureLeafletLoaded(() => {
       initLeafletMap();
       updateLeafletPolygonColors();
@@ -1794,6 +1970,7 @@ function switchPolygonView(view) {
   } else {
     mapEl.style.display = 'none';
     gridEl.style.display = '';
+    if (ctrlEl) ctrlEl.style.display = 'none';
   }
   state.polygonView = view;
 }
@@ -1930,6 +2107,23 @@ $('playBtn').addEventListener('click', togglePlay);
 document.querySelectorAll('.view-toggle-btn').forEach(btn => {
   btn.addEventListener('click', () => switchPolygonView(btn.dataset.view));
 });
+
+// Hex size slider
+(function wireHexSlider() {
+  const slider = document.getElementById('hexSizeSlider');
+  const valLabel = document.getElementById('hexSizeValue');
+  if (!slider) return;
+  const updateLabel = () => {
+    const km = approxKmFromDeg(state.hexSize);
+    valLabel.textContent = '~' + km.toFixed(1) + ' km';
+  };
+  slider.addEventListener('input', e => {
+    state.hexSize = Number(e.target.value);
+    updateLabel();
+    if (leafletState.map) updateLeafletPolygonShapes();
+  });
+  updateLabel();
+})();
 
 // Init
 renderScenarios();
