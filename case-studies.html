@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case Studies · Marketplace Ops Toolkit</title>
+<meta name="description" content="22 operator case studies across fraud review, BIN monitoring, surge pricing, chargeback disputes, workforce forecast, logistics supply, queue operations, customer feedback cost, 90-day operating plans, vendor scorecards, and driver scorecards. Real operating decisions, real dollar outcomes, mapped to the tool that surfaced the answer.">
+<link rel="canonical" href="https://everpaula.github.io/marketplace-ops-toolkit/case-studies.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://everpaula.github.io/marketplace-ops-toolkit/case-studies.html">
+<meta property="og:title" content="Case Studies · 22 operator decisions, mapped to the tool that surfaced the answer">
+<meta property="og:description" content="Fraud, supply, workforce, customer ops, logistics, last-mile. Every case has setup, problem, what the tool surfaced, and the outcome. Built from years of hands-on marketplace and fintech operations.">
+<meta property="og:site_name" content="Marketplace Ops Toolkit">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Case Studies · Marketplace Ops Toolkit">
+<meta name="twitter:description" content="22 operator case studies across fraud, supply, workforce, customer ops, logistics, last-mile.">
+<meta name="author" content="Everton Paula">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Case Studies","url":"https://everpaula.github.io/marketplace-ops-toolkit/case-studies.html","description":"22 operator case studies across fraud, supply, workforce, customer ops, logistics, and last-mile, mapped to the tool that surfaced the answer.","isPartOf":{"@type":"WebSite","name":"Marketplace Ops Toolkit","url":"https://everpaula.github.io/marketplace-ops-toolkit/"},"author":{"@type":"Person","name":"Everton Paula","url":"https://linkedin.com/in/evertonpaula"}}</script>
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-elev: #131c33;
+    --bg-card: #131c33;
+    --bg-sunken: #0a1024;
+    --border: #1f2a44;
+    --border-bright: #2e3d5f;
+    --text: #e6ecf5;
+    --text-muted: #8a96b4;
+    --text-faint: #5d6a8a;
+    --accent: #14b8a6;
+    --accent-bright: #2dd4bf;
+    --accent-soft: rgba(20, 184, 166, 0.1);
+    --accent-softer: rgba(20, 184, 166, 0.05);
+    --accent-border: rgba(20, 184, 166, 0.35);
+    --green: #10b981;
+    --yellow: #fbbf24;
+    --red: #ef4444;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --orange: #fb923c;
+    --radius-sm: 5px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --t-fast: 90ms ease;
+    --t-base: 140ms ease;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+  .container { max-width: 1080px; margin: 0 auto; padding: 1.5rem; }
+  ::selection { background: var(--accent-soft); color: var(--text); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+  .top-nav { margin-bottom: 1rem; }
+  .top-nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color var(--t-fast);
+  }
+  .top-nav a:hover { color: var(--accent); }
+
+  header { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .brand {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.55rem;
+  }
+  header h1 {
+    font-size: 2.2rem;
+    color: var(--text);
+    margin-bottom: 0.7rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    font-weight: 700;
+  }
+  header .tagline {
+    color: var(--text-muted);
+    font-size: 1.02rem;
+    max-width: 820px;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  header .tagline strong { color: var(--text); font-weight: 600; }
+  header .disclaimer {
+    font-size: 0.82rem;
+    color: var(--text-faint);
+    font-style: italic;
+    max-width: 820px;
+    line-height: 1.55;
+  }
+
+  .toc {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 2rem;
+  }
+  .toc h2 {
+    color: var(--accent);
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.85rem;
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.5rem;
+  }
+  .toc-link {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    padding: 0.55rem 0.7rem;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-md);
+    color: var(--text);
+    text-decoration: none;
+    transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast);
+    font-size: 0.88rem;
+  }
+  .toc-link:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .toc-link .toc-num {
+    color: var(--accent);
+    font-weight: 800;
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+  }
+  .toc-link:hover .toc-num { color: var(--accent-bright); }
+  .toc-link .toc-text { flex: 1; line-height: 1.4; }
+  .toc-link .toc-count {
+    color: var(--text-faint);
+    font-size: 0.74rem;
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    flex-shrink: 0;
+  }
+
+  .tool-section {
+    margin-bottom: 3rem;
+    scroll-margin-top: 1rem;
+  }
+  .tool-section h2 {
+    color: var(--text);
+    font-size: 1.5rem;
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.015em;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .tool-section h2 .tool-tag {
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-right: 0.55rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    vertical-align: 0.2em;
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
+  .tool-section .tool-intro {
+    color: var(--text-muted);
+    font-size: 0.94rem;
+    margin-bottom: 1.4rem;
+    max-width: 78ch;
+    line-height: 1.6;
+  }
+  .tool-section .tool-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.88rem;
+    margin-top: 0.35rem;
+    margin-bottom: 1.2rem;
+    transition: color var(--t-fast);
+  }
+  .tool-section .tool-link:hover { color: var(--accent-bright); }
+  .tool-section .tool-link::after { content: "\2192"; font-weight: 700; }
+
+  .case-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1rem;
+    transition: border-color var(--t-base);
+  }
+  .case-card:hover { border-color: var(--border-bright); }
+  .case-card h3 {
+    color: var(--text);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.85rem;
+    line-height: 1.35;
+    letter-spacing: -0.005em;
+  }
+  .case-card .case-label {
+    display: inline-block;
+    color: var(--accent);
+    font-size: 0.66rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-right: 0.5rem;
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
+  .case-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 0.7rem 1rem;
+    margin-bottom: 0.55rem;
+    align-items: baseline;
+  }
+  @media (max-width: 580px) {
+    .case-row { grid-template-columns: 1fr; gap: 0.2rem 0; }
+  }
+  .case-row .case-key {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding-top: 0.2rem;
+  }
+  .case-row .case-val {
+    color: var(--text);
+    font-size: 0.93rem;
+    line-height: 1.65;
+  }
+  .case-row.outcome .case-key { color: var(--accent); }
+  .case-row.outcome .case-val {
+    background: var(--accent-softer);
+    border-left: 3px solid var(--accent);
+    padding: 0.55rem 0.85rem;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+  .case-row .case-val strong { color: var(--accent-bright); font-weight: 700; }
+  .case-row .case-val em { color: var(--text-muted); font-style: normal; font-size: 0.9rem; }
+
+  .closer {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(167, 139, 250, 0.05));
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-lg);
+    padding: 1.8rem 2rem;
+    margin: 2.5rem 0 1.5rem;
+    text-align: center;
+  }
+  .closer h2 {
+    color: var(--accent);
+    font-size: 1.05rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.85rem;
+  }
+  .closer p {
+    color: var(--text);
+    font-size: 1rem;
+    max-width: 620px;
+    margin: 0 auto 1.2rem;
+    line-height: 1.6;
+  }
+  .closer .closer-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .closer .btn {
+    background: var(--accent);
+    color: #042f2e;
+    border: 1px solid var(--accent);
+    padding: 0.65rem 1.3rem;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 0.92rem;
+    transition: background var(--t-base);
+  }
+  .closer .btn:hover { background: var(--accent-bright); border-color: var(--accent-bright); }
+  .closer .btn.outline {
+    background: transparent;
+    color: var(--accent);
+  }
+  .closer .btn.outline:hover { background: var(--accent-soft); color: var(--accent-bright); }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { color: var(--accent-bright); }
+  footer .footer-grid {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.7rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <nav class="top-nav">
+    <a href="index.html">&larr; Toolkit</a>
+  </nav>
+
+  <header>
+    <div class="brand">Marketplace Ops Toolkit</div>
+    <h1>Case Studies</h1>
+    <p class="tagline">
+      Twenty-two operator decisions, each mapped to the tool that surfaced the answer. <strong>Fraud review, BIN monitoring, surge pricing, chargeback disputes, workforce forecast, logistics supply, queue operations, customer feedback cost, 90-day operating plans, vendor scorecards, driver scorecards.</strong> Real operating shape, real dollar outcomes.
+    </p>
+    <p class="disclaimer">
+      Scenarios are illustrative and drawn from operator practice across multi-country marketplaces and consumer fintech. Numbers are realistic order-of-magnitude, not measurements from a specific deployment. Company and employer names are sanitized.
+    </p>
+  </header>
+
+  <nav class="toc" aria-label="Table of contents">
+    <h2>Jump to a tool</h2>
+    <div class="toc-grid">
+      <a class="toc-link" href="#tool-1"><span class="toc-num">#1</span><span class="toc-text">Agent ROI Calculator</span><span class="toc-count">2 cases</span></a>
+      <a class="toc-link" href="#tool-2"><span class="toc-num">#2</span><span class="toc-text">BIN Monitoring Detection</span><span class="toc-count">2 cases</span></a>
+      <a class="toc-link" href="#tool-3"><span class="toc-num">#3</span><span class="toc-text">Marketplace Surge Simulator</span><span class="toc-count">2 cases</span></a>
+      <a class="toc-link" href="#tool-4"><span class="toc-num">#4</span><span class="toc-text">Chargeback Dispute Wizard</span><span class="toc-count">2 cases</span></a>
+      <a class="toc-link" href="#tool-5"><span class="toc-num">#5</span><span class="toc-text">Workforce Forecast Calculator</span><span class="toc-count">2 cases</span></a>
+      <a class="toc-link" href="#tool-6"><span class="toc-num">#6</span><span class="toc-text">Logistics Supply Forecaster</span><span class="toc-count">2 cases</span></a>
+      <a class="toc-link" href="#tool-7"><span class="toc-num">#7</span><span class="toc-text">Queue Operations Command Center</span><span class="toc-count">2 cases</span></a>
+      <a class="toc-link" href="#tool-10"><span class="toc-num">#10</span><span class="toc-text">Customer Feedback Cost Analyzer</span><span class="toc-count">3 cases</span></a>
+      <a class="toc-link" href="#tool-11"><span class="toc-num">#11</span><span class="toc-text">90-Day Operating Plan Generator</span><span class="toc-count">2 cases</span></a>
+      <a class="toc-link" href="#tool-12"><span class="toc-num">#12</span><span class="toc-text">Vendor Performance Scorecard</span><span class="toc-count">2 cases</span></a>
+      <a class="toc-link" href="#tool-13"><span class="toc-num">#13</span><span class="toc-text">Driver / Courier Scorecard</span><span class="toc-count">2 cases</span></a>
+    </div>
+  </nav>
+
+  <!-- TOOL 1 -->
+  <section class="tool-section" id="tool-1">
+    <h2><span class="tool-tag">Tool #1</span>Agent ROI Calculator</h2>
+    <p class="tool-intro">Decide which manual review queues to scale, which to tune, and which need root-cause work. Portfolio mode allocates the next marginal agent across multiple queues so the decision is the math, not the politics.</p>
+    <a class="tool-link" href="agent-roi.html">Open the calculator</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>Fraud review queue running 3 months in the red</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">An 8-agent manual review team at a global marketplace screens 200 flagged orders per day at $30 average order value.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Net ROI looked positive on paper at 18% catch rate, but false-positive cost was quietly burning roughly $1,400 per day in lost legitimate customer LTV.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Portfolio mode flagged FP cost at $4.50 per agent-day against gross savings of $3.20, recommending root-cause work on the rule set rather than more headcount.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Decision rules rewritten, FP rate dropped from 6% to 2.5%, net ROI flipped to <strong>+0.8x</strong>, around <strong>$280K saved annually</strong> vs the "add 2 more agents" plan that was already approved.</div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>VP picking between three queues for one new hire budget</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">A US consumer fintech VP of Ops has budget for exactly one new analyst across three queues (account takeover, disputes, KYC review).</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Each queue manager was lobbying with their own spreadsheet, decisions were political, and the wrong placement would waste roughly $95K fully loaded for the year.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Portfolio comparison ranked marginal ROI per queue: KYC at 2.1x, ATO at 1.4x, disputes at 0.6x because dispute auto-decision coverage was already high.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Hire went to KYC, the dispute queue got a process review instead, combined coverage gain came out at <strong>+$140K</strong> vs the politically favored allocation.</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 2 -->
+  <section class="tool-section" id="tool-2">
+    <h2><span class="tool-tag">Tool #2</span>BIN Monitoring Detection</h2>
+    <p class="tool-intro">Detect BIN-level attack patterns before they hit chargeback. Combines volume velocity, new-user clustering, and CBK rate trending into a single dashboard with adjustable thresholds.</p>
+    <a class="tool-link" href="bin-monitor.html">Open the dashboard</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>Card testing wave 47 days before chargebacks would land</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Risk analyst at a digital goods platform watching nightly BIN reports across roughly 1,800 active issuer ranges.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Standard transaction monitoring missed slow-burn card testing because no single transaction tripped scoring; team usually only saw the damage after $60K-$120K in chargebacks posted.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Two prepaid BINs crossed all three thresholds simultaneously (velocity +210% vs baseline, $14K volume, 78 new users in 3 days), pattern matched the slow-burn attack signature.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Both BINs rate-limited for new users within 6 hours, projected chargeback exposure dropped from an estimated $90K to about $11K, roughly <strong>$79K saved on a single alert</strong>.</div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>Pre-Black Friday tuning to avoid alert fatigue</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Fraud lead at a regional ecommerce site preparing for a holiday week with expected 3x-4x organic volume across all BINs.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Existing single-signal alerts (just velocity) would fire on 40+ BINs during peak, drowning the on-call analyst and effectively disabling detection.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Combining velocity AND volume floor AND new-user clustering kept the alert list to 3 real candidates during simulated peak.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Peak week ran with <strong>4 true-positive escalations and zero alert fatigue</strong>, vs the prior year where 2 real attacks were missed under noise costing about <strong>$45K</strong>.</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 3 -->
+  <section class="tool-section" id="tool-3">
+    <h2><span class="tool-tag">Tool #3</span>Marketplace Surge Simulator (PID Control)</h2>
+    <p class="tool-intro">Surge pricing using PID control theory, with a polygon-map mode running nine independent PIDs across a 3x3 city grid. City averages hide local imbalance. Optimize by zone.</p>
+    <a class="tool-link" href="surge-pid.html">Open the simulator</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>City-average surge masking 4 starving polygons</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Pricing manager at a ride-hailing operation in a Tier-2 city running a single citywide surge multiplier on weekday evening peaks.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Citywide multiplier averaged 1.4x and looked healthy, but 4 outer polygons were stuck at 18-22 minute ETAs while downtown sat at 4 minutes, causing roughly 8% trip cancellation in those zones.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">V2 polygon view showed the 3x3 zone grid with two cells in deep undersupply at effective 1.0x while downtown was overshooting at 1.7x.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Zone-level Kp raised on outer cells, cancellation in those polygons dropped from <strong>8% to 3.2%</strong>, recovered an estimated <strong>$9K per weekday peak</strong> in completed trips.</div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>Surge oscillation eroding driver trust</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Marketplace ops at a delivery platform running surge updates every 5 minutes, pricing swinging 1.0x to 1.8x to 1.1x within a single 30 minute window.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Driver complaints spiked about "phantom surge" and weekly driver churn climbed roughly 4 points, costing the team about $22K monthly in re-acquisition.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Simulator showed integral gain too high and derivative too low, classic PID overshoot; smoother coefficients held supply-demand inside the deadband 78% of the time vs 41% in current settings.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">New PID coefficients rolled out region by region, driver churn dropped back <strong>3.5 points within 2 cycles</strong>, savings around <strong>$19K monthly</strong> on retention alone.</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 4 -->
+  <section class="tool-section" id="tool-4">
+    <h2><span class="tool-tag">Tool #4</span>Chargeback Dispute Investigation Wizard</h2>
+    <p class="tool-intro">Walk through a chargeback like a senior fraud analyst. Decision tree wizard guides from reason code to action recommendation in 4-6 questions, with the evidence package ready.</p>
+    <a class="tool-link" href="chargeback-sop.html">Open the wizard</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>New chargeback analysts making inconsistent dispute calls</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">A 4-person disputes team at a subscription SaaS handles roughly 180 chargebacks per month with one senior and three juniors hired in the last 90 days.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Junior analysts were accepting disputes that were defensible and fighting ones that were lost causes, win rate sat at 22% vs benchmark 38%, costing about $15K monthly in avoidable losses.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Wizard standardized the 4-6 question flow (cardholder contact, delivery proof, prior dispute history, friendly fraud indicators) and dispositioned each case with reasoning.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Win rate climbed to <strong>41% within two months</strong>, recovered roughly <strong>$11K monthly</strong>, senior analyst time on QA dropped from 15 hours per week to 4.</div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>Onboarding offshore vendor team in 2 weeks</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Ops manager at a marketplace stood up a vendor team in a different time zone to handle chargeback overflow, with no internal trainer available full time.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Vendor team was expected to take 6-8 weeks to reach quality parity, meaning roughly $40K in additional losses during ramp.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Wizard's 8-section SOP plus the decision tree functioned as the training spine, every case run through the same logic regardless of analyst tenure.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Vendor team hit quality parity in <strong>18 days instead of 6 weeks</strong>, saved roughly <strong>$28K in ramp losses</strong>, post-hoc QA showed consistency scores within 4 points of in-house team.</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 5 -->
+  <section class="tool-section" id="tool-5">
+    <h2><span class="tool-tag">Tool #5</span>Workforce Forecast Calculator</h2>
+    <p class="tool-intro">How many agents do you actually need? Multi-case-type forecast based on volume, complexity, productivity, and shrinkage. The math behind quarterly capacity planning, made explicit.</p>
+    <a class="tool-link" href="workforce-forecast.html">Open the calculator</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>Finance asking for next year headcount in 5 days</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Head of Ops at a regional fintech needs to justify a 2026 plan covering 4 case types (KYC, fraud review, ATO, disputes) with different complexity and volume curves.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Existing spreadsheet model was 14 tabs of stale assumptions, last touched 8 months ago, produced a single headcount number with no scenario range, putting roughly $1.8M in payroll asks at risk of being slashed.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Multi-case-type calculator separated AHT and volume per type, layered shrinkage (22% real vs 15% assumed) and peak month uplift, produced in-house vs vendor split economics side by side.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Plan went in with three scenarios (lean, base, peak-ready) and finance approved base case at <strong>31 FTE plus 8 vendor seats</strong>, vs the original ask of 38 FTE that would have been rejected.</div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>60% vendor-heavy footprint that was bleeding cost</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">COO at a high-growth ecommerce platform had 24 in-house and 36 vendor reviewers across two sites, locked into a per-case vendor rate set 3 years prior.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Vendor cost per case had crept to roughly $4.20 vs in-house fully loaded $3.10 once productivity and shrinkage were applied honestly; the platform was spending an extra $360K per year on the worse option.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Vendor split scenario showed crossover point at 45% vendor, not 60%, given current AHT and shrinkage; rebalancing recovered the spread without losing peak flexibility.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">12 cases per day shifted in-house, vendor headcount renegotiated to a smaller flex pool, net savings around <strong>$230K annualized</strong> in year one with peak coverage preserved.</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 6 -->
+  <section class="tool-section" id="tool-6">
+    <h2><span class="tool-tag">Tool #6</span>Logistics Supply Forecaster</h2>
+    <p class="tool-intro">Translate a marketplace forecast into required couriers, vehicles, sorters, and dock capacity, with day-over-day backlog cascade, storage occupation tracking, origin mix decomposition, and operational levers.</p>
+    <a class="tool-link" href="logistics-supply.html">Open the forecaster</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>3PL last-mile facing a 35% Q4 volume jump</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Network planner at a regional 3PL handling 12,000 daily parcels with 140 couriers and 18 vans across 3 hubs.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Standard linear model said add 50 couriers; gut said wrong because backlog from Day 1 would cascade into Day 3-4 vehicle saturation. Wrong-sizing risk was roughly $180K either way.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">V2 backlog cascade with 2-layer capacity showed couriers were not the bottleneck (occupation 78%); vans were (occupation 96%), recommending 8 extra vehicles and 22 couriers, not 50.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Q4 ran at <strong>94% on-time vs 89% prior year</strong>, courier overstaffing avoided, net cost vs the linear-model plan came out about <strong>$140K lower</strong> with better service.</div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>DTC fulfillment warehouse missing cutoff 3 days in 5</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Ops manager at a DTC brand's contracted fulfillment site, 2 shifts, 60 pickers, 8 sorters, processing 8,000 orders per day with same-day cutoff at 2 PM.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Same-day promise was failing on roughly 60% of weekdays, refund and re-ship cost about $11K per missed-cutoff day, brand was threatening to switch 3PLs.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Forecaster's intraday view showed sorter capacity at 102% utilization 11 AM to 1 PM while pickers ran at 71%; the bottleneck was sortation, not pick.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">2 sorters added on a 10 AM start, cutoff miss rate dropped to <strong>8% of days within 3 weeks</strong>, retained the brand account worth about <strong>$1.4M annually</strong>.</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 7 -->
+  <section class="tool-section" id="tool-7">
+    <h2><span class="tool-tag">Tool #7</span>Queue Operations Command Center</h2>
+    <p class="tool-intro">Two questions every ops leader asks at standup, fused into one tool: are we behind on SLA right now, and what should the agent pick next. Backlog health monitor plus queue prioritization in the same view.</p>
+    <a class="tool-link" href="queue-ops-center.html">Open the command center</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>6,000-case backlog on a Tuesday morning</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Fraud ops lead walking into Monday standup finds the weekend left a 6,000-case backlog with mixed SLA risk and no clear "who works what first" answer.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Status quo was analyst-by-analyst FIFO, oldest cases worked first regardless of dollar exposure, causing roughly $45K weekly in avoidable losses on high-value cases that aged past windows.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Command center showed hours to SLA breach across queues, ranked cases by dollar-at-risk x time-decay, projected 9 agents needed for full recovery in 36 hours vs 14 for 18 hours.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Team prioritized 380 high-value aging cases first, dollar-weighted loss dropped <strong>62% week over week</strong> (around <strong>$28K saved</strong>), backlog cleared in 41 hours.</div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>Content moderation team facing an SLA audit</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Trust and Safety manager at a UGC platform with a 12-person moderation team and contractual 24-hour SLA across 3 queue types.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Audit was 10 days out and the team did not know current SLA compliance percentage by queue, manual sampling estimated somewhere between 78%-91% with $0.5M of contractual penalty exposure.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Content moderation preset surfaced live SLA compliance per queue (84%, 71%, 96%) and showed appeals queue needed 3 extra reviewers for 4 days to reach 95% before audit date.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Temporary reallocation from escalations to appeals pulled appeals compliance to 97% before audit, <strong>full audit passed at 96% weighted</strong>, penalty exposure eliminated.</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 10 -->
+  <section class="tool-section" id="tool-10">
+    <h2><span class="tool-tag">Tool #10</span>Customer Feedback Cost Analyzer</h2>
+    <p class="tool-intro">Quantify the dollar leak from preventable customer feedback. Two personas, Pareto category breakdown, sensitivity at +/- 15% and +/- 30%. The number you bring to the executive conversation when the question is fix-it vs absorb-it.</p>
+    <a class="tool-link" href="customer-feedback-cost.html">Open the analyzer</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>Self-service eligibility analysis at a top-3 BR insurer</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Inbound call center handling 1M+ contacts per quarter. Calls were being treated as fixed demand.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Aggregate call volume was the only KPI reported up. No taxonomy meant no fix.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Mapping calls by motive showed 42% were self-service eligible. The user had a question or request the IVR or app could absorb if the flow existed. Quantified preventable leak across the top 10 motives, payback period inside 4 months.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Built 3 new self-service channels (IVR menu redesign, app self-service flow, WhatsApp bot for top motives). <strong>Calls down 42% in 9 months</strong>, retention up 9 points on the affected cohort.</div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>NPS taxonomy and two operating squads at a hypergrowth courier platform</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Marketplace was treating NPS as a single number reported to the C-level. Trend was getting worse but the source was opaque.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">The number told you the leak was getting worse. It did not tell you where to fix.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Categorized feedback into motive x sub-motive x root cause. The Pareto chart concentrated 60-70% of dollar leak in two categories: defect rate (damaged items, wrong items) and late delivery. The fix-it vs absorb-it math made the engineering case.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Two operating squads stood up (defect rate squad and late delivery squad) with the taxonomy as their operating system. <strong>Defect rate moved from 6% to 3%. Late delivery moved from 5.5% to 3.6% in 6 months.</strong> NPS up 11 points, per-order cost down meaningfully.</div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 3</span>The CFO conversation that unlocked the engineering budget</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Ops leader at a marketplace knew the upstream cause of half the support volume. Engineering was booked for two quarters. The fix was competing with 18 features in the backlog.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Anecdotes lose to features. The fix needed a dollar number and a payback period.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Annual leak at $1.4M, payback period 4.2 months, year-1 NPV positive by $480K. Sensitivity card showed even the -30% case still paid back inside 6 months.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Engineering slot approved at the next planning cycle. <strong>The taxonomy plus the math became the standard framing</strong> for every subsequent ops fix request inside the org.</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 11 -->
+  <section class="tool-section" id="tool-11">
+    <h2><span class="tool-tag">Tool #11</span>90-Day Operating Plan Generator</h2>
+    <p class="tool-intro">The structured one-pager every new operations leader needs. Generates 30-60-90 day plans mapped to JD priorities, with executive summary, per-priority deliverables, north star metrics, risk register, and asks to the leader. Transcript mining included.</p>
+    <a class="tool-link" href="operating-plan-generator.html">Open the generator</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>The post-panel follow-up that moved a candidate to offer</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Director ops candidate at a B2B marketplace had a strong case panel but partial answers on two execution-specific questions. The hiring manager liked the diagnosis, was unsure about the operating side.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">A thank-you email could not re-litigate the answers. The candidate needed to demonstrate operating depth on paper without restating the panel.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Generated a 90-day plan mapped to the actual JD priorities the candidate had memorized. Included the dispatch mechanism the candidate had drifted on in the panel, with the SLA plus routing model plus volume guarantees fully spelled out as a Day 60 deliverable.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Sent as the post-panel artifact. The hiring manager forwarded to two skip-level stakeholders. <strong>Offer at 12% above initial range.</strong></div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>The internal scaffold that compresses 90-day planning to one day</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Newly hired ops director at a scale-up CPG. Three direct reports waiting for the operating plan. CEO wanted it by end of week 1.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Writing the plan from blank page across 5 priorities means a lot of structural decisions about phasing, owner-of-record, metric definitions, before any content.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Loaded the scale-up CPG preset, swapped priorities to the actual JD list, generated the scaffold in 90 seconds. The director then spent the rest of the day editing for company-specific context (vendor names, site numbers, real metrics they could track).</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val"><strong>Final plan landed Thursday of week 1.</strong> Three pages, mapped to JD priorities, with named owners. CEO greenlit at the Friday review with two specific edits, both on metric targets, not structure.</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 12 -->
+  <section class="tool-section" id="tool-12">
+    <h2><span class="tool-tag">Tool #12</span>Vendor Performance Scorecard</h2>
+    <p class="tool-intro">Rank vendors against a weighted multi-dimensional scorecard (on-time, defect, cost, lead time, response). A/B/C tier classification with sensitivity analysis on weights, per-vendor action recommendations, and money-on-the-table math.</p>
+    <a class="tool-link" href="vendor-scorecard.html">Open the scorecard</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>Multifamily kit sourcing with overseas manufacturers</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Multifamily renovation supply firm sourcing 8-15 manufacturers across cabinets, flooring, lighting, plumbing fixtures, hardware out of China and Vietnam.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Lead times unpredictable, defect rates variable, communication latency from time zones made everything slower. No scorecard rhythm meant vendor conversations were anecdotal.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Kit sourcing preset ranked top 3 vendors (score 80+) holding 65% of volume, surfaced 2 bottom-tier vendors with combined volume drag of $180K annualized.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Renegotiated 2 bottom-tier vendors on volume commitment, 30-day improvement plans, cycle-2 PO shifted 18% of volume to top performers. <strong>Cost-per-unit down 4% in one cycle.</strong></div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>3PL last-mile carrier renegotiation cycle</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Logistics operator with 15+ last-mile carriers across regions, vendor performance drifting month over month.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">On-time delivery had dropped from 91% to 78% across the carrier base over two quarters and nobody had time to investigate carrier by carrier.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">3PL preset ranked all carriers, surfaced 3 bottom-tier carriers driving most of the on-time drop, generated peer-relative scorecards for each.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Walked into each renegotiation with the carrier's own data. Zero carriers lost from the network. <strong>On-time recovered from 78% to 91% in two quarters</strong>, cost-per-handover down 6% on the bottom-tier renegotiations.</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 13 -->
+  <section class="tool-section" id="tool-13">
+    <h2><span class="tool-tag">Tool #13</span>Driver / Courier Performance Scorecard</h2>
+    <p class="tool-intro">Rank drivers and couriers on weighted multi-dimensional performance, with tenure-based bias correction so new drivers are not unfairly penalized by thin data. Four-tier classification, best-gets-first-call simulation, turnover risk surfacing.</p>
+    <a class="tool-link" href="driver-scorecard.html">Open the scorecard</a>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 1</span>Instant delivery driver onboarding leak</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Instant-needs delivery platform onboarding around 500 drivers per month across markets.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Dashboard reported 500 onboardings, P&amp;L showed 220 never delivered a second order. Average cost per onboarding around $180. That was $40K per month of sunk onboarding cost on drivers who churned in week 1.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Instant delivery preset with bias correction ON identified 38% of new drivers (under 30 days) in Watch or At-Risk tier despite limited data. Targeted intervention list ready by week 2.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val">Week-2 intervention recovered 24% of Watch-tier new drivers to Reliable by day 30. At-Risk new drivers cut early before more onboarding investment. <strong>Onboarding-to-second-order rate moved from 56% to 71% in one quarter</strong>, around <strong>$95K annualized</strong>.</div></div>
+    </div>
+
+    <div class="case-card">
+      <h3><span class="case-label">Case 2</span>Gig courier supply during peak event</h3>
+      <div class="case-row"><div class="case-key">Setup</div><div class="case-val">Gig courier platform running 8,000 active couriers, Black Friday surge incoming.</div></div>
+      <div class="case-row"><div class="case-key">Problem</div><div class="case-val">Routing high-value orders to wrong courier during peak meant refunds, churn, customer feedback. Historical pattern: peak refund rate 2.1x normal week refund rate, with most of the spike on tail-tier couriers.</div></div>
+      <div class="case-row"><div class="case-key">Tool surfaced</div><div class="case-val">Gig courier preset plus best-gets-first-call sim confirmed Top tier could absorb 78% of peak volume across daily capacity. At-Risk tier paused for peak window, Reliable tier got high-value orders, At-Risk got low-stakes.</div></div>
+      <div class="case-row outcome"><div class="case-key">Outcome</div><div class="case-val"><strong>Peak refund rate stayed within 1.3x normal week (vs 2.1x prior peak).</strong> Avoided losses around <strong>$220K across the peak event</strong>. Tier-based dispatch became the peak-event playbook going forward.</div></div>
+    </div>
+  </section>
+
+  <div class="closer">
+    <h2>Want to put one of these to work?</h2>
+    <p>Every case maps back to a single-file HTML tool you can open and adapt to your own numbers. No install, no login, no tracking. Open source.</p>
+    <div class="closer-actions">
+      <a href="index.html" class="btn">Browse all tools</a>
+      <a href="https://linkedin.com/in/evertonpaula" target="_blank" rel="noopener" class="btn outline">Get in touch</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-grid">
+      <a href="index.html">All tools</a>
+      <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">GitHub repo</a>
+      <a href="https://linkedin.com/in/evertonpaula" target="_blank" rel="noopener">Built by Everton Paula</a>
+    </div>
+    <div>MIT License. No tracking. No login. Open source.</div>
+  </footer>
+
+</div>
+</body>
+</html>
