@@ -438,6 +438,99 @@
     accent-color: var(--accent);
   }
 
+  /* View toggle (Grid vs Map) */
+  .view-toggle {
+    display: inline-flex;
+    background: rgba(15, 31, 26, 0.6);
+    border: 1px solid #2e3d5f;
+    border-radius: 8px;
+    padding: 0.3rem;
+    margin-bottom: 1rem;
+    gap: 0.25rem;
+  }
+  .view-toggle-btn {
+    background: transparent;
+    color: var(--text-muted, #97a3b8);
+    border: none;
+    padding: 0.45rem 0.95rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-weight: 700;
+    transition: color 0.1s ease, background 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .view-toggle-btn:hover { color: var(--text, #e6ecf5); }
+  .view-toggle-btn.active {
+    background: var(--accent, #14b8a6);
+    color: #042f2e;
+  }
+  .view-toggle-btn .new-pill {
+    background: rgba(255, 255, 255, 0.18);
+    color: inherit;
+    font-size: 0.62rem;
+    padding: 0.05rem 0.32rem;
+    border-radius: 3px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .view-toggle-btn.active .new-pill { background: rgba(0, 0, 0, 0.22); color: #042f2e; }
+
+  /* Leaflet map container */
+  .leaflet-map-wrap {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #2e3d5f;
+    background: #0b1220;
+    height: 500px;
+    width: 100%;
+    position: relative;
+  }
+  #leafletMap { height: 100%; width: 100%; }
+  .leaflet-map-wrap .map-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted, #97a3b8);
+    font-size: 0.9rem;
+    background: #0b1220;
+    z-index: 1000;
+    pointer-events: none;
+  }
+  .leaflet-map-wrap .map-loading.hidden { display: none; }
+  /* Leaflet style overrides to match toolkit theme */
+  .leaflet-popup-content-wrapper {
+    background: #131c33 !important;
+    color: #e6ecf5 !important;
+    border: 1px solid #2e3d5f !important;
+    border-radius: 8px !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+  .leaflet-popup-tip { background: #131c33 !important; border: 1px solid #2e3d5f !important; }
+  .leaflet-popup-content { margin: 0.65rem 0.85rem !important; line-height: 1.5 !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; font-size: 0.85rem !important; }
+  .leaflet-popup-content strong { color: #2dd4bf; }
+  .leaflet-popup-close-button { color: #97a3b8 !important; padding: 4px 6px 0 0 !important; }
+  .leaflet-control-attribution {
+    background: rgba(15, 31, 26, 0.85) !important;
+    color: #97a3b8 !important;
+    font-size: 0.66rem !important;
+    border-radius: 4px 0 0 0 !important;
+    padding: 0.18rem 0.5rem !important;
+  }
+  .leaflet-control-attribution a { color: #14b8a6 !important; }
+  .leaflet-control-zoom a {
+    background: #131c33 !important;
+    color: #e6ecf5 !important;
+    border-color: #2e3d5f !important;
+  }
+  .leaflet-control-zoom a:hover { background: #14b8a6 !important; color: #042f2e !important; }
+
   .polygon-map-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -811,8 +904,16 @@
     <div class="polygon-map-card">
       <h2>City zones — current state</h2>
       <div class="map-sub">Each polygon is a zone running its own PID surge controller. Color shows current MAPE status. Click any zone to see its detail. Drag the time scrubber above to see how the city evolves across 24h.</div>
-      <div class="polygon-svg-wrap">
+      <div class="view-toggle" role="tablist" aria-label="Map view mode">
+        <button class="view-toggle-btn active" data-view="grid" role="tab" aria-selected="true">Grid view</button>
+        <button class="view-toggle-btn" data-view="map" role="tab" aria-selected="false">Map view <span class="new-pill">Austin</span></button>
+      </div>
+      <div class="polygon-svg-wrap" id="polygonGridView">
         <svg class="polygon-svg" id="polygonSvg" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="leaflet-map-wrap" id="polygonMapView" style="display: none;">
+        <div id="leafletMap"></div>
+        <div class="map-loading" id="mapLoading">Loading map tiles, hold on a second.</div>
       </div>
       <div class="legend-row">
         <span><span class="legend-swatch" style="background: var(--green)"></span>MAPE &lt; 15% — balanced</span>
@@ -1207,6 +1308,7 @@ const state = {
   cityComparisonResult: null,
   scrubTick: 144,         // start at midday
   selectedPolygonId: null,
+  polygonView: 'grid',    // 'grid' or 'map'
   isPlaying: false,
   playInterval: null
 };
@@ -1512,6 +1614,188 @@ function renderPolygonMap() {
   });
 
   renderPolygonDetail();
+
+  // Keep Leaflet map in sync if it's loaded (works whether visible or not)
+  if (leafletState.map) updateLeafletPolygonColors();
+}
+
+// === LEAFLET MAP VIEW ===
+const AUSTIN_CENTER = [30.2672, -97.7431];
+const GRID_LAT_HALF = 0.06;
+const GRID_LNG_HALF = 0.075;
+
+function polygonLatLngBounds(row, col) {
+  const cellLat = (GRID_LAT_HALF * 2) / 3;
+  const cellLng = (GRID_LNG_HALF * 2) / 3;
+  const south = AUSTIN_CENTER[0] + GRID_LAT_HALF - (row + 1) * cellLat;
+  const north = south + cellLat;
+  const west = AUSTIN_CENTER[1] - GRID_LNG_HALF + col * cellLng;
+  const east = west + cellLng;
+  return [[south, west], [south, east], [north, east], [north, west]];
+}
+
+let leafletState = {
+  loaded: false,
+  loading: false,
+  map: null,
+  polygonLayers: {},
+  hasInitView: false
+};
+
+function ensureLeafletLoaded(cb) {
+  if (leafletState.loaded || window.L) {
+    leafletState.loaded = true;
+    cb();
+    return;
+  }
+  if (leafletState.loading) {
+    const wait = setInterval(() => {
+      if (leafletState.loaded || window.L) {
+        clearInterval(wait);
+        leafletState.loaded = true;
+        cb();
+      }
+    }, 80);
+    return;
+  }
+  leafletState.loading = true;
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+  css.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+  css.crossOrigin = 'anonymous';
+  document.head.appendChild(css);
+  const script = document.createElement('script');
+  script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+  script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+  script.crossOrigin = 'anonymous';
+  script.onload = () => {
+    leafletState.loaded = true;
+    leafletState.loading = false;
+    cb();
+  };
+  script.onerror = () => {
+    leafletState.loading = false;
+    const el = $('mapLoading');
+    if (el) { el.textContent = 'Could not load map tiles. Check your connection and try again.'; el.classList.remove('hidden'); }
+  };
+  document.head.appendChild(script);
+}
+
+function initLeafletMap() {
+  if (leafletState.map) return;
+  const L = window.L;
+  const map = L.map('leafletMap', {
+    center: AUSTIN_CENTER,
+    zoom: 11,
+    minZoom: 10,
+    maxZoom: 14,
+    zoomControl: true,
+    attributionControl: true,
+    scrollWheelZoom: false
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Click anywhere outside polygons to enable scroll wheel zoom (UX courtesy)
+  map.on('click', () => map.scrollWheelZoom.enable());
+  map.on('mouseout', () => map.scrollWheelZoom.disable());
+
+  leafletState.map = map;
+  rebuildLeafletPolygons();
+  setTimeout(() => map.invalidateSize(), 50);
+  const el = $('mapLoading');
+  if (el) el.classList.add('hidden');
+}
+
+function rebuildLeafletPolygons() {
+  if (!leafletState.map || !window.L) return;
+  const L = window.L;
+  // Clear previous layers
+  Object.values(leafletState.polygonLayers).forEach(layer => layer.remove());
+  leafletState.polygonLayers = {};
+
+  state.polygonResults.forEach(r => {
+    const p = r.polygon;
+    const latLngs = polygonLatLngBounds(p.row, p.col);
+    const mapeNow = r.mape[state.scrubTick];
+    const surgeNow = r.surge[state.scrubTick];
+    const tier = getMapeTier(mapeNow);
+    const fillColor = tierColor(tier);
+    const fillOpacity = 0.42 + Math.min(mapeNow / 50, 0.45);
+
+    const polygon = L.polygon(latLngs, {
+      color: state.selectedPolygonId === p.id ? '#2dd4bf' : fillColor,
+      weight: state.selectedPolygonId === p.id ? 3 : 1.5,
+      fillColor,
+      fillOpacity,
+      smoothFactor: 1
+    }).addTo(leafletState.map);
+
+    polygon.bindTooltip(
+      '<strong>' + p.name + '</strong><br>MAPE ' + mapeNow.toFixed(0) + '% • Surge ' + surgeNow.toFixed(2) + 'x',
+      { permanent: false, direction: 'top', className: 'leaflet-zone-tip', sticky: true }
+    );
+
+    polygon.on('click', () => {
+      selectPolygon(p.id);
+    });
+
+    leafletState.polygonLayers[p.id] = polygon;
+  });
+
+  if (!leafletState.hasInitView) {
+    leafletState.hasInitView = true;
+    const allBounds = L.latLngBounds(state.polygonResults.flatMap(r => polygonLatLngBounds(r.polygon.row, r.polygon.col)));
+    leafletState.map.fitBounds(allBounds, { padding: [20, 20] });
+  }
+}
+
+function updateLeafletPolygonColors() {
+  if (!leafletState.map || !window.L) return;
+  state.polygonResults.forEach(r => {
+    const p = r.polygon;
+    const layer = leafletState.polygonLayers[p.id];
+    if (!layer) return;
+    const mapeNow = r.mape[state.scrubTick];
+    const surgeNow = r.surge[state.scrubTick];
+    const tier = getMapeTier(mapeNow);
+    const fillColor = tierColor(tier);
+    const fillOpacity = 0.42 + Math.min(mapeNow / 50, 0.45);
+    layer.setStyle({
+      color: state.selectedPolygonId === p.id ? '#2dd4bf' : fillColor,
+      weight: state.selectedPolygonId === p.id ? 3 : 1.5,
+      fillColor,
+      fillOpacity
+    });
+    layer.setTooltipContent('<strong>' + p.name + '</strong><br>MAPE ' + mapeNow.toFixed(0) + '% • Surge ' + surgeNow.toFixed(2) + 'x');
+  });
+}
+
+function switchPolygonView(view) {
+  document.querySelectorAll('.view-toggle-btn').forEach(b => {
+    const isActive = b.dataset.view === view;
+    b.classList.toggle('active', isActive);
+    b.setAttribute('aria-selected', isActive);
+  });
+  const gridEl = $('polygonGridView');
+  const mapEl = $('polygonMapView');
+  if (view === 'map') {
+    gridEl.style.display = 'none';
+    mapEl.style.display = 'block';
+    ensureLeafletLoaded(() => {
+      initLeafletMap();
+      updateLeafletPolygonColors();
+      if (leafletState.map) setTimeout(() => leafletState.map.invalidateSize(), 100);
+    });
+  } else {
+    mapEl.style.display = 'none';
+    gridEl.style.display = '';
+  }
+  state.polygonView = view;
 }
 
 function renderPolygonDetail() {
@@ -1642,6 +1926,11 @@ $('scrubber').addEventListener('input', e => {
 // Play button
 $('playBtn').addEventListener('click', togglePlay);
 
+// Polygon view toggle (Grid vs Map)
+document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchPolygonView(btn.dataset.view));
+});
+
 // Init
 renderScenarios();
 recomputeCity();
@@ -1649,6 +1938,9 @@ updateScrubber();
 
 window.addEventListener('resize', () => {
   if (state.mode === 'city') drawCityCharts();
+  if (leafletState.map && state.polygonView === 'map') {
+    setTimeout(() => leafletState.map.invalidateSize(), 50);
+  }
 });
 </script>
 </body>
