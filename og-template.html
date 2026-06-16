@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OG Image Template · Marketplace Ops Toolkit</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #e2e8f0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 40px 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .instructions {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 16px 22px;
+    color: #0f172a;
+    font-size: 14px;
+    line-height: 1.55;
+    max-width: 1180px;
+  }
+  .instructions strong { color: #0d9488; }
+  .instructions code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace;
+    font-size: 12.5px;
+  }
+
+  /* The actual OG card. Exact 1200x630 box. */
+  .og-card {
+    width: 1200px;
+    height: 630px;
+    background:
+      radial-gradient(800px 500px at 85% -10%, rgba(13, 148, 136, 0.10), transparent 60%),
+      radial-gradient(700px 400px at -10% 110%, rgba(20, 184, 166, 0.08), transparent 55%),
+      linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #cbd5e1;
+    padding: 64px 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #0f172a;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .brand-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #0d9488;
+    box-shadow: 0 0 0 5px rgba(13, 148, 136, 0.18);
+  }
+  .brand {
+    color: #0d9488;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: 60px;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-weight: 800;
+    color: #0f172a;
+    max-width: 920px;
+    margin-top: 18px;
+  }
+  h1 .accent { color: #0d9488; }
+
+  .tagline {
+    color: #475569;
+    font-size: 22px;
+    line-height: 1.5;
+    margin-top: 18px;
+    max-width: 880px;
+  }
+
+  .tools-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: auto;
+  }
+  .tool-tile {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .tool-tile::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 3px;
+    background: #0d9488;
+    opacity: 0.85;
+  }
+  .tool-tile .num {
+    color: #0d9488;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace;
+    text-transform: uppercase;
+  }
+  .tool-tile .name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+    margin-top: 6px;
+  }
+  .tool-tile .blurb {
+    font-size: 12.5px;
+    color: #475569;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid #cbd5e1;
+  }
+  .author {
+    color: #475569;
+    font-size: 15px;
+  }
+  .author strong { color: #0f172a; font-weight: 700; }
+  .url {
+    color: #0d9488;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace;
+  }
+</style>
+</head>
+<body>
+
+  <div class="instructions">
+    <strong>Open Graph hero image template (1200 × 630).</strong>
+    To capture: open DevTools (<code>F12</code> or <code>Cmd+Opt+I</code>), open the rendering menu (three-dot menu in DevTools → More tools → Rendering), or use the device toolbar to set a custom viewport at <code>1200 × 630</code>. Then run <code>document.querySelector('.og-card')</code> and screenshot only that element (or use a full-page screenshot once the viewport matches). Save the resulting PNG to <code>images/og-toolkit.png</code>.
+    Easiest path: zoom the page to fit, then <strong>right-click the card → Capture node screenshot</strong> from DevTools' element inspector.
+  </div>
+
+  <div class="og-card">
+    <div>
+      <div class="brand-row">
+        <span class="brand-dot"></span>
+        <span class="brand">Marketplace Ops Toolkit</span>
+      </div>
+      <h1>Practical tools for <span class="accent">operations leaders</span> making decisions at scale.</h1>
+      <p class="tagline">Fraud, supply chain, workforce planning, vendor management, driver performance, escalation triage, 90-day operating plans. Open source, single-file HTML, no install.</p>
+    </div>
+
+    <div class="tools-row">
+      <div class="tool-tile">
+        <div class="num">Tool #11 · New</div>
+        <div class="name">90-Day Operating Plan Generator</div>
+        <div class="blurb">The structured one-pager every new ops leader needs.</div>
+      </div>
+      <div class="tool-tile">
+        <div class="num">Tool #12</div>
+        <div class="name">Vendor Performance Scorecard</div>
+        <div class="blurb">Weighted multi-dimensional scorecard with tier classification.</div>
+      </div>
+      <div class="tool-tile">
+        <div class="num">Tool #6</div>
+        <div class="name">Logistics Supply Forecaster</div>
+        <div class="blurb">Translate forecasts into couriers, vehicles, sorters.</div>
+      </div>
+      <div class="tool-tile">
+        <div class="num">Tool #8</div>
+        <div class="name">Escalation Decision Calculator</div>
+        <div class="blurb">Auto-resolve, wait, route, or page. The taxonomy.</div>
+      </div>
+    </div>
+
+    <div class="footer-row">
+      <div class="author">Built by <strong>Everton Paula</strong> · 13 tools open source · MIT License</div>
+      <div class="url">everpaula.github.io/marketplace-ops-toolkit</div>
+    </div>
+  </div>
+
+</body>
+</html>
