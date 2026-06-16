@@ -1,8 +1,40 @@
 # Marketplace Ops Toolkit
 
-> Practical tools for operations leaders making decisions at scale. Fraud, supply chain, workforce planning, vendor management, driver performance, dispute investigation. Anywhere an ops decision deserves the actual numbers, not intuition.
+> Thirteen interactive ops tools an operator wishes existed. Single-file HTML, no install, no signup, MIT licensed.
 
-Open-source methodologies and simulators for evaluating, scaling, and tuning operational decisions. Built from years of hands-on multi-country marketplace and consumer fintech operations, sanitized and generalized so any ops leader can adapt them to their own context.
+I'm Everton Paula. Fifteen years running marketplace operations across nine countries, most recently as Regional Operations Director at a multi-country ride-hail marketplace covering $40M in P&L. These tools are everything I either kept rewriting at every job or wanted to build but never had the engineering cycles for. Nothing in the toolkit phones home, requires an account, or runs server-side. Fork them, embed them, build paid versions on top of them, none of my business.
+
+[**Browse the tools**](#tools) · [**Twenty-two case studies**](./case-studies.html) · [**Plenor Group**](https://plenorgroup.com)
+
+---
+
+## Start here
+
+If you are new to the toolkit, the three I would hand you first:
+
+### → [90-Day Operating Plan Generator](./operating-plan-generator.html) (new)
+
+Paste a meeting transcript, onboarding 1:1 notes, or JD walkthrough text. The tool runs client-side heuristic extraction (no LLM call, no upload, runs offline) and surfaces candidate priorities, named stakeholders, and metrics from the raw text. Drop them into a five-priority structure and the tool generates a 30/60/90 day plan with executive summary, per-priority deliverables across discover/decide/deploy phases, north star metrics, risk register, and asks to the leader. Markdown and plain-text export.
+
+Built because every new ops director I onboarded burned their first month writing 90-day plans from scratch and missing half the commitments buried in their kickoff calls.
+
+### → [Vendor Performance Scorecard](./vendor-scorecard.html)
+
+Weighted multi-dimensional scorecard across five dimensions with A/B/C tier classification, sensitivity analysis on weights, per-vendor action recommendations, and money-on-the-table math. Share-by-URL state encoding so a filled-out scorecard becomes a link you can send to a partner without giving them write access to your sheet.
+
+### → [Marketplace Surge Simulator V2](./surge-pid.html)
+
+PID control simulator for surge pricing across nine city zones, with a Leaflet + H3-style hex map view over a real city base (theme-aware tile layer). City-average surge hides geographic imbalance. Tune the zone, not the city.
+
+---
+
+## Why this exists
+
+Every ops director I know carries a folder of spreadsheets from job to job. Surge calculator, chargeback tracker, vendor scorecard, agent ROI model, workforce forecast, defect taxonomy. We rebuild them every two years because the last version belongs to the last employer.
+
+This toolkit ends the rebuild. Thirteen tools, MIT licensed, all single-file HTML so they survive any framework change. If you run ops anywhere, fork them.
+
+The [case studies page](./case-studies.html) is the part I would actually read first. Twenty-two anonymized stories of when each tool moved a number, with setup, problem, what the tool surfaced, and outcome.
 
 ---
 
@@ -741,12 +773,13 @@ MIT. Use freely. If it helps you make a better decision, that's enough.
 
 ## About me
 
-I'm Everton Paula. I spent the last 12+ years building and running operations at hypergrowth marketplaces and consumer fintech across multiple countries. Fraud, marketplace ops, logistics, vendor management, workforce planning at scale. This toolkit codifies the recurring patterns I've seen work, framed in a way any operations leader can adapt to their own environment.
+Everton Paula, based in Tampa FL. Fifteen years running operations at hypergrowth marketplaces and consumer fintech across nine countries. Fraud, marketplace ops, logistics, vendor management, workforce planning, supply quality at scale. This toolkit codifies recurring patterns I have seen work, framed so any ops leader can adapt them to their own environment.
 
-Currently based in Tampa, FL, focused on Director / Head roles in operations and fraud operations at consumer fintech and marketplaces.
+I run [Plenor Group](https://plenorgroup.com), a fractional ops advisory built around the toolkit. If you have used a tool and want a version tailored to your business, or you want me embedded for a 90-day install, that is where to find me.
 
 - LinkedIn: [linkedin.com/in/evertonpaula](https://linkedin.com/in/evertonpaula)
 - GitHub: [github.com/everpaula](https://github.com/everpaula)
+- Plenor Group: [plenorgroup.com](https://plenorgroup.com)
 
 ---
 
