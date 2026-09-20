@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <title>Marketplace Ops Toolkit — Open-source calculators for operations leaders</title>
 <meta name="description" content="12 open-source tools for operations leaders: agent ROI, vendor scorecards, driver performance, workforce forecasting, surge pricing, fraud detection, customer feedback cost, 90-day operating plan, escalation decision. Single-file HTML, no install. Built by Everton Paula.">
 <link rel="canonical" href="https://everpaula.github.io/marketplace-ops-toolkit/">
@@ -21,6 +22,10 @@
 
 <meta name="author" content="Everton Paula">
 <meta name="robots" content="index, follow, max-image-preview:large">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
 <script type="application/ld+json">
 {
@@ -61,594 +66,565 @@
   ]
 }
 </script>
+
 <style>
   :root {
-    --bg: #0b1220;
-    --bg-elev: #131c33;
-    --border: #1f2a44;
-    --border-bright: #2e3d5f;
-    --text: #f1f5f9;
-    --text-muted: #b8c5d9;
-    --accent: #14b8a6;
+    --paper: #faf9f7;
+    --paper-alt: #fff;
+    --ink: #16150f;
+    --ink-2: #413d36;
+    --ink-3: #6b665c;
+    --rule: #d6d1c7;
+    --rule-soft: #e4e0d8;
+    --accent: #c2410c;
+    --accent-ink: #fff;
+    --code-font: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --body-font: 'Space Grotesk', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   }
-  html { font-size: 17px; }
-  :root[data-theme="light"] {
-    --bg: #ffffff;
-    --bg-elev: #f8fafc;
-    --bg-card: #ffffff;
-    --bg-sunken: #f1f5f9;
-    --border: #e2e8f0;
-    --border-bright: #cbd5e1;
-    --text: #0f172a;
-    --text-muted: #475569;
-    --text-faint: #64748b;
-    --accent: #0d9488;
-    --accent-bright: #0f766e;
-    --accent-soft: rgba(13, 148, 136, 0.08);
-    --accent-softer: rgba(13, 148, 136, 0.04);
-    --accent-border: rgba(13, 148, 136, 0.35);
-    --green: #059669;
-    --green-soft: rgba(5, 150, 105, 0.10);
-    --green-border: rgba(5, 150, 105, 0.32);
-    --yellow: #ca8a04;
-    --yellow-soft: rgba(202, 138, 4, 0.10);
-    --yellow-border: rgba(202, 138, 4, 0.32);
-    --orange: #ea580c;
-    --orange-soft: rgba(234, 88, 12, 0.10);
-    --orange-border: rgba(234, 88, 12, 0.32);
-    --red: #dc2626;
-    --red-soft: rgba(220, 38, 38, 0.10);
-    --red-border: rgba(220, 38, 38, 0.32);
-    --blue: #2563eb;
-    --purple: #7c3aed;
-    --purple-soft: rgba(124, 58, 237, 0.10);
+  :root[data-theme="dark"] {
+    --paper: #16150f;
+    --paper-alt: #1e1c15;
+    --ink: #faf9f7;
+    --ink-2: #d5cfc2;
+    --ink-3: #a09a8c;
+    --rule: #35322a;
+    --rule-soft: #292620;
+    --accent: #f97316;
   }
-  /* Theme toggle button (light/dark) */
+  * { box-sizing: border-box; }
+  html { font-size: 16px; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body-font);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: inherit; text-decoration: none; }
+  a:hover { text-decoration: none; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0; }
+
+  /* Theme toggle */
   #theme-toggle {
     position: fixed;
-    top: 0.85rem;
-    right: 0.85rem;
-    z-index: 9999;
-    background: var(--bg-elev);
-    color: var(--text);
-    border: 1px solid var(--border-bright);
-    border-radius: 8px;
-    width: 38px;
-    height: 38px;
+    top: 12px;
+    right: 14px;
+    z-index: 100;
+    background: var(--paper-alt);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    width: 34px;
+    height: 34px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-    padding: 0;
+    font-family: var(--code-font);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    transition: border-color .15s;
   }
-  #theme-toggle:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  #theme-toggle:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-  #theme-toggle svg { display: block; }
+  #theme-toggle:hover { border-color: var(--ink); }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-  }
-  .container { max-width: 880px; margin: 0 auto; padding: 3rem 1.5rem; }
-
-  .brand {
-    color: var(--accent);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 0.6rem;
-  }
-  h1 {
-    font-size: 2.2rem;
-    margin-bottom: 1rem;
-    letter-spacing: -0.01em;
-    line-height: 1.2;
-  }
-  .tagline {
-    color: var(--text-muted);
-    font-size: 1.05rem;
-    margin-bottom: 2.5rem;
-    max-width: 680px;
+  /* Card container (all sections share the paper card) */
+  .card {
+    background: var(--paper-alt);
+    color: var(--ink);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.08);
+    margin: 32px auto 48px;
   }
 
-  /* Featured hero band */
-  .featured-label {
-    color: var(--accent);
-    font-size: 0.76rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    margin-bottom: 0.7rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
+  /* Nav */
+  nav.top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 44px; height: 60px;
+    border-bottom: 1px solid var(--ink);
   }
-  .featured-label::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.18);
+  nav.top .logo {
+    font-family: var(--code-font);
+    font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  }
+  nav.top .links {
+    display: flex; align-items: center; gap: 28px;
+    font-family: var(--code-font);
+    font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  nav.top .links a:hover { color: var(--ink); }
+  nav.top .gh {
+    background: var(--ink); color: var(--paper);
+    padding: 7px 14px; border-radius: 3px; letter-spacing: 0.08em;
+  }
+
+  /* Hero */
+  .hero {
+    display: grid; grid-template-columns: 1.35fr 1fr;
+    gap: 56px; padding: 56px 44px 44px;
+  }
+  .hero-left { display: flex; flex-direction: column; gap: 22px; }
+  .hero h1 {
+    margin: 0;
+    font-size: 52px; line-height: 1.03;
+    font-weight: 600; letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+  .hero-lede {
+    margin: 0;
+    font-size: 17px; line-height: 1.55;
+    color: var(--ink-2); max-width: 52ch;
+  }
+  .cta-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 15px; font-weight: 600;
+    padding: 13px 22px; border-radius: 3px;
+    border: 1px solid var(--accent);
+    display: inline-block;
+  }
+  .btn-primary:hover { filter: brightness(0.94); }
+  .btn-secondary {
+    font-size: 15px; font-weight: 500;
+    padding: 13px 20px; border: 1px solid var(--ink);
+    border-radius: 3px; color: var(--ink);
+    display: inline-block;
+  }
+  .btn-secondary:hover { background: var(--ink); color: var(--paper); }
+
+  .problem-panel {
+    border: 1px solid var(--rule);
+    background: var(--paper-alt);
+    padding: 22px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .problem-label {
+    font-family: var(--code-font);
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .problem-list { display: flex; flex-direction: column; gap: 8px; }
+  .problem-item {
+    display: flex; justify-content: space-between; align-items: center;
+    border: 1px solid var(--rule); padding: 11px 14px;
+    font-size: 14px;
+    transition: border-color .12s, background .12s;
+  }
+  .problem-item:hover { border-color: var(--ink); }
+  .problem-item.featured { border: 1px solid var(--ink); font-weight: 500; }
+  .problem-item .num {
+    font-family: var(--code-font); font-size: 12px;
+    color: var(--ink-3);
+  }
+  .problem-item.featured .num { color: var(--accent); }
+
+  /* Credential strip */
+  .creds {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+  }
+  .creds .cell {
+    padding: 20px 24px;
+    border-right: 1px solid var(--rule);
+  }
+  .creds .cell:last-child { border-right: 0; }
+  .creds .num {
+    font-family: var(--code-font);
+    font-size: 26px; font-weight: 700; letter-spacing: -0.02em;
+  }
+  .creds .label {
+    font-size: 13px; color: var(--ink-3); margin-top: 3px;
+  }
+
+  /* Section titles */
+  .section-tag {
+    font-family: var(--code-font);
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* Featured "Start here" */
+  .featured { padding: 44px 44px 12px; }
+  .featured-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 20px;
   }
   .featured-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.9rem;
-    margin-bottom: 1.5rem;
+    display: grid; grid-template-columns: 1.1fr 1fr;
+    gap: 20px;
   }
-  @media (max-width: 720px) { .featured-grid { grid-template-columns: 1fr; } }
-  .featured-card {
-    background: var(--bg-elev);
-    border: 1px solid var(--border-bright);
-    border-radius: 10px;
-    padding: 1.3rem 1.4rem 1.2rem;
-    text-decoration: none;
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 170px;
-    transition: border-color 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
-    position: relative;
-    overflow: hidden;
+  .feat-card {
+    background: var(--paper-alt);
+    border: 1px solid var(--rule);
+    display: flex; flex-direction: column;
+    transition: border-color .15s;
   }
-  .featured-card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), transparent 50%);
-    pointer-events: none;
-    opacity: 0.85;
+  .feat-card.primary { border-color: var(--ink); }
+  .feat-card:hover { border-color: var(--ink); }
+  .feat-svg { width: 100%; height: 200px; display: block; background: #f1efea; }
+  :root[data-theme="dark"] .feat-svg { background: #24211a; }
+  .feat-body {
+    padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 8px;
+    border-top: 1px solid var(--rule);
   }
-  .featured-card > * { position: relative; z-index: 1; }
-  :root[data-theme="light"] .featured-card {
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  .feat-card.primary .feat-body { border-top-color: var(--ink); }
+  .feat-meta {
+    display: flex; gap: 8px; align-items: center;
   }
-  :root[data-theme="light"] .featured-card:hover {
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  .feat-num {
+    font-family: var(--code-font); font-size: 11px;
+    color: var(--accent); font-weight: 700;
   }
-  .featured-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-1px);
+  .badge {
+    font-family: var(--code-font); font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 2px;
   }
-  .featured-card .feat-num {
-    color: var(--accent);
-    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
+  .badge.v2 { background: var(--ink); color: var(--paper); }
+  .badge.new { background: var(--accent); color: var(--accent-ink); }
+  .feat-title {
+    font-size: 21px; font-weight: 600; letter-spacing: -0.015em;
   }
-  .featured-card .feat-num .new-pill {
-    background: var(--accent);
-    color: #042f2e;
-    padding: 0.1rem 0.45rem;
-    border-radius: 3px;
-    margin-left: 0.5rem;
-    font-size: 0.66rem;
-    letter-spacing: 0.06em;
+  .feat-title.sm { font-size: 19px; }
+  .feat-desc {
+    font-size: 14.5px; line-height: 1.5; color: var(--ink-2);
   }
-  .featured-card .feat-title {
-    font-size: 1.18rem;
-    font-weight: 700;
-    margin-bottom: 0.55rem;
-    color: var(--text);
-    line-height: 1.3;
-    letter-spacing: -0.005em;
+  .feat-formula {
+    font-family: var(--code-font); font-size: 12px;
+    color: var(--ink-3); margin-top: 4px;
   }
-  .featured-card .feat-desc {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    line-height: 1.55;
-    margin-bottom: 1rem;
-    flex-grow: 1;
+  .featured-side { display: flex; flex-direction: column; gap: 20px; }
+  .featured-side .feat-card { flex: 1; }
+  .featured-side .feat-body {
+    padding: 20px 22px;
+    border-top: none;
   }
-  .featured-card .feat-cta {
-    color: var(--accent);
-    font-weight: 700;
-    font-size: 0.85rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-  }
-  .featured-card:hover .feat-cta { color: var(--accent-bright, #2dd4bf); }
-  .featured-card .feat-cta::after { content: "\2192"; }
+  .featured-side .feat-formula { margin-top: auto; padding-top: 8px; }
 
-  /* Case studies banner */
-  .cases-banner {
-    background: linear-gradient(135deg, rgba(167, 139, 250, 0.10), rgba(96, 165, 250, 0.06));
-    border: 1px solid rgba(167, 139, 250, 0.32);
-    border-radius: 10px;
-    padding: 1.1rem 1.5rem;
-    margin-bottom: 2.2rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    text-decoration: none;
-    color: var(--text);
-    transition: border-color 0.18s ease;
+  /* Grouped index */
+  .index-section { padding: 40px 44px 44px; }
+  .index-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 0 40px;
   }
-  .cases-banner:hover { border-color: #a78bfa; }
-  .cases-banner .cases-icon {
-    color: #a78bfa;
-    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
-    font-size: 1.1rem;
-    font-weight: 800;
-    background: rgba(167, 139, 250, 0.18);
-    border: 1px solid rgba(167, 139, 250, 0.35);
-    width: 38px;
-    height: 38px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
+  .index-domain { display: flex; flex-direction: column; }
+  .index-domain.mt { margin-top: 32px; }
+  .domain-title {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--accent);
+    padding-bottom: 8px; border-bottom: 1px solid var(--ink);
+  }
+  .index-row {
+    display: grid; grid-template-columns: 34px 1fr;
+    gap: 0 10px; align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    transition: background .12s;
+  }
+  .index-row:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+  .index-row .num {
+    font-family: var(--code-font); font-size: 12px; color: var(--ink-3);
+  }
+  .index-row .name {
+    font-size: 15.5px; font-weight: 600;
+  }
+  .index-row .desc {
+    font-size: 13.5px; color: var(--ink-3); line-height: 1.45;
+  }
+
+  /* Footer CTA */
+  footer.hero-foot {
+    display: grid; grid-template-columns: 1.4fr 1fr;
+    gap: 48px; padding: 40px 44px;
+    background: var(--ink); color: var(--paper);
+  }
+  footer.hero-foot .who {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  footer.hero-foot .name {
+    font-size: 26px; font-weight: 600; letter-spacing: -0.02em;
+  }
+  footer.hero-foot .bio {
+    font-size: 15px; line-height: 1.55;
+    color: #c9c4b8; max-width: 54ch;
+  }
+  footer.hero-foot .actions {
+    display: flex; flex-direction: column; gap: 10px;
     justify-content: center;
-    flex-shrink: 0;
   }
-  .cases-banner .cases-text {
-    flex: 1;
-    min-width: 220px;
+  footer.hero-foot .actions a {
+    text-align: center; padding: 13px;
+    font-size: 15px; font-weight: 500;
+    border-radius: 3px; display: block;
   }
-  .cases-banner .cases-text strong {
-    color: var(--text);
-    display: block;
-    font-size: 1rem;
-    margin-bottom: 0.18rem;
+  footer.hero-foot .actions a.primary {
+    background: var(--accent); color: var(--accent-ink); font-weight: 600;
   }
-  .cases-banner .cases-text span {
-    color: var(--text-muted);
-    font-size: 0.88rem;
-    line-height: 1.5;
+  footer.hero-foot .actions a.secondary {
+    border: 1px solid #4a4640; color: var(--paper);
   }
-  .cases-banner .cases-cta {
-    color: #a78bfa;
-    font-weight: 700;
-    font-size: 0.88rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    flex-shrink: 0;
-  }
-  .cases-banner .cases-cta::after { content: "\2192"; }
-  .cases-banner:hover .cases-cta { color: #c4b5fd; }
-
-  .all-tools-label {
-    color: var(--text-muted);
-    font-size: 0.76rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    margin-bottom: 0.85rem;
+  footer.hero-foot .actions a.primary:hover { filter: brightness(0.94); }
+  footer.hero-foot .actions a.secondary:hover {
+    border-color: var(--paper);
   }
 
-  .tools { display: grid; gap: 1rem; margin-bottom: 3rem; }
-  .tool-card {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.5rem;
-    transition: border-color 0.15s ease, background 0.15s ease;
-    text-decoration: none;
-    color: var(--text);
-    display: block;
+  /* Site footer under the card */
+  .site-foot {
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 13px;
+    padding: 24px 16px 40px;
   }
-  .tool-card:hover {
-    border-color: var(--border-bright);
-    background: #18223d;
-  }
-  .tool-card:hover .tool-title {
-    color: var(--accent);
-  }
-  .tool-title { transition: color 0.15s ease; }
-  .v2-tag {
-    display: inline-block;
-    background: var(--border-bright);
-    color: var(--text-muted);
-    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Consolas, monospace;
-    font-size: 0.68rem;
-    padding: 0.1rem 0.4rem;
-    border-radius: 3px;
-    margin-left: 0.4rem;
-    vertical-align: 2px;
-    letter-spacing: 0;
-    font-weight: 500;
-  }
-  .tool-card.coming-soon {
-    opacity: 0.5;
-    pointer-events: none;
-  }
-  .tool-num {
-    color: var(--accent);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 0.4rem;
-  }
-  .tool-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-  .tool-desc {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    margin-bottom: 0.8rem;
-  }
-  .tool-status {
-    display: inline-block;
-    font-size: 0.72rem;
-    padding: 0.2rem 0.6rem;
-    border-radius: 4px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .tool-status.live { background: var(--accent); color: #042f2e; }
-  .tool-status.soon { background: var(--border-bright); color: var(--text-muted); }
+  .site-foot a { color: var(--accent); }
+  .site-foot a:hover { text-decoration: underline; }
 
-  .footer {
-    color: var(--text-muted);
-    font-size: 0.88rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
+  /* Responsive */
+  @media (max-width: 900px) {
+    .card { margin: 16px 12px 32px; }
+    nav.top { padding: 0 24px; height: 56px; }
+    nav.top .links { gap: 18px; font-size: 11px; }
+    .hero { grid-template-columns: 1fr; gap: 32px; padding: 40px 24px 32px; }
+    .hero h1 { font-size: 38px; }
+    .creds { grid-template-columns: repeat(2, 1fr); }
+    .creds .cell:nth-child(2) { border-right: 0; }
+    .creds .cell:nth-child(3), .creds .cell:nth-child(4) {
+      border-top: 1px solid var(--rule);
+    }
+    .featured { padding: 32px 24px 8px; }
+    .featured-grid { grid-template-columns: 1fr; }
+    .index-section { padding: 32px 24px; }
+    .index-grid { grid-template-columns: 1fr; }
+    .index-domain.mt { margin-top: 24px; }
+    footer.hero-foot {
+      grid-template-columns: 1fr; padding: 32px 24px; gap: 24px;
+    }
   }
-  .footer p { margin-bottom: 0.6rem; }
-  .footer a { color: var(--accent); text-decoration: none; }
-  .footer a:hover { text-decoration: underline; }
-
-  .about-block {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
+  @media (max-width: 560px) {
+    .hero h1 { font-size: 32px; }
+    nav.top .links a:not(.gh) { display: none; }
   }
-  .about-block h2 {
-    color: var(--accent);
-    font-size: 0.8rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 0.8rem;
-  }
-  .about-block p {
-    color: var(--text);
-    font-size: 0.95rem;
-    margin-bottom: 0.7rem;
-  }
-  .about-block p strong { color: var(--accent); }
 </style>
 </head>
 <body>
-<div class="container">
 
-  <div class="brand">marketplace-ops-toolkit</div>
-  <h1>Practical tools for operations leaders making decisions at scale.</h1>
-  <p class="tagline">
-    Thirteen interactive tools, single-file HTML, no install, no signup, MIT licensed. Built by an operator with fifteen years running marketplace operations across nine countries, most recently a $40M P&amp;L as Regional Operations Director at a multi-country ride-hail marketplace. The tools are everything I either kept rewriting at every job or wanted to build but never had the engineering cycles for.
-  </p>
+<button id="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle light/dark theme">◐</button>
 
-  <div class="featured-label">Featured tools</div>
-  <div class="featured-grid">
-    <a class="featured-card" href="./operating-plan-generator.html">
-      <div>
-        <div class="feat-num">Tool #11<span class="new-pill">New</span></div>
-        <div class="feat-title">90-Day Operating Plan Generator</div>
-        <div class="feat-desc">Generate the 30-60-90 day plan every new ops leader needs. Per-priority deliverables, north star metrics, risk register, asks to the leader. Paste meeting transcripts to mine candidate priorities. Output as Markdown.</div>
-      </div>
-      <span class="feat-cta">Open</span>
-    </a>
-    <a class="featured-card" href="./vendor-scorecard.html">
-      <div>
-        <div class="feat-num">Tool #12</div>
-        <div class="feat-title">Vendor Performance Scorecard</div>
-        <div class="feat-desc">Rank vendors on a weighted multi-dimensional scorecard. A/B/C tier classification, sensitivity analysis on weights, action recommendations per vendor, money-on-the-table math. Share-by-URL state encoding.</div>
-      </div>
-      <span class="feat-cta">Open</span>
-    </a>
-    <a class="featured-card" href="./logistics-supply.html">
-      <div>
-        <div class="feat-num">Tool #6</div>
-        <div class="feat-title">Logistics Supply Forecaster</div>
-        <div class="feat-desc">Translate a marketplace forecast into required couriers, vehicles, sorters, dock capacity. V2 backlog cascade, two-layer capacity, operational levers. Two personas, side-by-side operational and financial output. Share-by-URL.</div>
-      </div>
-      <span class="feat-cta">Open</span>
-    </a>
-    <a class="featured-card" href="./surge-pid.html">
-      <div>
-        <div class="feat-num">Tool #3<span class="new-pill">Hex map</span></div>
-        <div class="feat-title">Marketplace Surge Simulator V2</div>
-        <div class="feat-desc">PID-controlled surge pricing across nine city zones, with a Leaflet plus H3-style hex map view over a real city base (theme-aware tile layer). City-average surge hides geographic imbalance. Tune the zone, not the city.</div>
-      </div>
-      <span class="feat-cta">Open</span>
-    </a>
-  </div>
+<div class="wrap">
+<article class="card">
 
-  <a class="cases-banner" href="./case-studies.html">
-    <span class="cases-icon">22</span>
-    <div class="cases-text">
-      <strong>Case studies</strong>
-      <span>Real operator decisions mapped to the tool that surfaced the answer. Fraud, supply, workforce, customer ops, logistics, last-mile.</span>
+  <nav class="top">
+    <div class="logo">marketplace-ops-toolkit</div>
+    <div class="links">
+      <a href="#tools">Tools</a>
+      <a href="./case-studies.html">Case studies</a>
+      <a href="./about.html">About</a>
+      <a class="gh" href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">GitHub</a>
     </div>
-    <span class="cases-cta">Browse cases</span>
-  </a>
+  </nav>
 
-  <div class="all-tools-label">All tools</div>
-
-  <div class="tools">
-
-    <a href="./agent-roi.html" class="tool-card">
-      <div class="tool-num">Tool #1</div>
-      <div class="tool-title">Agent ROI Calculator <span class="v2-tag">v2</span></div>
-      <div class="tool-desc">
-        Decide which manual review queues to scale, which to optimize, and which need root-cause investigation. <strong>V2 adds false positive cost (LTV impact of blocking legit orders) and portfolio mode (allocate the next marginal agent across multiple queues).</strong>
+  <section class="hero">
+    <div class="hero-left">
+      <h1>Twelve calculators for the operations decisions nobody has a spreadsheet for.</h1>
+      <p class="hero-lede">Single-file HTML. No install, no signup, no tracking, MIT licensed. Built while running a $40M P&amp;L across nine countries — these are the models I kept rewriting at every job.</p>
+      <div class="cta-row">
+        <a href="#tools" class="btn-primary">Find the tool for my problem</a>
+        <a href="./case-studies.html" class="btn-secondary">Browse 22 case studies</a>
       </div>
-      <span class="tool-status live">Live · V2</span>
-    </a>
+    </div>
 
-    <a href="./bin-monitor.html" class="tool-card">
-      <div class="tool-num">Tool #2</div>
-      <div class="tool-title">BIN Monitoring Detection</div>
-      <div class="tool-desc">
-        Detect BIN-level attack patterns before they hit chargeback. Combines volume velocity, new-user clustering, and CBK rate trending into a single dashboard with adjustable thresholds and a 7-day drill-down per BIN. Includes a Python reference implementation.
+    <aside class="problem-panel">
+      <div class="problem-label">What's your problem today?</div>
+      <div class="problem-list">
+        <a class="problem-item featured" href="./queue-ops-center.html">
+          <span>My queue is behind SLA</span><span class="num">#7</span>
+        </a>
+        <a class="problem-item" href="./bin-monitor.html">
+          <span>Chargebacks are climbing</span><span class="num">#2</span>
+        </a>
+        <a class="problem-item" href="./workforce-forecast.html">
+          <span>I need headcount approved</span><span class="num">#5</span>
+        </a>
+        <a class="problem-item" href="./vendor-scorecard.html">
+          <span>A vendor is underperforming</span><span class="num">#12</span>
+        </a>
+        <a class="problem-item" href="./operating-plan-generator.html">
+          <span>I start a new ops role Monday</span><span class="num">#11</span>
+        </a>
       </div>
-      <span class="tool-status live">Live</span>
-    </a>
+    </aside>
+  </section>
 
-    <a href="./surge-pid.html" class="tool-card">
-      <div class="tool-num">Tool #3</div>
-      <div class="tool-title">Marketplace Surge Simulator (PID Control) <span class="v2-tag">v2</span></div>
-      <div class="tool-desc">
-        Surge pricing using PID control. <strong>V2 adds polygon-level optimization</strong> — a 3×3 city map (Airport, Downtown, Stadium, Residential, Industrial, Suburbs, etc.) showing per-zone surge state with a time scrubber across 24h. Nine independent PIDs (one per zone) vs a single city-level PID, because city-average surge hides geographic disparity.
-      </div>
-      <span class="tool-status live">Live · V2</span>
-    </a>
-
-    <a href="./chargeback-sop.html" class="tool-card">
-      <div class="tool-num">Tool #4</div>
-      <div class="tool-title">Chargeback Dispute Investigation Template</div>
-      <div class="tool-desc">
-        Walk through a chargeback like a senior fraud analyst. Interactive <strong>decision tree wizard</strong> guides you from reason code to action recommendation in 4-6 questions, with the evidence package ready. Plus the 8-section SOP structure any team can adapt.
-      </div>
-      <span class="tool-status live">Live</span>
-    </a>
-
-    <a href="./workforce-forecast.html" class="tool-card">
-      <div class="tool-num">Tool #5</div>
-      <div class="tool-title">Workforce Forecast Calculator</div>
-      <div class="tool-desc">
-        How many agents do you actually need? Multi-case-type forecast based on volume × complexity × productivity × shrinkage. Compares <strong>100% in-house vs vendor-split scenarios</strong> with cost comparison. Four pre-loaded operational presets.
-      </div>
-      <span class="tool-status live">Live</span>
-    </a>
-
-    <a href="./logistics-supply.html" class="tool-card">
-      <div class="tool-num">Tool #6</div>
-      <div class="tool-title">Logistics Supply Forecaster</div>
-      <div class="tool-desc">
-        Translate a marketplace forecast into required couriers, vehicles, sorters, and dock capacity, with <strong>day-over-day backlog cascade, storage occupation tracking, origin mix decomposition, and operational levers</strong> (boost capacity, defer origin). Two personas (3PL last-mile + fulfillment warehouse), two granularities (daily + intraday hourly+zone), side-by-side operational + financial output, sensitivity at +/- 15% and +/- 30%.
-      </div>
-      <span class="tool-status live">Live</span>
-    </a>
-
-    <a href="./queue-ops-center.html" class="tool-card">
-      <div class="tool-num">Tool #7</div>
-      <div class="tool-title">Queue Operations Command Center</div>
-      <div class="tool-desc">
-        Two questions every ops leader asks at standup, fused into one tool: <strong>are we behind on SLA right now</strong> (backlog health monitor with hours-to-breach, agents-needed-to-recover, recovery cost) and <strong>what should the agent pick next</strong> (queue prioritization with risk × age × value scoring, three reprioritize modes, top-5 highlight). Four operator presets for fraud, content moderation, disputes, CS escalations.
-      </div>
-      <span class="tool-status live">Live</span>
-    </a>
-
-    <a href="./escalation-calculator.html" class="tool-card">
-      <div class="tool-num">Tool #8</div>
-      <div class="tool-title">Escalation Decision Calculator</div>
-      <div class="tool-desc">
-        Most auto-escalate AI tools skip the taxonomy. They surface alerts but cannot say which deserves a human, which should wait, and which would self-resolve in four more hours. This tool maps <strong>exception type, alert age, SLA budget, customer impact, volume, and dollar exposure</strong> into a single recommendation: auto-resolve, wait, route to human review, or page on-call. Includes a recommendation-across-alert-age curve, cost-of-escalating vs cost-of-waiting comparison, and a per-tier action checklist. Five operator presets covering stuck shipments, payment failures, partner non-response, quality drift, and fraud-flagged transactions.
-      </div>
-      <span class="tool-status live">Live</span>
-    </a>
-
-    <a href="./customer-feedback-cost.html" class="tool-card">
-      <div class="tool-num">Tool #10</div>
-      <div class="tool-title">Customer Feedback Cost Analyzer</div>
-      <div class="tool-desc">
-        Quantify the dollar leak from <strong>preventable customer feedback</strong>. The number you bring to the executive conversation when the question is fix-it-now vs absorb-it-forever. Monthly leak, annualized leak, payback period, 12-month NPV, 3-year cumulative savings, Pareto category breakdown, sensitivity at +/- 15% and +/- 30%. Two personas (Operations Manager + CFO / Finance), 5 operator presets for marketplace, fintech, last-mile, DTC, and SaaS onboarding shapes.
-      </div>
-      <span class="tool-status live">Live</span>
-    </a>
-
-    <a href="./operating-plan-generator.html" class="tool-card">
-      <div class="tool-num">Tool #11</div>
-      <div class="tool-title">90-Day Operating Plan Generator</div>
-      <div class="tool-desc">
-        The structured one-pager every new operations leader needs. Generate the <strong>30-60-90 day plan mapped to JD priorities</strong>: executive summary, per-priority deliverables across discover / decide / deploy phases, north star metrics, risk register, asks to the leader. Output as Markdown for direct paste into your follow-up email or executive memo. Five operator presets covering Series A marketplace, scale-up CPG, mature marketplace supply, fintech fraud, and last-mile logistics.
-      </div>
-      <span class="tool-status live">Live</span>
-    </a>
-
-    <a href="./vendor-scorecard.html" class="tool-card">
-      <div class="tool-num">Tool #12</div>
-      <div class="tool-title">Vendor Performance Scorecard</div>
-      <div class="tool-desc">
-        Rank vendors against a <strong>weighted multi-dimensional scorecard</strong> (on-time delivery, defect rate, cost variance, lead time, response time). A/B/C tier classification with <strong>sensitivity analysis on weights</strong>, action recommendations per vendor, and money-on-the-table math. Four operator presets for kit sourcing (overseas manufacturers), 3PL last-mile carriers, BPO offshore support, and balanced multi-vendor portfolios.
-      </div>
-      <span class="tool-status live">Live</span>
-    </a>
-
-    <a href="./driver-scorecard.html" class="tool-card">
-      <div class="tool-num">Tool #13</div>
-      <div class="tool-title">Driver / Courier Performance Scorecard</div>
-      <div class="tool-desc">
-        Rank drivers and couriers on <strong>weighted multi-dimensional performance</strong> with <strong>tenure-based bias correction</strong> so new drivers aren't unfairly penalized by thin data. Four-tier classification (Top / Reliable / Watch / At-Risk), best-gets-first-call simulation showing which tier absorbs the next 100 orders, turnover risk surfacing, and per-driver action recommendations. Four presets for instant delivery, gig couriers, ride-hail, and 3PL last-mile.
-      </div>
-      <span class="tool-status live">Live</span>
-    </a>
-
+  <div class="creds">
+    <div class="cell"><div class="num">$40M</div><div class="label">P&amp;L owned</div></div>
+    <div class="cell"><div class="num">9</div><div class="label">countries operated</div></div>
+    <div class="cell"><div class="num">12</div><div class="label">years in marketplace ops</div></div>
+    <div class="cell"><div class="num">22</div><div class="label">documented cases</div></div>
   </div>
 
-  <div class="about-block">
-    <h2>About</h2>
-    <p>
-      I'm <strong>Everton Paula</strong>. 12+ years building and running operations at hypergrowth marketplaces and consumer fintech across multiple countries. Fraud, marketplace ops, logistics, vendor management, workforce planning at scale. This toolkit codifies recurring patterns I've seen work, sanitized and generalized so any operations leader can adapt them.
-    </p>
-    <p>
-      Currently based in Tampa, FL, focused on Director / Head roles in operations and fraud operations at consumer fintech and marketplaces.
-    </p>
-  </div>
+  <section class="featured">
+    <div class="featured-head">
+      <div class="section-tag">Start here</div>
+    </div>
+    <div class="featured-grid">
+      <a href="./surge-pid.html" class="feat-card primary">
+        <svg class="feat-svg" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <pattern id="hatchA" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+              <rect width="4" height="8" fill="#e2dfd7"></rect>
+            </pattern>
+          </defs>
+          <rect width="600" height="260" fill="url(#hatchA)"></rect>
+          <text x="300" y="134" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" fill="#6b665c">screenshot: zone hex map, surge state</text>
+        </svg>
+        <div class="feat-body">
+          <div class="feat-meta">
+            <span class="feat-num">#3</span>
+            <span class="badge v2">V2</span>
+          </div>
+          <div class="feat-title">Marketplace Surge Simulator</div>
+          <div class="feat-desc">City-average surge hides geographic imbalance. Nine independent PID loops, one per zone, scrubbed across 24h.</div>
+          <div class="feat-formula">zone demand + supply → per-zone multiplier</div>
+        </div>
+      </a>
+      <div class="featured-side">
+        <a href="./operating-plan-generator.html" class="feat-card">
+          <div class="feat-body">
+            <div class="feat-meta">
+              <span class="feat-num">#11</span>
+              <span class="badge new">NEW</span>
+            </div>
+            <div class="feat-title sm">90-Day Operating Plan Generator</div>
+            <div class="feat-desc">The 30-60-90 every new ops leader is asked for in week one.</div>
+            <div class="feat-formula">JD priorities → markdown plan</div>
+          </div>
+        </a>
+        <a href="./vendor-scorecard.html" class="feat-card">
+          <div class="feat-body">
+            <div class="feat-meta">
+              <span class="feat-num">#12</span>
+            </div>
+            <div class="feat-title sm">Vendor Performance Scorecard</div>
+            <div class="feat-desc">Which vendors to cut, coach, or grow — and what indecision costs.</div>
+            <div class="feat-formula">5 weighted metrics → A/B/C tiers</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
 
-  <div class="footer">
-    <p>Open source · MIT License · <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank">View on GitHub</a></p>
-    <p>If a particular tool would be useful for your team, open an issue and I'll prioritize it.</p>
-  </div>
+  <section id="tools" class="index-section">
+    <div class="section-tag" style="margin-bottom:18px;">All twelve, by domain</div>
+    <div class="index-grid">
+
+      <div class="index-domain">
+        <div class="domain-title">Fraud &amp; chargeback</div>
+        <a class="index-row" href="./agent-roi.html">
+          <span class="num">01</span>
+          <div><div class="name">Agent ROI Calculator</div><div class="desc">Scale, optimize, or investigate a review queue — now with false-positive LTV cost.</div></div>
+        </a>
+        <a class="index-row" href="./bin-monitor.html">
+          <span class="num">02</span>
+          <div><div class="name">BIN Monitoring Detection</div><div class="desc">Catch BIN-level attack patterns before they reach chargeback.</div></div>
+        </a>
+        <a class="index-row" href="./chargeback-sop.html">
+          <span class="num">04</span>
+          <div><div class="name">Chargeback Dispute Wizard</div><div class="desc">Reason code to action in six questions, evidence package included.</div></div>
+        </a>
+      </div>
+
+      <div class="index-domain">
+        <div class="domain-title">Supply &amp; logistics</div>
+        <a class="index-row" href="./surge-pid.html">
+          <span class="num">03</span>
+          <div><div class="name">Surge Simulator (PID)</div><div class="desc">Tune the zone, not the city.</div></div>
+        </a>
+        <a class="index-row" href="./logistics-supply.html">
+          <span class="num">06</span>
+          <div><div class="name">Logistics Supply Forecaster</div><div class="desc">Turn a demand forecast into couriers, vehicles, sorters and dock hours.</div></div>
+        </a>
+        <a class="index-row" href="./driver-scorecard.html">
+          <span class="num">13</span>
+          <div><div class="name">Driver / Courier Scorecard</div><div class="desc">Rank couriers without punishing the ones with thin tenure data.</div></div>
+        </a>
+      </div>
+
+      <div class="index-domain mt">
+        <div class="domain-title">Workforce &amp; queues</div>
+        <a class="index-row" href="./workforce-forecast.html">
+          <span class="num">05</span>
+          <div><div class="name">Workforce Forecast Calculator</div><div class="desc">How many agents you actually need — in-house vs vendor split.</div></div>
+        </a>
+        <a class="index-row" href="./queue-ops-center.html">
+          <span class="num">07</span>
+          <div><div class="name">Queue Operations Command Center</div><div class="desc">Are we behind on SLA, and what should the agent pick next.</div></div>
+        </a>
+        <a class="index-row" href="./escalation-calculator.html">
+          <span class="num">08</span>
+          <div><div class="name">Escalation Decision Calculator</div><div class="desc">Auto-resolve, wait, route to a human, or page on-call.</div></div>
+        </a>
+      </div>
+
+      <div class="index-domain mt">
+        <div class="domain-title">Money &amp; leadership</div>
+        <a class="index-row" href="./customer-feedback-cost.html">
+          <span class="num">10</span>
+          <div><div class="name">Customer Feedback Cost Analyzer</div><div class="desc">The number you bring when the question is fix-it-now vs absorb-it-forever.</div></div>
+        </a>
+        <a class="index-row" href="./operating-plan-generator.html">
+          <span class="num">11</span>
+          <div><div class="name">90-Day Operating Plan Generator</div><div class="desc">Your first ninety days, structured and paste-ready.</div></div>
+        </a>
+        <a class="index-row" href="./vendor-scorecard.html">
+          <span class="num">12</span>
+          <div><div class="name">Vendor Performance Scorecard</div><div class="desc">Weighted tiers, sensitivity on the weights, money on the table.</div></div>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="hero-foot">
+    <div class="who">
+      <div class="name">Everton Paula — Tampa, FL</div>
+      <div class="bio">Twelve years of marketplace and fintech operations across nine countries. Everything here is MIT licensed — fork it, adapt it, ship it. If a tool is missing something your team needs, open an issue and I'll prioritize it.</div>
+    </div>
+    <div class="actions">
+      <a class="primary" href="https://github.com/everpaula/marketplace-ops-toolkit/issues/new" target="_blank" rel="noopener">Request a tool</a>
+      <a class="secondary" href="https://linkedin.com/in/evertonpaula" target="_blank" rel="noopener">LinkedIn</a>
+      <a class="secondary" href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">GitHub · MIT</a>
+    </div>
+  </footer>
+
+</article>
+
+<div class="site-foot">
+  Open source · MIT License · <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">View on GitHub</a> · <a href="./about.html">About the toolkit</a>
+</div>
 
 </div>
+
 <script>
-(function() {
+(function () {
   var stored = null;
-  try { stored = localStorage.getItem('toolkit-theme'); } catch(e) {}
+  try { stored = localStorage.getItem('toolkit-theme'); } catch (e) {}
   var theme = stored === 'dark' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', theme);
-  var SUN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="m17.66 6.34 1.41-1.41"/></svg>';
-  var MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-  function makeToggle() {
-    var btn = document.createElement('button');
-    btn.id = 'theme-toggle';
-    btn.type = 'button';
-    btn.title = 'Toggle light/dark theme';
-    btn.setAttribute('aria-label', 'Toggle light/dark theme');
-    btn.innerHTML = theme === 'light' ? MOON : SUN;
-    btn.addEventListener('click', function() {
-      theme = theme === 'light' ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', theme);
-      try { localStorage.setItem('toolkit-theme', theme); } catch(e) {}
-      btn.innerHTML = theme === 'light' ? MOON : SUN;
-    });
-    document.body.appendChild(btn);
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', makeToggle);
-  } else {
-    makeToggle();
-  }
+  if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+
+  var btn = document.getElementById('theme-toggle');
+  function render() { btn.textContent = theme === 'dark' ? '◑' : '◐'; }
+  render();
+  btn.addEventListener('click', function () {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    else document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem('toolkit-theme', theme); } catch (e) {}
+    render();
+  });
 })();
 </script>
+
 </body>
 </html>
