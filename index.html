@@ -207,10 +207,12 @@
   .problem-list { display: flex; flex-direction: column; gap: 8px; }
   .problem-item {
     display: flex; justify-content: space-between; align-items: center;
-    border: 1px solid var(--rule); padding: 11px 14px;
+    border: 1px solid var(--rule);
+    padding: 0 14px;
+    height: 46px;
+    box-sizing: border-box;
     font-size: 14px;
-    line-height: 1.3;
-    min-height: 46px;
+    line-height: 1;
     transition: border-color .12s, background .12s;
   }
   .problem-item:hover { border-color: var(--ink); }
@@ -476,7 +478,7 @@
     </div>
     <div class="featured-grid">
       <a href="./surge-pid.html" class="feat-card primary">
-        <img class="feat-svg" src="./images/surge-hex-map.png" alt="Marketplace Surge Simulator hex map — Austin zones with green (balanced) and yellow (undersupply) states over a Leaflet base map" loading="lazy">
+        <img class="feat-svg" src="./images/surge-polygon-map.png" alt="Marketplace Surge Simulator polygon map — city zones with surge multipliers visualized over a base map" loading="lazy">
         <div class="feat-body">
           <div class="feat-meta">
             <span class="feat-num">#3</span>
