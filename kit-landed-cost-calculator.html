@@ -137,6 +137,11 @@
   .comp-block { border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 1rem; }
   .comp-block > .head { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--border); background: var(--bg-sunken); border-radius: var(--radius-md) var(--radius-md) 0 0; }
   .comp-block > .head strong { font-size: 0.95rem; }
+  .find { padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--border); font-size: 0.86rem; }
+  .find > summary { cursor: pointer; color: var(--accent); font-weight: 500; width: fit-content; }
+  .find-links { display: flex; flex-wrap: wrap; gap: 0.45rem 1.1rem; margin: 0.6rem 0 0.4rem; }
+  .find-links a { color: var(--accent); }
+  .find p { margin: 0.3rem 0 0; color: var(--text-muted); max-width: 80ch; }
   .comp-block .table-wrap { border: none; border-radius: 0; }
   .comp-block > .foot { padding: 0.5rem 0.9rem; }
   details.risk summary { cursor: pointer; list-style: none; white-space: nowrap; }
@@ -610,7 +615,7 @@
       var rows = R.mix.rows[c.id] || [];
       var byId = {}; rows.forEach(function (r) { byId[r.quoteId] = r; });
       var need = K.needQty(c, p);
-      h += '<div class="comp-block"><div class="head"><strong>' + esc(c.name) + '</strong><span class="faint">need ' + fnum(need.total, need.total < 100 ? 1 : 0) + ' ' + esc(c.uom) + ' (' + fnum(need.perKit, 2) + ' per unit with waste)</span><span class="faint">HTS ' + esc(c.htsCode || 'not set') + '</span></div>' +
+      h += '<div class="comp-block"><div class="head"><strong>' + esc(c.name) + '</strong><span class="faint">need ' + fnum(need.total, need.total < 100 ? 1 : 0) + ' ' + esc(c.uom) + ' (' + fnum(need.perKit, 2) + ' per unit with waste)</span><span class="faint">HTS ' + esc(c.htsCode || 'not set') + '</span></div>' + findSuppliers(c) +
         '<div class="table-wrap"><table><thead><tr><th scope="col">Supplier</th><th scope="col">Origin</th><th scope="col">Incoterm</th>' +
         '<th scope="col" class="r">Price<span class="u">USD / ' + esc(c.uom) + '</span></th><th scope="col" class="r">MOQ</th><th scope="col" class="r">Prod.<span class="u">days</span></th>' +
         '<th scope="col" class="r">Deposit<span class="u">%</span></th><th scope="col">Balance</th><th scope="col" class="r">CBM<span class="u">per carton</span></th><th scope="col" class="r">Kg<span class="u">per carton</span></th>' +
@@ -1003,6 +1008,55 @@
     schedule();
   });
 
+  // Search links per component. Plain links to public directories; nothing about the project leaves the page except the search words.
+  function findSuppliers(c) {
+    var q = String(c.name || '').split(',')[0].trim();
+    if (!q || q === 'New component') return '';
+    var e = encodeURIComponent(q);
+    var links = [
+      ['Alibaba', 'https://www.alibaba.com/trade/search?SearchText=' + e, 'filter to Verified Supplier'],
+      ['Made-in-China', 'https://www.made-in-china.com/productdirectory.do?word=' + e + '&subaction=hunt&style=b&mode=and&code=0&comProvince=nolimit&order=0&isOpenCorrection=1', 'look for Audited Supplier'],
+      ['Global Sources', 'https://www.globalsources.com/searchList/products?keyWord=' + e, ''],
+      ['ImportYeti', 'https://www.importyeti.com/search?q=' + e, 'who already ships this to US importers'],
+      ['Factories in Vietnam', 'https://www.google.com/search?q=' + encodeURIComponent(q + ' manufacturer factory Vietnam'), ''],
+      ['Factories in China', 'https://www.google.com/search?q=' + encodeURIComponent(q + ' manufacturer factory China'), '']
+    ];
+    return '<details class="find no-print"><summary data-k="find||' + esc(c.id) + '">Find suppliers for ' + esc(q) + '</summary><div class="find-links">' +
+      links.map(function (l) { return '<span><a href="' + esc(l[1]) + '" target="_blank" rel="noopener">' + esc(l[0]) + '</a>' + (l[2] ? ' <span class="faint">' + esc(l[2]) + '</span>' : '') + '</span>'; }).join('') +
+      '</div><p>Add each candidate with + Add quote and tick only the checks you have verified. ImportYeti shows US customs shipment records, a quick way to confirm a factory already exports to the US.</p>' +
+      '<p>China tip: 1688.com, the domestic wholesale site of the Alibaba group, lists factory prices inside China in Chinese and RMB. It is a good price check through your agent in China. Taobao is retail and not a source for container orders.</p></details>';
+  }
+  // Suppliers sent from a sourcing report: #add-suppliers=<encodeURIComponent(JSON)>
+  function importFromHash() {
+    var h = location.hash || '', pre = '#add-suppliers=';
+    if (h.indexOf(pre) !== 0) return;
+    var msg = document.getElementById('toolbarMsg');
+    try {
+      var data = JSON.parse(decodeURIComponent(h.slice(pre.length)));
+      if (!data || data.v !== 1 || !data.component || !Array.isArray(data.suppliers)) throw new Error('bad payload');
+      if (state.ui.example) { state.project = blankProject(); state.ui.example = false; }
+      var p = state.project, name = String(data.component.name || 'Component').slice(0, 80).trim();
+      var c = p.components.filter(function (x) { return String(x.name).toLowerCase() === name.toLowerCase(); })[0];
+      if (!c) {
+        var duty = Number(data.component.baseDutyRate);
+        c = { id: uid('c'), kitId: p.kits[0].id, name: name, uom: String(data.component.uom || 'each').slice(0, 12), qtyPerUnit: 1, wastePct: 0, unitsPerCarton: 1,
+          htsCode: String(data.component.htsCode || '').slice(0, 16), baseDutyRate: isFinite(duty) && duty >= 0 && duty < 1 ? duty : 0, metal232Share: 0, quotes: [] };
+        p.components.push(c);
+      }
+      var have = {}, added = 0;
+      c.quotes.forEach(function (q) { have[String(q.supplier).toLowerCase()] = true; });
+      data.suppliers.slice(0, 20).forEach(function (s) {
+        var n = String((s && s.name) || '').slice(0, 80).trim();
+        if (!n || have[n.toLowerCase()]) return;
+        have[n.toLowerCase()] = true;
+        c.quotes.push(newQuote({ supplier: n, origin: s.origin === 'VN' ? 'VN' : 'CN' })); added++;
+      });
+      save();
+      msg.textContent = added ? 'Added ' + added + ' supplier' + (added === 1 ? '' : 's') + ' to ' + name + ' in step 2. Fill in price, MOQ and carton data from their quotes.'
+        : 'Those suppliers are already in ' + name + ' in step 2.';
+    } catch (err) { msg.textContent = 'That supplier link could not be read. Nothing was changed.'; }
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (err2) { /* ignore */ }
+  }
   function newQuote(row) {
     var checks = {}; C.CHECK_KEYS.forEach(function (k) { checks[k] = false; });
     return { id: uid('q'), supplier: row.supplier || 'New supplier', origin: row.origin || 'CN', incoterm: row.incoterm || 'FOB', price: row.price || 0,
@@ -1073,6 +1127,8 @@
     location.href = './vendor-scorecard.html#import=' + b64;
   }
 
+  importFromHash();
+  window.addEventListener('hashchange', function () { if ((location.hash || '').indexOf('#add-suppliers=') === 0) { importFromHash(); rerender(); } });
   renderAll();
   save();
 })();
