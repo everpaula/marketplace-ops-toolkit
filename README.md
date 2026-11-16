@@ -12,7 +12,11 @@ I'm Everton Paula. Fifteen years running marketplace operations across nine coun
 
 If you are new to the toolkit, the three I would hand you first:
 
-### → [90-Day Operating Plan Generator](./operating-plan-generator.html) (new)
+### → [Kit Landed Cost Calculator](./kit-landed-cost-calculator.html) (new)
+
+For teams buying finish kits (flooring, faucets, lighting, hardware) direct from factories in China and Vietnam. Ranks every supplier quote by landed cost in the US instead of FOB: duty layers by country (HTS base, Section 301, Section 232), MPF and HMF, containers packed by volume and weight with LCL for the leftover, MOQ overage, supplier risk tiers, freight and tariff scenarios, margin and a dated cash timeline with peak capital. Tariff and fee defaults carry their source and date and are all editable. Paste quotes from a spreadsheet, export a versioned CSV, print a one-page summary. Runs in the browser; nothing is sent anywhere.
+
+### → [90-Day Operating Plan Generator](./operating-plan-generator.html)
 
 Paste a meeting transcript, onboarding 1:1 notes, or JD walkthrough text. The tool runs client-side heuristic extraction (no LLM call, no upload, runs offline) and surfaces candidate priorities, named stakeholders, and metrics from the raw text. Drop them into a five-priority structure and the tool generates a 30/60/90 day plan with executive summary, per-priority deliverables across discover/decide/deploy phases, north star metrics, risk register, and asks to the leader. Markdown and plain-text export.
 

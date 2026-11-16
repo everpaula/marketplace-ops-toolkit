@@ -1806,6 +1806,33 @@ function decodeStateFromHash(hash) {
   }
 })();
 
+// Import from the Kit Landed Cost Calculator: #import=<base64 JSON {vendors: [...]}>.
+// Loads the suppliers on the kit sourcing preset, then clears the hash so a reload keeps the normal behavior.
+(function loadImportFromHash() {
+  const match = (location.hash || '').match(/^#import=(.+)$/);
+  if (!match) return;
+  try {
+    const json = decodeURIComponent(escape(atob(decodeURIComponent(match[1]))));
+    const data = JSON.parse(json);
+    const num = (x, fallback) => { const n = Number(x); return Number.isFinite(n) ? n : fallback; };
+    const vendors = (Array.isArray(data && data.vendors) ? data.vendors : [])
+      .filter(v => v && v.name)
+      .slice(0, 50)
+      .map(v => ({
+        name: String(v.name).slice(0, 80),
+        volume: num(v.volume, 1000), ontime: num(v.ontime, 90), defect: num(v.defect, 2),
+        cost: num(v.cost, 0), leadtime: num(v.leadtime, 30), response: num(v.response, 12)
+      }));
+    const kit = PRESETS.find(p => p.id === 'kit-sourcing');
+    if (vendors.length && kit) {
+      state = { weights: { ...kit.weights }, vendors, activePreset: 'kit-sourcing' };
+    }
+  } catch (e) {
+    // Bad or truncated link: keep the default preset.
+  }
+  history.replaceState(null, '', location.pathname + location.search);
+})();
+
 // Share link button: copy current state as URL, update browser address bar
 document.getElementById('shareLinkBtn').addEventListener('click', async () => {
   const hash = '#s=' + encodeStateToHash();
