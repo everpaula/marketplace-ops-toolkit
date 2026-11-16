@@ -162,6 +162,9 @@
   function lineCbm(l) { return l.incoterm === 'CIF' ? 0 : num(l.cartons) * num(l.cbmPerCarton); }
   function lineKg(l) { return l.incoterm === 'CIF' ? 0 : num(l.cartons) * num(l.kgPerCarton); }
 
+  // LCL is billed per revenue ton: the larger of CBM and metric tons, minimum 1.
+  function lclCharge(cbm, kg) { return Math.max(cbm, kg / 1000, 1); }
+
   // Containers for one origin. Full boxes use the type with the lowest cost per usable CBM at this
   // load's density; the rest goes in whichever is cheaper: one more box of a type it fits, or LCL
   // (offered only below half the largest box).
@@ -179,7 +182,7 @@
     var lclMax = s.lclMaxCbm !== undefined ? num(s.lclMaxCbm, maxCbm / 2) : maxCbm / 2;
 
     if (!types.length) {
-      res.lclCbm = cbm; res.lclKg = kg; res.lclCost = Math.max(cbm, 1) * lclRate; res.freightTotal = res.lclCost;
+      res.lclCbm = cbm; res.lclKg = kg; res.lclCost = lclCharge(cbm, kg) * lclRate; res.freightTotal = res.lclCost;
       return res;
     }
     var eff = function (t) { return Math.min(caps[t].cbm, density > 0 ? caps[t].kg / density : Infinity); };
@@ -196,7 +199,7 @@
     }
     if (remCbm > EPS) {
       var opts = types.filter(fits).map(function (t) { return { type: t, cost: num(freight[t]) }; });
-      if (lclRate > 0 && remCbm <= lclMax + EPS) opts.push({ type: 'LCL', cost: Math.max(remCbm, 1) * lclRate });
+      if (lclRate > 0 && remCbm <= lclMax + EPS) opts.push({ type: 'LCL', cost: lclCharge(remCbm, remKg) * lclRate });
       opts.sort(function (a, b) { return a.cost - b.cost; });
       var pick = opts[0];
       if (pick.type === 'LCL') {

@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<title>Landed Cost Calculator for Imported Kits: China vs Vietnam</title>
+<meta name="description" content="Free landed cost calculator for imported finish kits. Rank supplier quotes by landed cost, not FOB: China and Vietnam tariff layers, container fill by volume and weight, freight shocks, margin and a cash calendar. Data stays in your browser.">
+<link rel="canonical" href="https://everpaula.github.io/marketplace-ops-toolkit/kit-landed-cost-calculator.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://everpaula.github.io/marketplace-ops-toolkit/kit-landed-cost-calculator.html">
+<meta property="og:title" content="Landed Cost Calculator for Imported Kits: China vs Vietnam">
+<meta property="og:description" content="Rank supplier quotes by landed cost, not FOB. Duty layers by country, containers by volume and weight, freight at $3k, $8k or $25k, margin and peak cash.">
+<meta property="og:image" content="https://everpaula.github.io/marketplace-ops-toolkit/images/kit-landed-cost-calculator.png">
+<meta property="og:site_name" content="Marketplace Ops Toolkit">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Landed Cost Calculator for Imported Kits">
+<meta name="twitter:description" content="China vs Vietnam landed cost per kit: tariffs, containers, freight shocks, margin and cash calendar. Free, runs in your browser.">
+<meta name="twitter:image" content="https://everpaula.github.io/marketplace-ops-toolkit/images/kit-landed-cost-calculator.png">
+<meta name="author" content="Everton Paula">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Kit Landed Cost Calculator","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://everpaula.github.io/marketplace-ops-toolkit/kit-landed-cost-calculator.html","description":"Landed cost calculator for imported finish kits: compares supplier quotes by landed cost with China and Vietnam tariff layers, container packing by volume and weight, freight scenarios, margin and a cash timeline.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Everton Paula","url":"https://linkedin.com/in/evertonpaula"},"license":"https://opensource.org/licenses/MIT"}</script>
+<style>
+  :root {
+    --bg: #16150f; --bg-elev: #1e1c15; --bg-card: #1e1c15; --bg-sunken: #201d16;
+    --border: #35322a; --border-bright: #4a4640;
+    --text: #faf9f7; --text-muted: #d5cfc2; --text-faint: #a09a8c;
+    --accent: #f97316; --accent-bright: #fb923c; --accent-soft: rgba(249, 115, 22, 0.10); --accent-border: rgba(249, 115, 22, 0.35);
+    --green: #10b981; --green-soft: rgba(16, 185, 129, 0.12);
+    --yellow: #fbbf24; --yellow-soft: rgba(251, 191, 36, 0.12);
+    --red: #ef4444; --red-soft: rgba(239, 68, 68, 0.12);
+    --blue: #60a5fa;
+    --radius-sm: 5px; --radius-md: 8px; --radius-lg: 10px;
+    --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 1px 2px rgba(0, 0, 0, 0.25);
+    --t-fast: 90ms ease;
+  }
+  :root[data-theme="light"] {
+    --bg: #faf9f7; --bg-elev: #ffffff; --bg-card: #ffffff; --bg-sunken: #f1efea;
+    --border: #d6d1c7; --border-bright: #16150f;
+    --text: #16150f; --text-muted: #413d36; --text-faint: #6b665c;
+    --accent: #c2410c; --accent-bright: #ea580c; --accent-soft: rgba(194, 65, 12, 0.08); --accent-border: rgba(194, 65, 12, 0.35);
+    --green: #047857; --green-soft: rgba(5, 150, 105, 0.10);
+    --yellow: #a16207; --yellow-soft: rgba(202, 138, 4, 0.10);
+    --red: #b91c1c; --red-soft: rgba(220, 38, 38, 0.08);
+    --blue: #1d4ed8;
+  }
+  #theme-toggle {
+    position: fixed; top: 0.85rem; right: 0.85rem; z-index: 9999;
+    background: var(--bg-elev); color: var(--text); border: 1px solid var(--border-bright); border-radius: 8px;
+    width: 38px; height: 38px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    transition: border-color 0.12s ease, color 0.12s ease; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18); padding: 0;
+  }
+  #theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  #theme-toggle svg { display: block; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 17px; }
+  body {
+    font-family: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55; min-height: 100vh;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  .mono, code, .num { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  ::selection { background: var(--accent-soft); color: var(--text); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  a { color: var(--accent); }
+  .container { max-width: 1180px; margin: 0 auto; padding: 1.5rem; }
+  .top-nav { margin: 2.2rem 0 1rem; }
+  .top-nav a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
+  .top-nav a:hover { color: var(--accent); }
+
+  header { margin-bottom: 1.5rem; }
+  .brand { color: var(--accent); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 0.55rem; }
+  header h1 { font-size: 2rem; margin-bottom: 0.6rem; letter-spacing: -0.02em; line-height: 1.15; font-weight: 700; }
+  header .tagline { color: var(--text-muted); font-size: 1rem; max-width: 840px; }
+  header .tagline strong { color: var(--text); font-weight: 600; }
+  .privacy { display: inline-block; margin-top: 0.7rem; font-size: 0.82rem; color: var(--green); border: 1px solid var(--green); border-radius: 999px; padding: 0.15rem 0.7rem; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.4rem 1.5rem; margin-bottom: 1.25rem; box-shadow: var(--shadow-card); }
+  .card > h2 { color: var(--accent); font-size: 0.74rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.45rem; }
+  .card h3 { font-size: 1rem; margin: 1.1rem 0 0.5rem; }
+  .sub { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; max-width: 860px; }
+  .faint { color: var(--text-faint); font-size: 0.82rem; }
+  .step { color: var(--text-faint); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; margin-right: 0.4rem; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  .toolbar .spacer { flex: 1; }
+  button, .btn {
+    font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; border-radius: 6px;
+    padding: 0.45rem 0.85rem; border: 1px solid var(--border-bright); background: var(--bg-elev); color: var(--text);
+    transition: border-color var(--t-fast), color var(--t-fast); text-decoration: none; display: inline-block;
+  }
+  button:hover, .btn:hover { border-color: var(--accent); color: var(--accent); }
+  button.primary { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  button.small { font-size: 0.78rem; padding: 0.25rem 0.55rem; }
+  button.icon { padding: 0.15rem 0.5rem; font-size: 0.9rem; line-height: 1.3; }
+  button.on { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  label.inline { display: inline-flex; gap: 0.4rem; align-items: center; font-size: 0.86rem; color: var(--text-muted); }
+
+  input, select, textarea {
+    font: inherit; font-size: 0.86rem; color: var(--text); background: var(--bg-sunken);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.3rem 0.45rem; min-width: 0;
+  }
+  input[type="number"], input.n { font-family: 'JetBrains Mono', monospace; text-align: right; }
+  input[aria-invalid="true"] { border-color: var(--red); background: var(--red-soft); }
+  input[type="checkbox"] { accent-color: var(--accent); width: 1rem; height: 1rem; }
+  textarea { width: 100%; min-height: 6.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: var(--radius-md); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  th, td { padding: 0.45rem 0.55rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { color: var(--text-faint); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; background: var(--bg-sunken); white-space: nowrap; }
+  th .u { display: block; text-transform: none; letter-spacing: 0; font-weight: 400; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.r, th.r { text-align: right; }
+  tr.picked td { background: var(--accent-soft); }
+  tr.ineligible td { color: var(--text-faint); }
+  td input { width: 100%; }
+  td input.w-xs { width: 4.2rem; } td input.w-s { width: 5.6rem; } td input.w-m { width: 8rem; } td input.w-l { width: 13rem; } td input.w-sup { width: 11.5rem; }
+
+  .pill { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 0.08rem 0.45rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .pill.A, .pill.good { color: var(--green); } .pill.B, .pill.warn { color: var(--yellow); } .pill.C, .pill.bad { color: var(--red); }
+  .pill.info { color: var(--blue); }
+
+  .band { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.75rem; }
+  .stat { background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.8rem 0.95rem; }
+  .stat .k { color: var(--text-faint); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+  .stat .v { font-family: 'JetBrains Mono', monospace; font-size: 1.45rem; font-weight: 700; margin-top: 0.15rem; letter-spacing: -0.02em; }
+  .stat .d { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.15rem; }
+  .stat.hero { border-color: var(--accent-border); background: var(--accent-soft); }
+  .stat.hero .v { color: var(--accent); font-size: 1.8rem; }
+
+  .comp-block { border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 1rem; }
+  .comp-block > .head { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--border); background: var(--bg-sunken); border-radius: var(--radius-md) var(--radius-md) 0 0; }
+  .comp-block > .head strong { font-size: 0.95rem; }
+  .comp-block .table-wrap { border: none; border-radius: 0; }
+  .comp-block > .foot { padding: 0.5rem 0.9rem; }
+  details.risk summary { cursor: pointer; list-style: none; white-space: nowrap; }
+  details.risk summary::-webkit-details-marker { display: none; }
+  details.risk[open] .checks { display: grid; }
+  .checks { display: none; gap: 0.25rem; margin-top: 0.4rem; min-width: 15rem; font-size: 0.8rem; white-space: normal; }
+  .checks label { display: flex; gap: 0.4rem; align-items: flex-start; }
+
+  .bar { height: 8px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; min-width: 60px; }
+  .bar > span { display: block; height: 100%; background: var(--accent); }
+  .bar.w > span { background: var(--yellow); }
+  .boxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.6rem; }
+  .box { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.6rem 0.75rem; font-size: 0.82rem; background: var(--bg-sunken); }
+  .box .t { display: flex; justify-content: space-between; gap: 0.5rem; font-weight: 700; margin-bottom: 0.35rem; }
+  .box .row { display: grid; grid-template-columns: 2.4rem 1fr 3.2rem; gap: 0.4rem; align-items: center; color: var(--text-muted); margin-top: 0.2rem; }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem 1.5rem; }
+  .grid2 > *, .band > * { min-width: 0; }
+  .field { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center; font-size: 0.86rem; padding: 0.25rem 0; border-bottom: 1px dashed var(--border); }
+  .field input, .field select { width: 7.5rem; }
+  .field span.f { color: var(--text-muted); }
+  .note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 0.6rem 0.85rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.86rem; margin: 0.8rem 0; }
+  .note.warn { border-left-color: var(--yellow); background: var(--yellow-soft); }
+  .errors { color: var(--red); font-size: 0.82rem; margin-top: 0.4rem; }
+  .ok-msg { color: var(--green); font-size: 0.82rem; margin-top: 0.4rem; }
+  ul.plain { padding-left: 1.1rem; font-size: 0.86rem; color: var(--text-muted); }
+  ul.plain li { margin: 0.25rem 0; }
+  .sources li { word-break: break-word; }
+
+  .chart { width: 100%; height: auto; display: block; }
+  .chart .grid { stroke: var(--border); stroke-width: 1; }
+  .chart .zero { stroke: var(--text-faint); stroke-width: 1; stroke-dasharray: 3 3; }
+  .chart .base { fill: none; stroke: var(--accent); stroke-width: 2.2; }
+  .chart .scen { fill: none; stroke: var(--blue); stroke-width: 2; stroke-dasharray: 6 4; }
+  .chart text { fill: var(--text-faint); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .chart .peak { fill: var(--red); }
+  .legend { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-muted); margin: 0.4rem 0; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 0.35rem; background: var(--accent); }
+  .legend i.s { background: var(--blue); }
+
+  .footer { margin-top: 2rem; padding-top: 1.2rem; border-top: 1px solid var(--border); color: var(--text-faint); font-size: 0.85rem; text-align: center; }
+  .footer a { color: var(--accent); text-decoration: none; }
+  .footer p { margin-bottom: 0.35rem; }
+  .print-only { display: none; }
+
+  .toolkit-home-link {
+    position: fixed; top: 12px; left: 14px; z-index: 100; background: var(--bg-elev); color: var(--text);
+    border: 1px solid var(--border); border-radius: 3px; padding: 7px 12px 7px 10px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    text-decoration: none; transition: border-color .15s, color .15s; box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+  }
+  .toolkit-home-link:hover { border-color: var(--text); color: var(--accent); }
+  .toolkit-strip-footer { text-align: center; color: var(--text-faint); font-size: 12.5px; padding: 24px 16px 32px; border-top: 1px solid var(--border); margin-top: 40px; }
+  .toolkit-strip-footer a { color: var(--accent); text-decoration: none; }
+  .toolkit-strip-footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 720px) {
+    .container { padding: 1rem; }
+    header h1 { font-size: 1.5rem; }
+    .card { padding: 1.05rem 1rem; }
+    .stat .v { font-size: 1.2rem; } .stat.hero .v { font-size: 1.5rem; }
+    .field input, .field select { width: 6.5rem; }
+  }
+  @media print {
+    :root, :root[data-theme="light"] {
+      --bg: #fff; --bg-elev: #fff; --bg-card: #fff; --bg-sunken: #f6f6f4; --border: #cfcac0;
+      --text: #111; --text-muted: #333; --text-faint: #555; --accent: #b4410c; --accent-soft: rgba(180, 65, 12, 0.06);
+    }
+    html { font-size: 9.5px; }
+    header .tagline, .privacy, #mixCard .sub { display: none !important; }
+    body { background: #fff; }
+    .container { max-width: 100%; padding: 0; }
+    .no-print, .toolkit-home-link, #theme-toggle, .toolkit-strip-footer, .top-nav, .footer, button { display: none !important; }
+    .print-only { display: block; }
+    #resultsCard .band, #cashCard .band, .boxes, .legend, #resultsCard p.faint, #cashCard p.faint,
+    #assumpCard .grid2, #assumpCard h3, #assumpCard ul, #mixBody h3 { display: none !important; }
+    .chart { max-height: 1.15in; width: auto; max-width: 100%; }
+    .note { margin: 0.3rem 0; padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+    .card { box-shadow: none; padding: 0.4rem 0.6rem; margin-bottom: 0.35rem; break-inside: avoid; }
+    header { margin-bottom: 0.4rem; } header h1 { font-size: 1.6rem; margin-bottom: 0.2rem; }
+    #resultsCard h3:nth-of-type(3) { display: none !important; }
+    #mixBody li { margin: 0.1rem 0; }
+    .stat .v { font-size: 1.1rem; } .stat.hero .v { font-size: 1.3rem; }
+    .band { grid-template-columns: repeat(6, 1fr); gap: 0.4rem; }
+    .stat { padding: 0.45rem 0.55rem; }
+    table { font-size: 0.8rem; }
+    .pill { font-size: 0.62rem; padding: 0 0.3rem; }
+    h3 { margin: 0.5rem 0 0.3rem !important; }
+    .boxes { grid-template-columns: repeat(4, 1fr); }
+    th, td { padding: 0.2rem 0.35rem; }
+    .pill { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    a { color: var(--text); text-decoration: none; }
+    @page { size: letter; margin: 0.45in; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<a class="toolkit-home-link" href="./index.html" aria-label="Back to toolkit home">← Toolkit</a>
+<div class="container">
+  <div class="top-nav"><a href="./index.html">← marketplace-ops-toolkit</a></div>
+
+  <header>
+    <div class="brand">Tool #13 · marketplace-ops-toolkit</div>
+    <h1>Landed Cost Calculator for Imported Kits</h1>
+    <div class="tagline">
+      For teams that buy finish kits direct from factories in <strong>China and Vietnam</strong>: flooring, faucets, lighting, hardware.
+      Put every quote side by side and rank it by <strong>landed cost in the US</strong>, not by FOB. Duty layers by country, containers filled
+      by volume and weight, freight at $3k or $25k a box, margin per unit and the week your cash is most exposed.
+    </div>
+    <span class="privacy">Data stays in your browser. Nothing is sent anywhere.</span>
+    <p class="print-only" id="printHead"></p>
+  </header>
+
+  <div class="card" id="summary"></div>
+
+  <div class="card no-print">
+    <div class="toolbar">
+      <label class="inline">Project <input id="projName" data-k="project||name" data-scope="project" data-path="name" type="text" style="width:16rem"></label>
+      <label class="inline">Destination
+        <select data-k="ui||destination" data-scope="dest">
+          <option value="west">US West Coast</option><option value="east">US East Coast</option>
+        </select></label>
+      <label class="inline">Lowest supplier tier allowed
+        <select data-k="ui||minTier" data-scope="ui" data-path="minTier">
+          <option value="A">A only</option><option value="B">B or better</option><option value="C">Any (C allowed)</option>
+        </select></label>
+      <span class="spacer"></span>
+      <button type="button" data-action="load-example" data-k="act||load-example">Load example</button>
+      <button type="button" data-action="export" data-k="act||export">Export CSV</button>
+      <button type="button" data-action="import" data-k="act||import">Import CSV</button>
+      <input type="file" id="csvFile" accept=".csv,text/csv" hidden>
+      <button type="button" data-action="print" data-k="act||print">Print summary</button>
+      <button type="button" data-action="clear" data-k="act||clear">Clear data</button>
+    </div>
+    <div id="toolbarMsg" aria-live="polite"></div>
+  </div>
+
+  <section class="card no-print" id="kitCard" aria-labelledby="h-kit">
+    <h2 id="h-kit"><span class="step">1</span>Kit builder</h2>
+    <div class="sub">One row per component of ONE apartment unit. Quantity is per unit, in the component's own unit of measure; waste covers cuts and attic stock. The HTS code and base duty are yours to set; this tool does not classify.</div>
+    <div id="kitBody"></div>
+  </section>
+
+  <section class="card no-print" id="quotesCard" aria-labelledby="h-quotes">
+    <h2 id="h-quotes"><span class="step">2</span>Quotes by component</h2>
+    <div class="sub">Two to four quotes per component. Price is per unit of measure at the incoterm shown. Cartons drive the container math, so carton volume and gross weight matter as much as price. Open the risk cell to tick the checks you have actually done.</div>
+    <div id="quotesBody"></div>
+    <h3>Paste quotes from a spreadsheet</h3>
+    <p class="faint">Copy rows from Excel or Google Sheets (tab separated) or CSV, with or without a header, in this column order: <span id="pasteCols" class="mono"></span>. The component name must match a row in step 1. New suppliers start with no checks ticked, so they rank as tier C until you verify them.</p>
+    <textarea id="pasteBox" aria-label="Paste quotes" data-k="paste||box" placeholder="Kitchen faucet&#9;Supplier N, Foshan&#9;CN&#9;FOB&#9;$33.40&#9;300&#9;45&#9;30%&#9;0.09&#9;17"></textarea>
+    <div class="toolbar" style="margin-top:0.5rem">
+      <label class="inline">Number format
+        <select data-k="ui||pasteLocale" data-scope="ui" data-path="pasteLocale">
+          <option value="en">1,234.50 (US)</option><option value="pt">1.234,50 (Brazil, Europe)</option>
+        </select></label>
+      <button type="button" class="primary" data-action="paste-add" data-k="act||paste-add">Add pasted quotes</button>
+    </div>
+    <div id="pasteMsg" aria-live="polite"></div>
+  </section>
+
+  <section class="card" id="mixCard" aria-labelledby="h-mix">
+    <h2 id="h-mix"><span class="step">3</span>Recommended mix</h2>
+    <div class="sub">Per component, the lowest landed cost for the whole project among quotes at or above your tier floor, plus a second source. Ranking uses full-container freight rates so one quote does not change another's number; the results below use your real container fill.</div>
+    <div id="mixBody"></div>
+  </section>
+
+  <section class="card" id="resultsCard" aria-labelledby="h-results">
+    <h2 id="h-results"><span class="step">4</span>Results</h2>
+    <div id="resultsBody"></div>
+  </section>
+
+  <section class="card no-print" id="scenCard" aria-labelledby="h-scen">
+    <h2 id="h-scen"><span class="step">5</span>Scenarios</h2>
+    <div class="sub">Hit the recommended mix with a tariff change, a freight spike or a change of origin, and see it next to the base case. The contract price stays where the base case set it, so the margin takes the hit, as it would after signing.</div>
+    <div id="scenBody"></div>
+  </section>
+
+  <section class="card" id="cashCard" aria-labelledby="h-cash">
+    <h2 id="h-cash"><span class="step">6</span>Cash timeline</h2>
+    <div id="cashBody"></div>
+  </section>
+
+  <section class="card" id="assumpCard" aria-labelledby="h-assump">
+    <h2 id="h-assump"><span class="step">7</span>Assumptions and sources</h2>
+    <div id="assumpBody"></div>
+  </section>
+
+  <section class="card no-print" aria-labelledby="h-next">
+    <h2 id="h-next"><span class="step">8</span>What's next</h2>
+    <div class="sub">This calculator is free and stays free. Two things are in the works for teams that want more:</div>
+    <ul class="plain">
+      <li><strong>Paid version (coming):</strong> saved projects shared with your team, tariff alerts by HTS code, supplier history shipment by shipment, and one cash calendar across several projects.</li>
+      <li><strong>Sourcing on request (coming):</strong> a shortlist of factories for a component, checked against public records, with the questions to ask before the first PO.</li>
+    </ul>
+    <p class="faint" style="margin-top:0.6rem">Want either one, or have a kit to run through this? <a href="./about.html">Get in touch through the About page</a>.</p>
+    <p class="faint" style="margin-top:0.4rem">Related tools: <a href="./vendor-scorecard.html">Vendor Performance Scorecard</a> for suppliers after the first shipments, <a href="./operating-plan-generator.html">Operating Plan Generator</a>, <a href="./logistics-supply.html">Logistics Supply</a>.</p>
+    <div class="toolbar" style="margin-top:0.8rem">
+      <button type="button" data-action="send-scorecard" data-k="act||send-scorecard">Send suppliers to Vendor Scorecard</button>
+      <span class="faint">Opens the scorecard with your suppliers on the kit sourcing preset. On-time and defect start as placeholders until you have shipments.</span>
+    </div>
+  </section>
+
+  <div class="footer">
+    <p>Part of <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">marketplace-ops-toolkit</a>. Single-file HTML, no install, no tracking.</p>
+    <p>Built by Everton Paula. Not customs or legal advice.</p>
+    <p><a href="./index.html">← All tools</a></p>
+  </div>
+</div>
+
+<script src="js/kit-landed-cost-core.js"></script>
+<script src="js/kit-landed-cost-csv.js"></script>
+<script src="js/kit-landed-cost-sample.js"></script>
+<script>
+(function () {
+  'use strict';
+  var K = window.KitCore, C = window.KitCsv, SAMPLE = window.KitSample;
+  var STORE_KEY = 'kitLandedCost.v1';
+  var CHECK_LABELS = [
+    ['factoryVerified', 'Factory verified: they own the production line, not a trader'],
+    ['sampleApproved', 'Production sample approved'],
+    ['usExportHistory', 'US export history (bills of lading on record)'],
+    ['businessLicense', 'Business license and scope checked'],
+    ['thirdPartyAudit', 'Third-party factory audit on file'],
+    ['certifications', 'Category certifications in hand (e.g. cUPC, NSF/ANSI 61 and 372, UL or ETL, FloorScore)'],
+    ['responsive', 'Answers within one business day']
+  ];
+  var BUCKET_LABELS = [
+    ['fob', 'Goods at origin port (FOB)'], ['freight', 'Ocean freight'], ['duty', 'Duty (all layers)'],
+    ['fees', 'MPF and HMF'], ['broker', 'Broker, ISF filing, bond'], ['insurance', 'Cargo insurance'],
+    ['drayage', 'Drayage and LCL delivery'], ['storage', 'US storage'], ['moqOverage', 'MOQ and carton leftover']
+  ];
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function uid(p) { return p + Math.random().toString(36).slice(2, 8); }
+  function money(n, d) {
+    if (n === null || n === undefined || !isFinite(n)) return '–';
+    d = d === undefined ? 0 : d;
+    var neg = n < 0; var v = Math.abs(n);
+    return (neg ? '-$' : '$') + v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function unitMoney(n) { return n !== null && isFinite(n) && Math.abs(n) < 10 ? money(n, 3) : money(n, 2); }
+  function fnum(n, d) { return (n === null || !isFinite(n)) ? '–' : n.toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
+  function pct(x, d) { return (x === null || !isFinite(x)) ? '–' : (x * 100).toFixed(d === undefined ? 1 : d) + '%'; }
+  function pctIn(x) { return String(+(Number(x) * 100).toPrecision(10)); }
+  function fmtDate(iso) {
+    var p = String(iso).split('-').map(Number);
+    if (p.length < 3 || !p[0]) return esc(iso);
+    return new Date(Date.UTC(p[0], p[1] - 1, p[2])).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  }
+  function todayIso() { return new Date().toISOString().slice(0, 10); }
+
+  // ---------- state ----------
+  function defaultUi() { return { minTier: 'B', pasteLocale: 'en', scenario: { dutyCN: 0, dutyVN: 0, freight: null, switchOrigin: {} } }; }
+  function freshState() { return { v: 1, project: clone(SAMPLE), settings: clone(K.DEFAULTS), ui: defaultUi() }; }
+  function blankProject() {
+    var d = K.addDays(todayIso(), 30);
+    return { name: 'New project', kits: [{ id: 'k1', name: 'Standard finish kit', units: 100 }], components: [],
+      waves: [{ id: 'w1', date: d, units: 100 }], pricing: { mode: 'margin', value: 0.2 },
+      billing: [{ pct: 0.3, daysAfter: 'contract', days: 0 }, { pct: 0.7, daysAfter: 'delivery', days: 30 }],
+      storage: { perPalletMonth: 28, months: 1 }, moqOverage: 'project' };
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && s.v === 1 && s.project && s.settings) {
+          var ui = defaultUi();
+          Object.keys(s.ui || {}).forEach(function (k) { ui[k] = s.ui[k]; });
+          ui.scenario = Object.assign(defaultUi().scenario, ui.scenario || {});
+          return { v: 1, project: s.project, settings: s.settings, ui: ui };
+        }
+      }
+    } catch (e) { /* storage blocked or corrupt: start from the example */ }
+    return freshState();
+  }
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* private mode */ } }
+  var state = load();
+
+  function setDestination(coast) {
+    var s = state.settings;
+    s.destination = coast;
+    Object.keys(s.origins).forEach(function (o) {
+      var oc = s.origins[o];
+      if (oc.freightByCoast && oc.freightByCoast[coast]) oc.freightPerContainer = clone(oc.freightByCoast[coast]);
+      if (oc.lclByCoast && oc.lclByCoast[coast] !== undefined) oc.lclPerCbm = oc.lclByCoast[coast];
+    });
+  }
+
+  function getPath(o, path) { return path.split('.').reduce(function (a, k) { return a == null ? undefined : a[k]; }, o); }
+  function setPath(o, path, v) {
+    var ks = path.split('.'); var last = ks.pop();
+    var t = ks.reduce(function (a, k) { if (a[k] == null || typeof a[k] !== 'object') a[k] = {}; return a[k]; }, o);
+    t[last] = v;
+  }
+  function findComp(id) { return state.project.components.filter(function (c) { return c.id === id; })[0]; }
+
+  // ---------- compute ----------
+  function scenarioSettings() {
+    var sc = state.ui.scenario;
+    var opt = { dutyAddPts: { CN: (+sc.dutyCN || 0) / 100, VN: (+sc.dutyVN || 0) / 100 }, switchOrigin: sc.switchOrigin || {} };
+    if (sc.freight > 0) opt.freightPerContainer = +sc.freight;
+    return K.applyScenario(state.settings, opt);
+  }
+  function scenarioActive() {
+    var sc = state.ui.scenario;
+    return (+sc.dutyCN || 0) !== 0 || (+sc.dutyVN || 0) !== 0 || sc.freight > 0 ||
+      Object.keys(sc.switchOrigin || {}).some(function (k) { return sc.switchOrigin[k]; });
+  }
+  function compute() {
+    var p = state.project, s = state.settings;
+    var mix = K.recommendMix(p, s, { minTier: state.ui.minTier });
+    var totals = K.projectTotals(p, mix.picks, s);
+    var r = { mix: mix, totals: totals, range: K.costRange(p, mix.picks, s), cash: K.cashTimeline(p, mix.picks, s) };
+    if (scenarioActive()) {
+      var ss = scenarioSettings(), fp = { fixedPrices: K.fixedPricesFrom(totals) };
+      r.sTotals = K.projectTotals(p, mix.picks, ss, fp);
+      r.sCash = K.cashTimeline(p, mix.picks, ss, fp);
+    }
+    return r;
+  }
+
+  // ---------- inputs ----------
+  function inp(scope, path, value, type, cls, extra) {
+    var shown = type === 'pct' ? pctIn(value || 0) : (value === null || value === undefined ? '' : value);
+    var ids = (extra && extra.id ? ' data-id="' + esc(extra.id) + '"' : '') + (extra && extra.cid ? ' data-cid="' + esc(extra.cid) + '"' : '') + (extra && extra.o ? ' data-o="' + esc(extra.o) + '"' : '');
+    var key = scope + '|' + ((extra && (extra.cid ? extra.cid + '/' : '') + (extra.id || extra.o || '')) || '') + '|' + path;
+    var isNum = type === 'num' || type === 'pct';
+    var label = extra && extra.label ? ' aria-label="' + esc(extra.label) + '"' : '';
+    return '<input type="text"' + (isNum ? ' inputmode="decimal" class="n ' + (cls || '') + '"' : ' class="' + (cls || '') + '"') +
+      ' data-scope="' + scope + '" data-path="' + path + '" data-type="' + (type || 'text') + '"' + ids + ' data-k="' + esc(key) + '" value="' + esc(shown) + '"' + label + '>';
+  }
+  function sel(scope, path, value, options, extra) {
+    var ids = (extra && extra.id ? ' data-id="' + esc(extra.id) + '"' : '') + (extra && extra.cid ? ' data-cid="' + esc(extra.cid) + '"' : '');
+    var key = scope + '|' + ((extra && (extra.cid ? extra.cid + '/' : '') + (extra.id || '')) || '') + '|' + path;
+    var label = extra && extra.label ? ' aria-label="' + esc(extra.label) + '"' : '';
+    return '<select data-scope="' + scope + '" data-path="' + path + '" data-type="text"' + ids + ' data-k="' + esc(key) + '"' + label + '>' +
+      options.map(function (o) { var v = Array.isArray(o) ? o[0] : o, l = Array.isArray(o) ? o[1] : o; return '<option value="' + esc(v) + '"' + (String(v) === String(value) ? ' selected' : '') + '>' + esc(l) + '</option>'; }).join('') + '</select>';
+  }
+  function btn(action, label, extra, cls) {
+    var ids = (extra && extra.id ? ' data-id="' + esc(extra.id) + '"' : '') + (extra && extra.cid ? ' data-cid="' + esc(extra.cid) + '"' : '') + (extra && extra.v !== undefined ? ' data-v="' + esc(extra.v) + '"' : '');
+    var key = 'act|' + ((extra && ((extra.cid || '') + '/' + (extra.id || '') + '/' + (extra.v === undefined ? '' : extra.v))) || '') + '|' + action;
+    var aria = extra && extra.label ? ' aria-label="' + esc(extra.label) + '"' : '';
+    return '<button type="button" class="' + (cls || 'small') + '" data-action="' + action + '"' + ids + aria + ' data-k="' + esc(key) + '">' + label + '</button>';
+  }
+
+  // ---------- render: summary ----------
+  function renderSummary(R) {
+    var t = R.totals, cash = R.cash;
+    var boxes = 0, lcl = 0;
+    t.containers.forEach(function (w) { Object.keys(w.byOrigin).forEach(function (o) { boxes += w.byOrigin[o].containers.length; if (w.byOrigin[o].lclCbm > 0) lcl++; }); });
+    var units = t.project.units;
+    var html = '<h2>Project at a glance</h2><div class="band">' +
+      stat('Landed cost per unit', money(t.perUnit.cost, 2), 'range ' + money(R.range.low) + ' to ' + money(R.range.high), true) +
+      stat('Project landed cost', money(t.project.cost), fnum(units) + ' units, ' + state.project.kits.length + ' kit' + (state.project.kits.length === 1 ? '' : 's')) +
+      stat('Margin', money(t.project.margin), pct(t.project.marginPct) + ' of price, ' + money(t.perUnit.margin, 2) + ' per unit') +
+      stat('Peak cash out', money(cash.peakCapital), cash.peakDate ? 'on ' + fmtDate(cash.peakDate) + (cash.workingCapitalDays !== null ? ', ' + cash.workingCapitalDays + ' days under water' : '') : 'never below zero') +
+      stat('Containers', fnum(boxes) + (lcl ? ' + ' + lcl + ' LCL' : ''), t.containers.length + ' lot' + (t.containers.length === 1 ? '' : 's') + ', ' + (state.settings.destination === 'east' ? 'East' : 'West') + ' Coast') +
+      stat('Duty paid', money(t.breakdown.duty), Object.keys(t.dutyExposureByOrigin).map(function (o) { return o + ' ' + money(t.dutyExposureByOrigin[o]); }).join(', ')) +
+      '</div>';
+    var warn = [];
+    Object.keys(R.mix.warnings).forEach(function (cid) { var c = findComp(cid); warn.push(esc(c ? c.name : cid) + ': ' + esc(R.mix.warnings[cid])); });
+    if (t.missing.length) warn.push(t.missing.length + ' component(s) have no usable quote and are left out of the totals.');
+    if (warn.length) html += '<div class="note warn">' + warn.join('<br>') + '</div>';
+    document.getElementById('summary').innerHTML = html;
+    document.getElementById('printHead').textContent = state.project.name + '. Summary printed ' + fmtDate(todayIso()) + '. Defaults as of ' + state.settings.asOf + '. Not customs or legal advice.';
+  }
+  function stat(k, v, d, hero) { return '<div class="stat' + (hero ? ' hero' : '') + '"><div class="k">' + esc(k) + '</div><div class="v">' + v + '</div><div class="d">' + d + '</div></div>'; }
+
+  // ---------- render: kit builder ----------
+  function renderKit() {
+    var p = state.project;
+    var kitOpts = p.kits.map(function (k) { return [k.id, k.name]; });
+    var h = '<h3>Kit variations</h3><div class="table-wrap"><table><thead><tr><th scope="col">Kit name</th><th scope="col" class="r">Apartment units</th>' +
+      (p.pricing.mode === 'pricePerKit' ? '<th scope="col" class="r">Price per kit<span class="u">USD, blank = default</span></th>' : '') + '<th scope="col"><span class="sr">Remove</span></th></tr></thead><tbody>';
+    p.kits.forEach(function (k) {
+      h += '<tr><td>' + inp('kit', 'name', k.name, 'text', 'w-l', { id: k.id, label: 'Kit name' }) + '</td><td class="r">' + inp('kit', 'units', k.units, 'num', 'w-s', { id: k.id, label: 'Units' }) + '</td>' +
+        (p.pricing.mode === 'pricePerKit' ? '<td class="r">' + inp('kit', 'price', k.price, 'num', 'w-s', { id: k.id, label: 'Price per kit' }) + '</td>' : '') +
+        '<td>' + (p.kits.length > 1 ? btn('del-kit', '×', { id: k.id, label: 'Remove kit ' + k.name }, 'icon') : '') + '</td></tr>';
+    });
+    h += '</tbody></table></div><div style="margin-top:0.5rem">' + btn('add-kit', '+ Add kit variation') + '</div>';
+
+    h += '<h3>Components of one unit</h3><div class="table-wrap"><table><thead><tr>' +
+      '<th scope="col">Component</th>' + (p.kits.length > 1 ? '<th scope="col">Kit</th>' : '') +
+      '<th scope="col">UoM</th><th scope="col" class="r">Qty<span class="u">per unit</span></th><th scope="col" class="r">Waste<span class="u">%</span></th>' +
+      '<th scope="col" class="r">Per carton<span class="u">UoM</span></th><th scope="col">HTS code<span class="u">example, confirm</span></th>' +
+      '<th scope="col" class="r">Base duty<span class="u">%</span></th><th scope="col" class="r">Sec. 232 share<span class="u">% of value</span></th><th scope="col" class="r">232 rate<span class="u">% if not default</span></th><th scope="col"><span class="sr">Remove</span></th></tr></thead><tbody>';
+    p.components.forEach(function (c) {
+      var x = { id: c.id };
+      h += '<tr><td>' + inp('comp', 'name', c.name, 'text', 'w-l', { id: c.id, label: 'Component name' }) + '</td>' +
+        (p.kits.length > 1 ? '<td>' + sel('comp', 'kitId', c.kitId, kitOpts, { id: c.id, label: 'Kit' }) + '</td>' : '') +
+        '<td>' + inp('comp', 'uom', c.uom, 'text', 'w-xs', { id: c.id, label: 'Unit of measure' }) + '</td>' +
+        '<td class="r">' + inp('comp', 'qtyPerUnit', c.qtyPerUnit, 'num', 'w-xs', { id: c.id, label: 'Quantity per unit' }) + '</td>' +
+        '<td class="r">' + inp('comp', 'wastePct', c.wastePct, 'pct', 'w-xs', { id: c.id, label: 'Waste percent' }) + '</td>' +
+        '<td class="r">' + inp('comp', 'unitsPerCarton', c.unitsPerCarton, 'num', 'w-xs', { id: c.id, label: 'Units per carton' }) + '</td>' +
+        '<td>' + inp('comp', 'htsCode', c.htsCode, 'text', 'w-s', { id: c.id, label: 'HTS code' }) + '</td>' +
+        '<td class="r">' + inp('comp', 'baseDutyRate', c.baseDutyRate, 'pct', 'w-xs', { id: c.id, label: 'Base duty percent' }) + '</td>' +
+        '<td class="r">' + inp('comp', 'metal232Share', c.metal232Share, 'pct', 'w-xs', { id: c.id, label: 'Section 232 share' }) + '</td>' +
+        '<td class="r">' + inp('comp', 'metal232Rate', c.metal232Rate === undefined ? '' : c.metal232Rate, c.metal232Rate === undefined ? 'num' : 'pct', 'w-xs', { id: c.id, label: 'Section 232 rate override' }).replace('data-type="num"', 'data-type="pctopt"') + '</td>' +
+        '<td>' + btn('del-comp', '×', { id: c.id, label: 'Remove component ' + c.name }, 'icon') + '</td></tr>';
+      void x;
+    });
+    if (!p.components.length) h += '<tr><td colspan="11" class="faint">No components yet. Add one, or load the example.</td></tr>';
+    h += '</tbody></table></div><div style="margin-top:0.5rem">' + btn('add-comp', '+ Add component') + '</div>';
+
+    h += '<div class="grid2" style="margin-top:1.2rem"><div><h3>Shipment lots</h3><p class="faint">PO date and units per lot. Every kit ships in the same proportion.</p>' +
+      '<div class="table-wrap"><table><thead><tr><th scope="col">PO date</th><th scope="col" class="r">Units</th><th scope="col"><span class="sr">Remove</span></th></tr></thead><tbody>';
+    p.waves.forEach(function (w) {
+      h += '<tr><td><input type="date" data-scope="wave" data-path="date" data-type="text" data-id="' + esc(w.id) + '" data-k="wave|' + esc(w.id) + '|date" value="' + esc(w.date) + '" aria-label="PO date"></td>' +
+        '<td class="r">' + inp('wave', 'units', w.units, 'num', 'w-s', { id: w.id, label: 'Units in lot' }) + '</td><td>' + (p.waves.length > 1 ? btn('del-wave', '×', { id: w.id, label: 'Remove lot' }, 'icon') : '') + '</td></tr>';
+    });
+    var waveUnits = p.waves.reduce(function (a, w) { return a + (+w.units || 0); }, 0);
+    var kitUnits = p.kits.reduce(function (a, k) { return a + (+k.units || 0); }, 0);
+    h += '</tbody></table></div><div style="margin-top:0.5rem">' + btn('add-wave', '+ Add lot') + '</div>' +
+      (waveUnits !== kitUnits ? '<p class="faint" style="margin-top:0.4rem">Lots add up to ' + fnum(waveUnits) + ' units and kits to ' + fnum(kitUnits) + '. Lots are used as proportions, so the project still ships every kit.</p>' : '') + '</div>';
+
+    h += '<div><h3>Price, billing and storage</h3>' +
+      field('Pricing', sel('project', 'pricing.mode', p.pricing.mode, [['margin', 'Margin % on landed cost'], ['pricePerKit', 'Fixed price per kit']], { label: 'Pricing mode' })) +
+      field(p.pricing.mode === 'margin' ? 'Margin on landed cost, %' : 'Default price per kit, USD', inp('project', 'pricing.value', p.pricing.value, p.pricing.mode === 'margin' ? 'pct' : 'num', '', { label: 'Pricing value' })) +
+      field('Contract signing date', '<input type="date" data-scope="project" data-path="contractDate" data-type="text" data-k="project||contractDate" value="' + esc(p.contractDate || '') + '" aria-label="Contract date">') +
+      field('US storage, USD per pallet per month', inp('project', 'storage.perPalletMonth', p.storage.perPalletMonth, 'num', '', { label: 'Storage per pallet month' })) +
+      field('Months in storage before delivery', inp('project', 'storage.months', p.storage.months, 'num', '', { label: 'Storage months' })) +
+      field('MOQ leftover', sel('project', 'moqOverage', p.moqOverage, [['project', 'Cost it to this project'], ['carry', 'Carry to the next project']], { label: 'MOQ leftover' })) +
+      '<p class="faint" style="margin-top:0.6rem">Customer billing</p><div class="table-wrap"><table><thead><tr><th scope="col" class="r">%</th><th scope="col">After</th><th scope="col" class="r">Days</th><th scope="col"><span class="sr">Remove</span></th></tr></thead><tbody>';
+    p.billing.forEach(function (b, i) {
+      h += '<tr><td class="r">' + inp('bill', 'pct', b.pct, 'pct', 'w-xs', { id: String(i), label: 'Billing percent' }) + '</td><td>' + sel('bill', 'daysAfter', b.daysAfter, [['contract', 'contract signed'], ['delivery', 'delivery on site']], { id: String(i), label: 'Billing trigger' }) + '</td>' +
+        '<td class="r">' + inp('bill', 'days', b.days, 'num', 'w-xs', { id: String(i), label: 'Days' }) + '</td><td>' + btn('del-bill', '×', { id: String(i), label: 'Remove billing line' }, 'icon') + '</td></tr>';
+    });
+    var billSum = p.billing.reduce(function (a, b) { return a + (+b.pct || 0); }, 0);
+    h += '</tbody></table></div><div style="margin-top:0.5rem">' + btn('add-bill', '+ Add billing line') + '</div>' +
+      (Math.abs(billSum - 1) > 0.0005 ? '<p class="errors">Billing adds up to ' + pct(billSum) + ', not 100%.</p>' : '') + '</div></div>';
+    document.getElementById('kitBody').innerHTML = h;
+  }
+  function field(label, control) { return '<div class="field"><span class="f">' + label + '</span>' + control + '</div>'; }
+
+  // ---------- render: quotes ----------
+  function renderQuotes(R) {
+    var p = state.project, h = '';
+    p.components.forEach(function (c) {
+      var rows = R.mix.rows[c.id] || [];
+      var byId = {}; rows.forEach(function (r) { byId[r.quoteId] = r; });
+      var need = K.needQty(c, p);
+      h += '<div class="comp-block"><div class="head"><strong>' + esc(c.name) + '</strong><span class="faint">need ' + fnum(need.total, need.total < 100 ? 1 : 0) + ' ' + esc(c.uom) + ' (' + fnum(need.perKit, 2) + ' per unit with waste)</span><span class="faint">HTS ' + esc(c.htsCode || 'not set') + '</span></div>' +
+        '<div class="table-wrap"><table><thead><tr><th scope="col">Supplier</th><th scope="col">Origin</th><th scope="col">Incoterm</th>' +
+        '<th scope="col" class="r">Price<span class="u">USD / ' + esc(c.uom) + '</span></th><th scope="col" class="r">MOQ</th><th scope="col" class="r">Prod.<span class="u">days</span></th>' +
+        '<th scope="col" class="r">Deposit<span class="u">%</span></th><th scope="col">Balance</th><th scope="col" class="r">CBM<span class="u">per carton</span></th><th scope="col" class="r">Kg<span class="u">per carton</span></th>' +
+        '<th scope="col" class="r">Incoterm adj.<span class="u">USD / ' + esc(c.uom) + '</span></th><th scope="col">Risk</th>' +
+        '<th scope="col" class="r">Duty<span class="u">rate</span></th><th scope="col" class="r">Landed<span class="u">USD / ' + esc(c.uom) + '</span></th><th scope="col" class="r">Project cost<span class="u">incl. MOQ</span></th><th scope="col" class="r">Rank</th><th scope="col"><span class="sr">Remove</span></th></tr></thead><tbody>';
+      (c.quotes || []).forEach(function (q) {
+        var r = byId[q.id] || {};
+        var x = function (label) { return { id: q.id, cid: c.id, label: label }; };
+        var picked = R.mix.picks[c.id] === q.id, alt = R.mix.alternates[c.id] === q.id;
+        var adj = q.incoterm === 'EXW' ? inp('quote', 'exwToFobPerUnit', q.exwToFobPerUnit, 'num', 'w-xs', x('Origin trucking per unit'))
+          : q.incoterm === 'CIF' ? inp('quote', 'cifFreightInsurancePerUnit', q.cifFreightInsurancePerUnit, 'num', 'w-xs', x('Freight and insurance inside CIF price')) : '<span class="faint">–</span>';
+        var risk = r.risk || K.riskScore(q.risk && q.risk.checks);
+        var checks = (q.risk && q.risk.checks) || {};
+        var dr = K.dutyRate(q, c, q.origin, state.settings);
+        h += '<tr class="' + (picked ? 'picked' : '') + (r.eligible === false ? ' ineligible' : '') + '">' +
+          '<td>' + inp('quote', 'supplier', q.supplier, 'text', 'w-sup', x('Supplier')) + '</td>' +
+          '<td>' + sel('quote', 'origin', q.origin, ['CN', 'VN'], x('Origin')) + '</td>' +
+          '<td>' + sel('quote', 'incoterm', q.incoterm, ['FOB', 'EXW', 'CIF'], x('Incoterm')) + '</td>' +
+          '<td class="r">' + inp('quote', 'price', q.price, 'num', 'w-xs', x('Price')) + '</td>' +
+          '<td class="r">' + inp('quote', 'moq', q.moq, 'num', 'w-s', x('MOQ')) + '</td>' +
+          '<td class="r">' + inp('quote', 'productionDays', q.productionDays, 'num', 'w-xs', x('Production days')) + '</td>' +
+          '<td class="r">' + inp('quote', 'paymentTerms.depositPct', q.paymentTerms && q.paymentTerms.depositPct, 'pct', 'w-xs', x('Deposit percent')) + '</td>' +
+          '<td>' + sel('quote', 'paymentTerms.balance', q.paymentTerms && q.paymentTerms.balance, [['beforeShipment', 'before ship'], ['onArrival', 'on arrival']], x('Balance terms')) + '</td>' +
+          '<td class="r">' + inp('quote', 'cbmPerCarton', q.cbmPerCarton, 'num', 'w-xs', x('CBM per carton')) + '</td>' +
+          '<td class="r">' + inp('quote', 'kgPerCarton', q.kgPerCarton, 'num', 'w-xs', x('Kg per carton')) + '</td>' +
+          '<td class="r">' + adj + '</td>' +
+          '<td><details class="risk"><summary data-k="risk|' + esc(c.id + '/' + q.id) + '|open"><span class="pill ' + risk.tier + '">' + risk.tier + '</span> <span class="num faint">' + risk.score + '</span></summary><div class="checks">' +
+          CHECK_LABELS.map(function (cl) {
+            return '<label><input type="checkbox" data-scope="quote" data-path="risk.checks.' + cl[0] + '" data-type="bool" data-id="' + esc(q.id) + '" data-cid="' + esc(c.id) + '" data-k="quote|' + esc(c.id + '/' + q.id) + '|chk.' + cl[0] + '"' + (checks[cl[0]] ? ' checked' : '') + '> <span>' + esc(cl[1]) + ' <span class="faint">(' + K.RISK_WEIGHTS[cl[0]] + ')</span></span></label>';
+          }).join('') + '</div></details></td>' +
+          '<td class="r num">' + pct(dr) + '</td>' +
+          '<td class="r num">' + (r.eligible ? unitMoney(r.landedPerUnit) : '<span class="pill bad" title="' + esc(r.reason) + '">' + esc(r.reason || 'incomplete') + '</span>') + '</td>' +
+          '<td class="r num">' + (r.eligible ? money(r.componentTotal) : '–') + (r.overageQty > 0.0001 ? '<div class="faint">' + fnum(r.overageQty) + ' over need</div>' : '') + '</td>' +
+          '<td class="r">' + (r.rank ? '<span class="num">' + r.rank + '</span>' : '–') + (picked ? ' <span class="pill good">pick</span>' : alt ? ' <span class="pill info">alt</span>' : '') + (r.cheapestFob ? ' <span class="pill warn" title="Lowest price at the origin port">low FOB</span>' : '') + '</td>' +
+          '<td>' + btn('del-quote', '×', { id: q.id, cid: c.id, label: 'Remove quote from ' + q.supplier }, 'icon') + '</td></tr>';
+      });
+      if (!(c.quotes || []).length) h += '<tr><td colspan="17" class="faint">No quotes yet.</td></tr>';
+      h += '</tbody></table></div><div class="foot">' + btn('add-quote', '+ Add quote', { cid: c.id }) + '</div></div>';
+    });
+    if (!p.components.length) h = '<p class="faint">Add components in step 1 first.</p>';
+    document.getElementById('quotesBody').innerHTML = h;
+    document.getElementById('pasteCols').textContent = C.QUOTE_PASTE_COLUMNS.map(function (c) { return c.label; }).join(' | ');
+  }
+
+  // ---------- render: mix ----------
+  function renderMix(R) {
+    var p = state.project, mix = R.mix;
+    var h = '<div class="table-wrap"><table><thead><tr><th scope="col">Component</th><th scope="col">Recommended</th><th scope="col" class="r">Landed<span class="u">per UoM</span></th><th scope="col" class="r">Project cost</th>' +
+      '<th scope="col">Second source</th><th scope="col" class="r">Cost of the backup<span class="u">extra for the project</span></th></tr></thead><tbody>';
+    p.components.forEach(function (c) {
+      var rows = mix.rows[c.id] || [];
+      var find = function (id) { return rows.filter(function (r) { return r.quoteId === id; })[0]; };
+      var pick = find(mix.picks[c.id]), alt = find(mix.alternates[c.id]);
+      h += '<tr><td>' + esc(c.name) + '</td>' +
+        '<td>' + (pick ? esc(pick.supplier) + ' <span class="pill info">' + pick.origin + '</span> <span class="pill ' + pick.risk.tier + '">' + pick.risk.tier + '</span>' : '<span class="pill bad">no usable quote</span>') + '</td>' +
+        '<td class="r num">' + (pick ? unitMoney(pick.landedPerUnit) + ' / ' + esc(c.uom) : '–') + '</td><td class="r num">' + (pick ? money(pick.componentTotal) : '–') + '</td>' +
+        '<td>' + (alt ? esc(alt.supplier) + ' <span class="pill info">' + alt.origin + '</span> <span class="pill ' + alt.risk.tier + '">' + alt.risk.tier + '</span>' : '<span class="faint">none at this tier</span>') + '</td>' +
+        '<td class="r num">' + (alt && pick ? '+' + money(alt.componentTotal - pick.componentTotal) : '–') + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    if (mix.cheapestFobLost.length) {
+      h += '<h3>Where the lowest FOB price lost</h3><ul class="plain">';
+      mix.cheapestFobLost.forEach(function (l) {
+        var c = findComp(l.componentId), rows = mix.rows[l.componentId];
+        var cheap = rows.filter(function (r) { return r.quoteId === l.cheapestFobQuoteId; })[0];
+        var pick = rows.filter(function (r) { return r.quoteId === l.pickQuoteId; })[0];
+        var why;
+        if (l.belowTier) why = 'it is tier ' + cheap.risk.tier + ', below your floor (' + esc(missingChecks(c, cheap.quoteId)) + ')';
+        else if (l.landedGapPerUnit > 0) why = 'landed it costs ' + unitMoney(cheap.landedPerUnit) + ' against ' + unitMoney(pick.landedPerUnit) + ' per ' + esc(c.uom) + ': duty ' + pct(cheap.breakdown.dutyRate) + ' vs ' + pct(pick.breakdown.dutyRate) + ', freight ' + unitMoney(cheap.breakdown.freight) + ' vs ' + unitMoney(pick.breakdown.freight);
+        else why = 'its MOQ of ' + fnum(cheap.orderQty) + ' against a need of ' + fnum(cheap.needQty) + ' makes the project cost ' + money(cheap.componentTotal) + ' against ' + money(pick.componentTotal);
+        h += '<li><strong>' + esc(c.name) + ':</strong> ' + esc(cheap.supplier) + ' (' + cheap.origin + ') quotes the lowest FOB at ' + unitMoney(cheap.fobPerUnit) + ', but ' + why + '.</li>';
+      });
+      h += '</ul>';
+    }
+    document.getElementById('mixBody').innerHTML = h;
+  }
+  function missingChecks(c, qid) {
+    var q = (c.quotes || []).filter(function (x) { return x.id === qid; })[0];
+    var ch = (q && q.risk && q.risk.checks) || {};
+    var miss = CHECK_LABELS.filter(function (cl) { return !ch[cl[0]] && (cl[0] === 'factoryVerified' || cl[0] === 'sampleApproved'); }).map(function (cl) { return cl[0] === 'factoryVerified' ? 'factory not verified' : 'no approved sample'; });
+    return miss.join(', ') || 'checks missing';
+  }
+
+  // ---------- render: results ----------
+  function renderResults(R) {
+    var t = R.totals, p = state.project, h = '';
+    h += '<div class="band">' +
+      stat('Landed cost per unit', money(t.perUnit.cost, 2), 'range ' + money(R.range.low) + ' to ' + money(R.range.high), true) +
+      stat('Price per unit', money(t.perUnit.price), p.pricing.mode === 'margin' ? pct(p.pricing.value, 0) + ' on landed cost' : 'fixed price per kit') +
+      stat('Margin per unit', money(t.perUnit.margin), pct(t.project.marginPct) + ' of price') +
+      stat('Project', money(t.project.cost), 'cost; price ' + money(t.project.price) + ', margin ' + money(t.project.margin)) + '</div>';
+    if (p.kits.length > 1) {
+      h += '<h3>By kit</h3><div class="table-wrap"><table><thead><tr><th scope="col">Kit</th><th scope="col" class="r">Units</th><th scope="col" class="r">Cost per kit</th><th scope="col" class="r">Price per kit</th><th scope="col" class="r">Margin per kit</th></tr></thead><tbody>';
+      p.kits.forEach(function (k) { var x = t.perKit[k.id] || {}; h += '<tr><td>' + esc(k.name) + '</td><td class="r num">' + fnum(x.units) + '</td><td class="r num">' + money(x.cost) + '</td><td class="r num">' + money(x.price) + '</td><td class="r num">' + money(x.margin) + ' (' + pct(x.marginPct) + ')</td></tr>'; });
+      h += '</tbody></table></div>';
+    }
+    if (t.project.carriedInventory > 0) h += '<div class="note">MOQ leftover carried as stock: ' + money(t.project.carriedInventory) + '. It is paid in the cash timeline but not costed to this project.</div>';
+    h += '<p class="faint" style="margin-top:0.5rem">Range: low = every duty layer 5 points lower; high = 5 points higher and ocean freight doubled. Only the per-unit total shows cents.</p>';
+
+    h += '<div class="grid2"><div><h3>Where the money goes</h3><div class="table-wrap"><table><thead><tr><th scope="col">Cost line</th><th scope="col" class="r">Project</th><th scope="col" class="r">Per unit</th><th scope="col">Share</th></tr></thead><tbody>';
+    BUCKET_LABELS.forEach(function (b) {
+      var v = t.breakdown[b[0]], sh = t.project.cost > 0 ? v / t.project.cost : 0;
+      h += '<tr><td>' + b[1] + '</td><td class="r num">' + money(v) + '</td><td class="r num">' + money(t.project.units > 0 ? v / t.project.units : 0) + '</td><td><div class="bar" title="' + pct(sh) + '"><span style="width:' + (sh * 100).toFixed(1) + '%"></span></div></td></tr>';
+    });
+    h += '<tr><th scope="row">Total landed cost</th><th class="r num">' + money(t.project.cost) + '</th><th class="r num">' + money(t.perUnit.cost, 2) + '</th><th></th></tr></tbody></table></div></div>';
+
+    h += '<div><h3>Tariff exposure by origin</h3><div class="table-wrap"><table><thead><tr><th scope="col">Origin</th><th scope="col" class="r">Goods value</th><th scope="col" class="r">Duty paid</th><th scope="col" class="r">Effective rate</th><th scope="col" class="r">+10 points costs</th></tr></thead><tbody>';
+    Object.keys(t.valueByOrigin).forEach(function (o) {
+      var v = t.valueByOrigin[o], d = t.dutyExposureByOrigin[o] || 0;
+      h += '<tr><td>' + esc((state.settings.origins[o] || {}).label || o) + '</td><td class="r num">' + money(v) + '</td><td class="r num">' + money(d) + '</td><td class="r num">' + pct(v > 0 ? d / v : 0) + '</td><td class="r num">' + money(v * 0.1) + '</td></tr>';
+    });
+    h += '</tbody></table></div><p class="faint" style="margin-top:0.4rem">Duty is charged on the customs value (FOB). Freight and insurance stay out of the base.</p></div></div>';
+
+    h += '<h3>Containers by lot and origin</h3><p class="faint">Full boxes use the size with the lowest cost per usable CBM at this load\'s density; heavy loads such as SPC flooring fill on weight first. The leftover goes LCL when that is cheaper than one more box. Payload is the US road limit, not the box maximum.</p>';
+    t.containers.forEach(function (w, wi) {
+      Object.keys(w.byOrigin).forEach(function (o) {
+        var g = w.byOrigin[o];
+        if (!(g.cbm > 0)) return;
+        var counts = {}, heavy = 0;
+        g.containers.forEach(function (c) { counts[c.type] = (counts[c.type] || 0) + 1; if (c.limitedBy === 'weight') heavy++; });
+        var mixTxt = Object.keys(counts).map(function (t) { return counts[t] + ' × ' + t; }).join(' + ') + (heavy ? ' (' + heavy + ' weight-limited)' : '');
+        mixTxt = mixTxt ? mixTxt + (g.lclCbm > 0 ? ' + LCL ' + fnum(g.lclCbm, 1) + ' CBM' : '') : 'LCL only';
+        h += '<p style="margin:0.7rem 0 0.35rem"><strong>Lot ' + (wi + 1) + ' (' + fmtDate(w.date) + ') from ' + esc((state.settings.origins[o] || {}).label || o) + ':</strong> ' + esc(mixTxt) + '. <span class="mono">' + fnum(g.cbm, 1) + ' CBM (' + fnum(g.cbm * 35.3147) + ' cu ft), ' + fnum(g.kg) + ' kg (' + fnum(g.kg * 2.20462) + ' lb)</span>, freight ' + money(g.freightTotal) + '</p><div class="boxes">';
+        g.containers.forEach(function (c, i) {
+          var cap = state.settings.containers[c.type] || { cbm: 1, kg: 1 };
+          var fv = c.cbmUsed / cap.cbm, fw = c.kgUsed / cap.kg;
+          h += '<div class="box"><div class="t"><span>' + c.type + ' #' + (i + 1) + '</span>' + (c.limitedBy === 'weight' ? '<span class="pill warn">weight-limited</span>' : c.full ? '<span class="pill good">full by volume</span>' : '<span class="pill info">partial</span>') + '</div>' +
+            '<div class="row"><span>Vol</span><div class="bar"><span style="width:' + Math.min(100, fv * 100).toFixed(0) + '%"></span></div><span class="num">' + pct(fv, 0) + '</span></div>' +
+            '<div class="row"><span>Wt</span><div class="bar w"><span style="width:' + Math.min(100, fw * 100).toFixed(0) + '%"></span></div><span class="num">' + pct(fw, 0) + '</span></div>' +
+            '<div class="faint mono" style="margin-top:0.3rem">' + fnum(c.cbmUsed, 1) + ' CBM, ' + fnum(c.kgUsed) + ' kg, ' + money(c.cost) + '</div></div>';
+        });
+        if (g.lclCbm > 0) h += '<div class="box"><div class="t"><span>LCL</span><span class="pill info">shared box</span></div><div class="faint mono">' + fnum(g.lclCbm, 2) + ' CBM, ' + fnum(g.lclKg) + ' kg, billed on ' + fnum(Math.max(g.lclCbm, g.lclKg / 1000, 1), 2) + ' revenue tons, ' + money(g.lclCost) + '</div></div>';
+        h += '</div>';
+      });
+    });
+    document.getElementById('resultsBody').innerHTML = h;
+  }
+
+  // ---------- render: scenarios ----------
+  function renderScen(R) {
+    var sc = state.ui.scenario, p = state.project;
+    var h = '<div class="grid2"><div>' +
+      field('China: change all duty layers by, points', inp('scen', 'dutyCN', sc.dutyCN, 'num', '', { label: 'China duty change in points' })) +
+      field('Vietnam: change all duty layers by, points', inp('scen', 'dutyVN', sc.dutyVN, 'num', '', { label: 'Vietnam duty change in points' })) +
+      field('Ocean freight per 40HQ, USD (all lanes)', inp('scen', 'freight', sc.freight || '', 'num', '', { label: 'Freight per 40HQ' })) +
+      '<div class="toolbar" style="margin-top:0.5rem"><span class="faint">Freight shortcuts:</span>' +
+      [3000, 8000, 25000].map(function (v) { return btn('freight', '$' + (v / 1000) + 'k', { v: v, label: 'Freight ' + v + ' per 40HQ' }, 'small' + (+sc.freight === v ? ' on' : '')); }).join('') +
+      btn('scen-reset', 'Reset scenario') + '</div>' +
+      '<p class="faint" style="margin-top:0.4rem">Other box sizes and LCL move by the same ratio as the 40HQ.</p></div><div>' +
+      '<p class="faint">Ship a component from the other country at the same price (shows what the duty and freight difference alone is worth):</p>';
+    p.components.forEach(function (c) {
+      var pick = (R.mix.rows[c.id] || []).filter(function (r) { return r.quoteId === R.mix.picks[c.id]; })[0];
+      if (!pick) return;
+      h += field(esc(c.name) + ' <span class="faint">(' + pick.origin + ')</span>', sel('scenOrigin', c.id, (sc.switchOrigin || {})[c.id] || '', [['', 'as quoted'], ['CN', 'from China'], ['VN', 'from Vietnam']], { label: 'Origin for ' + c.name }));
+    });
+    h += '</div></div>';
+    if (R.sTotals) {
+      var b = R.totals, s = R.sTotals;
+      var rows = [
+        ['Landed cost per unit', b.perUnit.cost, s.perUnit.cost, 2], ['Project landed cost', b.project.cost, s.project.cost, 0],
+        ['Ocean freight', b.breakdown.freight, s.breakdown.freight, 0], ['Duty', b.breakdown.duty, s.breakdown.duty, 0],
+        ['Margin', b.project.margin, s.project.margin, 0], ['Peak cash out', R.cash.peakCapital, R.sCash.peakCapital, 0]
+      ];
+      h += '<h3>Base case vs scenario</h3><div class="table-wrap"><table><thead><tr><th scope="col">Line</th><th scope="col" class="r">Base</th><th scope="col" class="r">Scenario</th><th scope="col" class="r">Change</th></tr></thead><tbody>';
+      rows.forEach(function (r) { var d = r[2] - r[1]; h += '<tr><td>' + r[0] + '</td><td class="r num">' + money(r[1], r[3]) + '</td><td class="r num">' + money(r[2], r[3]) + '</td><td class="r num">' + (d >= 0 ? '+' : '') + money(d, r[3]) + '</td></tr>'; });
+      h += '<tr><td>Margin, % of price</td><td class="r num">' + pct(b.project.marginPct) + '</td><td class="r num">' + pct(s.project.marginPct) + '</td><td class="r num">' + ((s.project.marginPct - b.project.marginPct) * 100).toFixed(1) + ' pts</td></tr></tbody></table></div>';
+    } else {
+      h += '<p class="faint" style="margin-top:0.8rem">Set a change above to see it next to the base case.</p>';
+    }
+    document.getElementById('scenBody').innerHTML = h;
+  }
+
+  // ---------- render: cash ----------
+  function renderCash(R) {
+    var c = R.cash, s = R.sCash;
+    var h = '<div class="band">' + stat('Peak cash out', money(c.peakCapital), c.peakDate ? 'on ' + fmtDate(c.peakDate) : 'never below zero', true) +
+      stat('Days under water', c.workingCapitalDays === null ? 'not recovered' : c.workingCapitalDays + ' days', 'from the first day the balance goes negative to the day it recovers') +
+      stat('Cash at the end', money(c.events.length ? c.events[c.events.length - 1].cumulative : 0), 'equals margin' + (R.totals.project.carriedInventory > 0 ? ' minus stock carried' : '')) + '</div>';
+    h += '<div class="legend"><span><i></i>Base case</span>' + (s ? '<span><i class="s"></i>Scenario</span>' : '') + '</div>' + chart(c.events, s ? s.events : null, c);
+    h += '<p class="faint">Deposit on the PO date (lot date), balance when goods are ready (or on arrival if the quote says so), freight and insurance at sailing, duty, fees and drayage on arrival, storage monthly, customer receipts per your billing lines. Arrival = latest ready date per origin + transit + ' + state.settings.clearanceDays + ' days to clear and deliver.</p>';
+    h += '<details class="no-print" style="margin-top:0.6rem"><summary data-k="cash||table">All ' + c.events.length + ' payments</summary><div class="table-wrap" style="margin-top:0.5rem"><table><thead><tr><th scope="col">Date</th><th scope="col">Item</th><th scope="col" class="r">Out</th><th scope="col" class="r">In</th><th scope="col" class="r">Running balance</th></tr></thead><tbody>';
+    c.events.forEach(function (e) { h += '<tr><td class="num">' + esc(e.date) + '</td><td>' + esc(e.label) + '</td><td class="r num">' + (e.kind === 'out' ? money(e.amount) : '') + '</td><td class="r num">' + (e.kind === 'in' ? money(e.amount) : '') + '</td><td class="r num">' + money(e.cumulative) + '</td></tr>'; });
+    h += '</tbody></table></div></details>';
+    document.getElementById('cashBody').innerHTML = h;
+  }
+  function chart(ev, ev2, c) {
+    if (!ev.length) return '<p class="faint">No payments yet.</p>';
+    var W = 820, H = 250, L = 70, Rm = 14, T = 14, B = 30;
+    var all = ev.concat(ev2 || []);
+    var t0 = Date.parse(all.reduce(function (a, e) { return e.date < a ? e.date : a; }, all[0].date));
+    var t1 = Date.parse(all.reduce(function (a, e) { return e.date > a ? e.date : a; }, all[0].date));
+    if (t1 <= t0) t1 = t0 + 86400000;
+    var vals = all.map(function (e) { return e.cumulative; }).concat([0]);
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    if (hi - lo < 1) hi = lo + 1;
+    var x = function (d) { return L + (Date.parse(d) - t0) / (t1 - t0) * (W - L - Rm); };
+    var y = function (v) { return T + (hi - v) / (hi - lo) * (H - T - B); };
+    var path = function (list) {
+      var d = 'M' + x(list[0].date).toFixed(1) + ' ' + y(0).toFixed(1), prev = 0;
+      list.forEach(function (e) { d += ' L' + x(e.date).toFixed(1) + ' ' + y(prev).toFixed(1) + ' L' + x(e.date).toFixed(1) + ' ' + y(e.cumulative).toFixed(1); prev = e.cumulative; });
+      return d;
+    };
+    var s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Running cash balance from ' + esc(ev[0].date) + ' to ' + esc(ev[ev.length - 1].date) + '; lowest point ' + esc(money(-c.peakCapital)) + '">';
+    [lo, (lo + hi) / 2, hi].forEach(function (v) { s += '<line class="grid" x1="' + L + '" x2="' + (W - Rm) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '"/><text x="' + (L - 6) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end">' + esc(short(v)) + '</text>'; });
+    s += '<line class="zero" x1="' + L + '" x2="' + (W - Rm) + '" y1="' + y(0).toFixed(1) + '" y2="' + y(0).toFixed(1) + '"/>';
+    var months = [], d0 = new Date(t0); d0.setUTCDate(1);
+    for (var m = new Date(d0); m.getTime() <= t1; m.setUTCMonth(m.getUTCMonth() + 1)) if (m.getTime() >= t0) months.push(new Date(m));
+    var stepM = Math.max(1, Math.ceil(months.length / 8));
+    months.forEach(function (m, i) { if (i % stepM) return; var iso = m.toISOString().slice(0, 10); s += '<text x="' + x(iso).toFixed(1) + '" y="' + (H - 10) + '" text-anchor="middle">' + m.toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' }) + '</text>'; });
+    if (ev2) s += '<path class="scen" d="' + path(ev2) + '"/>';
+    s += '<path class="base" d="' + path(ev) + '"/>';
+    if (c.peakDate) s += '<circle class="peak" cx="' + x(c.peakDate).toFixed(1) + '" cy="' + y(-c.peakCapital).toFixed(1) + '" r="4.5"/><text x="' + Math.min(W - 120, x(c.peakDate) + 8).toFixed(1) + '" y="' + Math.min(H - B - 4, y(-c.peakCapital) + 16).toFixed(1) + '">peak ' + esc(short(-c.peakCapital)) + '</text>';
+    return s + '</svg>';
+  }
+  function short(v) { var a = Math.abs(v); return (v < 0 ? '-' : '') + '$' + (a >= 1e6 ? (a / 1e6).toFixed(2) + 'M' : a >= 1e3 ? (a / 1e3).toFixed(0) + 'k' : a.toFixed(0)); }
+
+  // ---------- render: assumptions ----------
+  function renderAssump() {
+    var s = state.settings, dest = s.destination || 'west';
+    var h = '<div class="note warn"><strong>Confirm with your customs broker. Not customs or legal advice.</strong> Defaults were researched on ' + esc(s.asOf) + ' and change often. Every number below is editable and saved in this browser only. HTS codes in the example are examples; confirm classification with your broker.</div>';
+    h += '<div class="grid2">';
+    Object.keys(s.origins).forEach(function (o) {
+      var oc = s.origins[o];
+      h += '<div class="no-print-edit"><h3>' + esc(oc.label || o) + ': duty layers on top of the HTS base rate</h3>';
+      (oc.countryAdders || []).forEach(function (a, i) {
+        h += '<div class="field"><span class="f">' + inp('adder', 'label', a.label, 'text', '', { o: o, id: String(i), label: 'Layer name' }).replace('data-k="adder|', 'data-k="adder|' + o + '/').replace('<input', '<input style="width:100%"') + (a.exemptIf232 ? ' <span class="faint">(not charged on Section 232 goods)</span>' : '') + '</span><span>' + inp('adder', 'rate', a.rate, 'pct', 'w-xs', { o: o, id: String(i), label: 'Layer rate percent' }).replace('data-k="adder|', 'data-k="adder|' + o + '/') + ' % ' + btn('del-adder', '×', { cid: o, id: String(i), label: 'Remove layer' }, 'icon') + '</span></div>';
+      });
+      h += '<div style="margin:0.4rem 0 0.8rem">' + btn('add-adder', '+ Add layer', { cid: o }) + '</div>';
+      h += '<h3>' + esc(oc.label || o) + ': ocean freight to the ' + (dest === 'east' ? 'East' : 'West') + ' Coast</h3>';
+      K.CONTAINER_TYPES.forEach(function (t) { h += field(t + ', USD per box', inp('frt', t, (oc.freightPerContainer || {})[t], 'num', '', { o: o, label: o + ' ' + t + ' freight' })); });
+      h += field('LCL, USD per revenue ton (CBM or 1,000 kg)', inp('frt', 'lcl', oc.lclPerCbm, 'num', '', { o: o, label: o + ' LCL rate' }));
+      h += field('Transit days to the West / East Coast', inp('set', 'transitDays.' + o + '.west', s.transitDays[o].west, 'num', 'w-xs', { label: o + ' transit west' }) + ' ' + inp('set', 'transitDays.' + o + '.east', s.transitDays[o].east, 'num', 'w-xs', { label: o + ' transit east' }));
+      h += '</div>';
+    });
+    h += '<div><h3>Customs fees and handling</h3>' +
+      field('MPF, % of entered value', inp('set', 'fees.mpfRate', s.fees.mpfRate, 'pct')) +
+      field('MPF minimum per entry, USD', inp('set', 'fees.mpfMin', s.fees.mpfMin, 'num')) +
+      field('MPF maximum per entry, USD', inp('set', 'fees.mpfMax', s.fees.mpfMax, 'num')) +
+      field('HMF, % of value (ocean)', inp('set', 'fees.hmfRate', s.fees.hmfRate, 'pct')) +
+      field('Broker per entry, USD <span class="faint">estimate</span>', inp('set', 'fees.brokerPerEntry', s.fees.brokerPerEntry, 'num')) +
+      field('ISF filing per entry, USD <span class="faint">estimate</span>', inp('set', 'fees.isfPerEntry', s.fees.isfPerEntry, 'num')) +
+      field('Single-entry bond, USD <span class="faint">estimate</span>', inp('set', 'fees.bondPerEntry', s.fees.bondPerEntry, 'num')) +
+      field('Cargo insurance, % of goods + freight <span class="faint">estimate</span>', inp('set', 'fees.insuranceRate', s.fees.insuranceRate, 'pct')) +
+      field('Drayage per container, USD <span class="faint">estimate</span>', inp('set', 'fees.drayagePerContainer', s.fees.drayagePerContainer, 'num')) +
+      field('LCL delivery per shipment, USD <span class="faint">estimate</span>', inp('set', 'fees.lclDelivery', s.fees.lclDelivery, 'num')) +
+      field('Days to clear and deliver after arrival', inp('set', 'clearanceDays', s.clearanceDays, 'num')) +
+      field('Section 232 default rate, %', inp('set', 'metal232Rate', s.metal232Rate, 'pct')) +
+      field('CBM per pallet (storage)', inp('set', 'cbmPerPallet', s.cbmPerPallet, 'num')) + '</div>';
+    h += '<div><h3>Containers: usable volume and payload</h3>';
+    K.CONTAINER_TYPES.forEach(function (t) { h += field(t + ': CBM / kg', inp('set', 'containers.' + t + '.cbm', s.containers[t].cbm, 'num', 'w-xs', { label: t + ' CBM' }) + ' ' + inp('set', 'containers.' + t + '.kg', s.containers[t].kg, 'num', 'w-s', { label: t + ' kg' })); });
+    h += '<p class="faint" style="margin-top:0.4rem">Payload is set to typical US over-the-road limits. Heavier boxes need a tri-axle chassis or a permit; ask your drayage carrier.</p></div>';
+    h += '</div><div class="toolbar no-print" style="margin-top:0.8rem">' + btn('reset-defaults', 'Reset to the researched defaults', null, '') + '</div>';
+
+    h += '<h3>Where the defaults come from</h3><ul class="plain sources">';
+    (s.sources || []).forEach(function (src) { h += '<li>' + esc(src.label) + ' <span class="faint">(' + esc(src.asOf) + ')</span>. <a href="' + esc(src.url) + '" target="_blank" rel="noopener">Source</a></li>'; });
+    h += '</ul>';
+    h += '<h3>How the numbers are built</h3><ul class="plain">' +
+      '<li><strong>Duty</strong> = customs value × (HTS base rate + country layers + Section 232 share × 232 rate). Layers marked as not charged on Section 232 goods drop out on that share. Since Apr 6, 2026, Section 232 applies to the full customs value of a covered article: enter 100% if your HTS line is on the 232 annex, 0% if not or if metal is under 15% of the weight.</li>' +
+      '<li><strong>China and Vietnam today:</strong> the IEEPA "reciprocal" and fentanyl tariffs ended when the Supreme Court ruled on Feb 20, 2026 (CBP stopped collecting Feb 24). The 10% Section 122 surcharge that replaced them expired Jul 24, 2026, and a Section 301 forced-labor tariff of 12.5% took its place for both countries. China\'s older Section 301 lists still apply: List 3 is 25% and covers most lines in a finish kit; a few lighting lines sit on List 4A at 7.5%. Refunds of IEEPA duties paid are a separate matter for your broker.</li>' +
+      '<li><strong>Customs value</strong> is the FOB price. EXW adds your origin trucking to the port (conservative: on a through bill of lading your broker may be able to leave it out). CIF removes the freight and insurance already inside the price, and those quotes never take a share of your own containers, so freight is not counted twice.</li>' +
+      '<li><strong>Entries:</strong> one entry per origin per lot. MPF uses the min and max per entry and is split by value; broker, ISF and bond are per entry, split by value.</li>' +
+      '<li><strong>Freight split:</strong> each box\'s cost is shared by CBM, or by weight when the box closed on weight. LCL is billed per revenue ton (CBM or 1,000 kg, whichever is larger, minimum 1).</li>' +
+      '<li><strong>Quote ranking</strong> uses full-container rates: a carton pays its share of the cheapest box by volume or weight, whichever binds. Per-entry fees are the same for every quote and stay out of the ranking.</li>' +
+      '<li><strong>MOQ:</strong> you buy whole cartons and at least the MOQ. The leftover is costed to the project, or carried to the next one as stock (paid, but outside this project\'s cost).</li>' +
+      '<li><strong>Supplier risk score</strong> (0 to 100): factory verified 25, sample approved 25, US export history 15, business license 10, third-party audit 10, category certifications 10, responsiveness 5. Tier A at 80 or more, B at 55 or more, else C. No verified factory and no approved sample is tier C regardless.</li>' +
+      '<li><strong>Storage:</strong> pallets = lot CBM ÷ CBM per pallet, rounded up, times the monthly rate and months. Storage months also push delivery to site, and with it the customer payments tied to delivery.</li>' +
+      '</ul>';
+    h += '<details class="no-print" style="margin-top:0.6rem"><summary data-k="csv||cols">CSV file format (version 1)</summary><p class="faint" style="margin:0.5rem 0">First line <code>' + esc(C.VERSION_LINE) + '</code>, then this header. Each row has a record type and fills the columns it needs. Export-only columns are ignored on import.</p><div class="table-wrap"><table><thead><tr><th scope="col">Column</th><th scope="col">Meaning</th></tr></thead><tbody>' +
+      C.CSV_COLUMNS.map(function (c) { return '<tr><td class="mono">' + esc(c.key) + '</td><td>' + esc(c.note) + '</td></tr>'; }).join('') + '</tbody></table></div></details>';
+    document.getElementById('assumpBody').innerHTML = h;
+  }
+
+  // ---------- render all, keep focus ----------
+  function renderAll() {
+    var R = compute();
+    document.getElementById('projName').value = state.project.name || '';
+    document.querySelector('[data-scope="dest"]').value = state.settings.destination || 'west';
+    document.querySelector('[data-k="ui||minTier"]').value = state.ui.minTier;
+    document.querySelector('[data-k="ui||pasteLocale"]').value = state.ui.pasteLocale;
+    renderSummary(R); renderKit(); renderQuotes(R); renderMix(R); renderResults(R); renderScen(R); renderCash(R); renderAssump();
+    lastR = R;
+  }
+  var lastR = null, openRisk = {};
+  function rerender() {
+    var a = document.activeElement, key = a && a.getAttribute && a.getAttribute('data-k');
+    openRisk = {};
+    document.querySelectorAll('details.risk[open] summary, details[open] > summary[data-k]').forEach(function (s) { openRisk[s.getAttribute('data-k')] = true; });
+    save();
+    renderAll();
+    Object.keys(openRisk).forEach(function (k) { var s = document.querySelector('summary[data-k="' + cssEsc(k) + '"]'); if (s && s.parentNode) s.parentNode.open = true; });
+    if (key) { var el = document.querySelector('[data-k="' + cssEsc(key) + '"]'); if (el) el.focus({ preventScroll: true }); }
+  }
+  function cssEsc(s) { return String(s).replace(/["\\]/g, '\\$&'); }
+  var pending = null;
+  function schedule() { if (pending) return; pending = setTimeout(function () { pending = null; rerender(); }, 0); }
+
+  // ---------- events ----------
+  function readValue(el) {
+    var type = el.getAttribute('data-type');
+    if (type === 'bool') return { ok: true, v: el.checked };
+    var raw = el.value;
+    if (type === 'text') return { ok: true, v: raw };
+    if (type === 'pctopt' && raw.trim() === '') return { ok: true, v: undefined };
+    var n = C.parseNumber(raw, 'en');
+    if (!n.ok) return raw.trim() === '' && type !== 'pctopt' ? { ok: true, v: 0 } : { ok: false };
+    return { ok: true, v: type === 'pct' || type === 'pctopt' ? n.value / 100 : n.value };
+  }
+  document.addEventListener('change', function (ev) {
+    var el = ev.target;
+    if (el.id === 'csvFile') return importFile(el);
+    var scope = el.getAttribute('data-scope');
+    if (!scope) return;
+    if (scope === 'dest') { setDestination(el.value); return schedule(); }
+    var path = el.getAttribute('data-path'), id = el.getAttribute('data-id'), cid = el.getAttribute('data-cid'), o = el.getAttribute('data-o');
+    var r = readValue(el);
+    if (!r.ok) { el.setAttribute('aria-invalid', 'true'); el.title = 'Not a number'; return; }
+    el.removeAttribute('aria-invalid');
+    var p = state.project, s = state.settings;
+    if (scope === 'project') setPath(p, path, r.v);
+    else if (scope === 'ui') state.ui[path] = r.v;
+    else if (scope === 'kit') setPath(p.kits.filter(function (k) { return k.id === id; })[0] || {}, path, r.v);
+    else if (scope === 'comp') {
+      var c = findComp(id);
+      if (c) { if (r.v === undefined) delete c[path]; else setPath(c, path, r.v); }
+    } else if (scope === 'quote') {
+      var cc = findComp(cid), q = cc && cc.quotes.filter(function (x) { return x.id === id; })[0];
+      if (q) setPath(q, path, r.v);
+    } else if (scope === 'wave') setPath(p.waves.filter(function (w) { return w.id === id; })[0] || {}, path, r.v);
+    else if (scope === 'bill') setPath(p.billing[+id] || {}, path, r.v);
+    else if (scope === 'set') setPath(s, path, r.v);
+    else if (scope === 'adder') setPath(s.origins[o].countryAdders[+id], path, r.v);
+    else if (scope === 'frt') {
+      var oc = s.origins[o], coast = s.destination || 'west';
+      if (path === 'lcl') { oc.lclPerCbm = r.v; if (oc.lclByCoast) oc.lclByCoast[coast] = r.v; }
+      else { oc.freightPerContainer[path] = r.v; if (oc.freightByCoast && oc.freightByCoast[coast]) oc.freightByCoast[coast][path] = r.v; }
+    } else if (scope === 'scen') state.ui.scenario[path] = r.v;
+    else if (scope === 'scenOrigin') { state.ui.scenario.switchOrigin = state.ui.scenario.switchOrigin || {}; if (r.v) state.ui.scenario.switchOrigin[path] = r.v; else delete state.ui.scenario.switchOrigin[path]; }
+    schedule();
+  });
+
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-action]');
+    if (!b) return;
+    var a = b.getAttribute('data-action'), id = b.getAttribute('data-id'), cid = b.getAttribute('data-cid');
+    var p = state.project, s = state.settings;
+    switch (a) {
+      case 'load-example':
+        if (!confirm('Replace the current project with the example? Your tariff and freight settings stay.')) return;
+        p = state.project = clone(SAMPLE); break;
+      case 'clear':
+        if (!confirm('Delete everything saved for this tool in this browser and start a blank project?')) return;
+        try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
+        state = freshState(); state.project = blankProject(); break;
+      case 'export': return exportCsv();
+      case 'import': return document.getElementById('csvFile').click();
+      case 'print': return window.print();
+      case 'send-scorecard': return sendToScorecard();
+      case 'add-kit': p.kits.push({ id: uid('k'), name: 'Kit ' + (p.kits.length + 1), units: 0 }); break;
+      case 'del-kit':
+        if (p.components.some(function (c) { return c.kitId === id; }) && !confirm('Components on this kit will move to the first kit. Continue?')) return;
+        p.kits = p.kits.filter(function (k) { return k.id !== id; });
+        p.components.forEach(function (c) { if (c.kitId === id) c.kitId = p.kits[0].id; }); break;
+      case 'add-comp': p.components.push({ id: uid('c'), kitId: p.kits[0].id, name: 'New component', uom: 'each', qtyPerUnit: 1, wastePct: 0, unitsPerCarton: 1, htsCode: '', baseDutyRate: 0, metal232Share: 0, quotes: [] }); break;
+      case 'del-comp': if (!confirm('Remove this component and its quotes?')) return; p.components = p.components.filter(function (c) { return c.id !== id; }); break;
+      case 'add-quote': var c = findComp(cid); if (c) c.quotes.push(newQuote({})); break;
+      case 'del-quote': var cq = findComp(cid); if (cq) cq.quotes = cq.quotes.filter(function (q) { return q.id !== id; }); break;
+      case 'add-wave': p.waves.push({ id: uid('w'), date: K.addDays((p.waves[p.waves.length - 1] || {}).date || todayIso(), 60), units: 0 }); break;
+      case 'del-wave': p.waves = p.waves.filter(function (w) { return w.id !== id; }); break;
+      case 'add-bill': p.billing.push({ pct: 0, daysAfter: 'delivery', days: 30 }); break;
+      case 'del-bill': p.billing.splice(+id, 1); break;
+      case 'add-adder': s.origins[cid].countryAdders.push({ label: 'New layer', rate: 0 }); break;
+      case 'del-adder': s.origins[cid].countryAdders.splice(+id, 1); break;
+      case 'reset-defaults':
+        if (!confirm('Reset all tariff, fee, freight and container settings to the researched defaults?')) return;
+        var dest = s.destination; state.settings = clone(K.DEFAULTS); setDestination(dest || 'west'); break;
+      case 'freight': state.ui.scenario.freight = +b.getAttribute('data-v'); break;
+      case 'scen-reset': state.ui.scenario = defaultUi().scenario; break;
+      case 'paste-add': pasteAdd(); break;
+      default: return;
+    }
+    schedule();
+  });
+
+  function newQuote(row) {
+    var checks = {}; C.CHECK_KEYS.forEach(function (k) { checks[k] = false; });
+    return { id: uid('q'), supplier: row.supplier || 'New supplier', origin: row.origin || 'CN', incoterm: row.incoterm || 'FOB', price: row.price || 0,
+      moq: row.moq || 0, productionDays: row.productionDays || 45, paymentTerms: { depositPct: row.depositPct === undefined ? 0.3 : row.depositPct, balance: 'beforeShipment' },
+      cbmPerCarton: row.cbmPerCarton || 0, kgPerCarton: row.kgPerCarton || 0, exwToFobPerUnit: 0, cifFreightInsurancePerUnit: 0, risk: { checks: checks } };
+  }
+  function pasteAdd() {
+    var box = document.getElementById('pasteBox'), msg = document.getElementById('pasteMsg');
+    var res = C.parseQuotesTable(box.value, { locale: state.ui.pasteLocale });
+    var errs = res.errors.map(function (e) { return esc(e.message); }), added = 0;
+    res.rows.forEach(function (row) {
+      var name = String(row.component).trim().toLowerCase();
+      var c = state.project.components.filter(function (x) { return String(x.name).trim().toLowerCase() === name; })[0];
+      if (!c) { errs.push('No component named "' + esc(row.component) + '" in step 1'); return; }
+      c.quotes.push(newQuote(row)); added++;
+    });
+    msg.innerHTML = (added ? '<p class="ok-msg">Added ' + added + ' quote' + (added === 1 ? '' : 's') + '.</p>' : '') + (errs.length ? '<p class="errors">' + errs.join('<br>') + '</p>' : '');
+    if (added && !errs.length) box.value = '';
+  }
+
+  function exportCsv() {
+    var csv = C.exportProjectCsv(state.project, lastR ? lastR.mix : null);
+    var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (state.project.name || 'kit-landed-cost').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+  function importFile(input) {
+    var f = input.files && input.files[0], msg = document.getElementById('toolbarMsg');
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        state.project = C.parseProjectCsv(String(reader.result));
+        msg.innerHTML = '<p class="ok-msg">Imported ' + esc(f.name) + '.</p>';
+        schedule();
+      } catch (e) { msg.innerHTML = '<p class="errors">' + esc(e.message) + '</p>'; }
+      input.value = '';
+    };
+    reader.readAsText(f);
+  }
+
+  // Hand suppliers to the Vendor Performance Scorecard (kit sourcing preset) through the URL hash.
+  function sendToScorecard() {
+    var R = lastR || compute(), s = state.settings, dest = s.destination || 'west', bySup = {};
+    state.project.components.forEach(function (c) {
+      var rows = R.mix.rows[c.id] || [];
+      var best = rows.filter(function (r) { return r.eligible; })[0];
+      (c.quotes || []).forEach(function (q) {
+        var r = rows.filter(function (x) { return x.quoteId === q.id; })[0];
+        var v = bySup[q.supplier] || (bySup[q.supplier] = { name: q.supplier, volume: 0, lead: [], cost: [], responsive: true });
+        v.volume += r && r.orderQty ? r.orderQty : 0;
+        v.lead.push((+q.productionDays || 0) + ((s.transitDays[q.origin] || {})[dest] || 0));
+        if (r && r.eligible && best && best.landedPerUnit > 0) v.cost.push((r.landedPerUnit - best.landedPerUnit) / best.landedPerUnit * 100);
+        if (!(q.risk && q.risk.checks && q.risk.checks.responsive)) v.responsive = false;
+      });
+    });
+    var avg = function (a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : 0; };
+    var vendors = Object.keys(bySup).map(function (k) {
+      var v = bySup[k];
+      return { name: v.name, volume: Math.round(v.volume), ontime: 90, defect: 2, cost: Math.round(avg(v.cost) * 10) / 10, leadtime: Math.round(avg(v.lead)), response: v.responsive ? 12 : 48 };
+    });
+    if (!vendors.length) return;
+    var json = JSON.stringify({ src: 'kit-landed-cost', vendors: vendors });
+    var b64 = btoa(unescape(encodeURIComponent(json)));
+    location.href = './vendor-scorecard.html#import=' + b64;
+  }
+
+  renderAll();
+  save();
+})();
+</script>
+<script>
+(function() {
+  var stored = null;
+  try { stored = localStorage.getItem('toolkit-theme'); } catch(e) {}
+  var theme = stored === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  var SUN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="m17.66 6.34 1.41-1.41"/></svg>';
+  var MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  function makeToggle() {
+    var btn = document.createElement('button');
+    btn.id = 'theme-toggle';
+    btn.type = 'button';
+    btn.title = 'Toggle light/dark theme';
+    btn.setAttribute('aria-label', 'Toggle light/dark theme');
+    btn.innerHTML = theme === 'light' ? MOON : SUN;
+    btn.addEventListener('click', function() {
+      theme = theme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+      try { localStorage.setItem('toolkit-theme', theme); } catch(e) {}
+      btn.innerHTML = theme === 'light' ? MOON : SUN;
+    });
+    document.body.appendChild(btn);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', makeToggle);
+  } else {
+    makeToggle();
+  }
+})();
+</script>
+<div class="toolkit-strip-footer">
+  <a href="./index.html">← Marketplace Ops Toolkit</a> · <a href="./case-studies.html">Case studies</a> · <a href="./about.html">About</a> · <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">GitHub · MIT</a>
+</div>
+</body>
+</html>

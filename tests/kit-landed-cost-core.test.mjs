@@ -392,3 +392,10 @@ test('costRange: low <= mid <= high, and mid is the base cost per unit', () => {
   assert.ok(r.low < r.high);
   close(r.mid, K.projectTotals(p, { c1: 'q1' }, s).perUnit.cost, 1e-9);
 });
+
+test('packLines: heavy LCL is charged weight-or-measure (1 CBM = 1,000 kg)', () => {
+  // 1.2 CBM of flooring at 2,000 kg -> 2 revenue tons x 100 = 200 (not 1.2 x 100)
+  const p = K.packLines([{ componentId: 'f', quoteId: 'q', origin: 'VN', cartons: 100, cbmPerCarton: 0.012, kgPerCarton: 20 }], testSettings());
+  close(p.byOrigin.VN.lclCbm, 1.2);
+  close(p.byOrigin.VN.lclCost, 200);
+});
