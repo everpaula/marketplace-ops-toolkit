@@ -1,6 +1,6 @@
 # Walkthrough video scripts
 
-Two 90-120 second walkthroughs for the tools that landed in the BySupply R2 panel demo (2026-05-28). Use Loom or similar. Record in the same browser window the tool runs in.
+Two 90-120 second walkthroughs for the tools that landed in a founder and CFO panel demo (May 2026). Use Loom or similar. Record in the same browser window the tool runs in.
 
 Both scripts share the same structure:
 1. **Hook** (5-10s): what problem the tool solves
@@ -145,6 +145,6 @@ Both should land at 90-120 seconds at normal speaking pace.
 
 ### Why these two tools first
 
-Both demoed live to the BySupply R2 panel on 2026-05-28. Robert Peay (CFO) reacted to Vendor Scorecard with "this looks super impressive." Logistics Supply was the active pilot example. These two have proven landing power; the walkthrough video lets them keep landing in async contexts where screen share is not possible.
+Both demoed live to a founder and CFO panel in May 2026, where the Vendor Scorecard got the strongest reaction. Logistics Supply was the active pilot example. These two have proven landing power; the walkthrough video lets them keep landing in async contexts where screen share is not possible.
 
 Tool #5 (Workforce Forecast) is the next candidate for a walkthrough, given it lands in workforce planning conversations specifically (TFD, FNF, any Director WFP role).

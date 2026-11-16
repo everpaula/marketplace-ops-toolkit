@@ -22,7 +22,7 @@ All shipped, deployed to GitHub Pages, indexed in `sitemap.xml`, documented in `
 | 13 | Driver / Courier Scorecard | `driver-scorecard.html` | Last-mile |
 | - | Landing hub | `index.html` | - |
 
-★ = demoed live and validated in pipeline (BySupply R2 panel, 2026-05-28, Robert Peay CFO: "this looks super impressive")
+★ = demoed live and validated in pipeline (founder and CFO panel, May 2026)
 ✦ = built around the "cost of preventable feedback" metric cited across Gopuff R2, TFD, FNF, Lume preps
 ◆ = productizes the 30/60/90 day operating plan pattern used in every Director+ interview prep since 2026-05
 ◇ = productizes the escalation taxonomy gap surfaced by Ricardo Vieira-Gomes and Harsh Baranwal: most auto-escalate AI tools surface alerts but cannot say which deserves a human
@@ -49,7 +49,7 @@ Operators have surfaced clear gaps. These fill them.
 | # | Tool | Why | Source of insight |
 |---|---|---|---|
 | ~~8~~ | ~~**Escalation Decision Calculator**~~ | **Shipped 2026-06-14.** See `escalation-calculator.html`. 5 presets (stuck shipment, payment failure, partner non-response, quality drift, fraud-flagged high-value), 9 exception types, 4-tier recommendation (auto-resolve / wait / review / page), score breakdown across 6 factors, cost-of-escalating vs cost-of-waiting comparison, recommendation curve across alert age, per-tier action checklist. | Comment on Harsh Baranwal post (2026-05-29), conversations with Ricardo Vieira-Gomes |
-| 9 | **PO + Delivery Tracking Template** | JD priority #1 in many ops director roles (ROI BySupply 2026-05-28 most recent). Spreadsheet template that becomes a workflow: PO logged, vendor SLA, delivery validation, defect-drag, cost-per-unit reconciliation. | ROI BySupply R2 panel, multifamily kits use case |
+| 9 | **PO + Delivery Tracking Template** | JD priority #1 in many ops director roles (most recent: May 2026). Spreadsheet template that becomes a workflow: PO logged, vendor SLA, delivery validation, defect-drag, cost-per-unit reconciliation. | ROI BySupply R2 panel, multifamily kits use case |
 | ~~10~~ | ~~**Customer Feedback Cost Analyzer**~~ | **Shipped 2026-06-01.** See `customer-feedback-cost.html`. Two personas (Ops Manager + CFO), 5 presets, Pareto category breakdown, sensitivity card. | Used in Gopuff R2, TFD prep, FNF prep |
 | ~~11~~ | ~~**90-Day Operating Plan Generator**~~ | **Shipped 2026-06-12.** See `operating-plan-generator.html`. 5 presets (Series A marketplace, scale-up CPG, mature marketplace supply, fintech fraud, last-mile logistics), 6 function focus areas, 30-60-90 or 60-90-180 horizons, per-priority discover/decide/deploy breakdown, north star metrics, risk register, asks to the leader. Markdown + plain text export, download .md. | Used in every Director/Head interview prep since 2026-05 |
 
