@@ -192,3 +192,114 @@ test('5,000-unit project with researched defaults: every bucket finite and posit
     }
   }
 });
+
+// ---------- Task 2: quote comparison, supplier risk, recommended mix ----------
+
+const ALL_CHECKS = { factoryVerified: true, businessLicense: true, usExportHistory: true, thirdPartyAudit: true, sampleApproved: true, certifications: true, responsive: true };
+const TIER_C_CHECKS = Object.assign({}, ALL_CHECKS, { factoryVerified: false, sampleApproved: false });
+
+function quote(over) {
+  return Object.assign({
+    id: 'q', supplier: 'S', origin: 'CN', incoterm: 'FOB', price: 10, moq: 0, productionDays: 45,
+    paymentTerms: { depositPct: 0.3, balance: 'beforeShipment' },
+    cbmPerCarton: 0.09, kgPerCarton: 17, exwToFobPerUnit: 0, cifFreightInsurancePerUnit: 0,
+    risk: { checks: Object.assign({}, ALL_CHECKS) }
+  }, over);
+}
+function component(over) {
+  return Object.assign({
+    id: 'c1', kitId: 'k1', name: 'Kitchen faucet', uom: 'each', qtyPerUnit: 1, wastePct: 0, unitsPerCarton: 6,
+    htsCode: '8481.80.10', baseDutyRate: 0.04, metal232Share: 0, quotes: []
+  }, over);
+}
+function project(over) {
+  return Object.assign({
+    name: 'Test', kits: [{ id: 'k1', name: 'Standard', units: 120 }], components: [],
+    waves: [{ id: 'w1', date: '2027-01-04', units: 120 }],
+    pricing: { mode: 'margin', value: 0.25 },
+    billing: [{ pct: 0.3, daysAfter: 'contract', days: 0 }, { pct: 0.7, daysAfter: 'delivery', days: 30 }],
+    storage: { perPalletMonth: 0, months: 0 }, moqOverage: 'project'
+  }, over);
+}
+
+test('needQty: 120 units x 700 sq ft x 1.10 waste = 92,400 sq ft', () => {
+  const c = component({ qtyPerUnit: 700, wastePct: 0.1, uom: 'sq ft' });
+  const n = K.needQty(c, project());
+  close(n.perKit, 770);
+  close(n.total, 92400);
+});
+
+test('riskScore: all checks = 100/A; no factory check and no sample = tier C', () => {
+  assert.deepEqual(K.riskScore(ALL_CHECKS), { score: 100, tier: 'A' });
+  const r = K.riskScore(TIER_C_CHECKS);
+  assert.equal(r.tier, 'C');
+  assert.equal(r.score, 50); // factory 25 + sample 25 removed
+});
+
+test('compareQuotes: cheaper FOB from China loses to Vietnam on landed cost', () => {
+  const s = testSettings();
+  const c = component({ quotes: [quote({ id: 'cn', origin: 'CN', price: 30 }), quote({ id: 'vn', origin: 'VN', price: 32 })] });
+  const p = project({ components: [c] });
+  const rows = K.compareQuotes(c, p, s);
+  const cn = rows.find(r => r.quoteId === 'cn');
+  const vn = rows.find(r => r.quoteId === 'vn');
+  assert.equal(cn.cheapestFob, true);
+  assert.equal(vn.cheapestFob, false);
+  assert.equal(vn.rank, 1);
+  assert.equal(cn.rank, 2);
+  assert.equal(rows[0].quoteId, 'vn');
+  // CN: 30 x 29% duty = 8.70. VN: 32 x 16.5% = 5.28. Freight per carton at full-box rate:
+  // max(0.09/68, 17/26,500) = 0.0013235 of a box -> CN 5.294/6 = 0.882, VN 5.824/6 = 0.971 per unit.
+  close(cn.breakdown.duty, 8.7);
+  close(vn.breakdown.duty, 5.28);
+  close(cn.breakdown.freight, 4000 * 0.09 / 68 / 6, 1e-9);
+  assert.ok(vn.landedPerUnit < cn.landedPerUnit);
+});
+
+test('compareQuotes: MOQ overage counts in the project only when moqOverage = project', () => {
+  const s = testSettings();
+  const c = component({ unitsPerCarton: 1, quotes: [quote({ id: 'm', moq: 500 })] });
+  const p = project({ kits: [{ id: 'k1', name: 'Standard', units: 240 }], components: [c] });
+  const inProject = K.compareQuotes(c, p, s)[0];
+  close(inProject.needQty, 240);
+  close(inProject.orderQty, 500);
+  close(inProject.overageQty, 260);
+  close(inProject.componentTotal, inProject.landedPerUnit * 500, 1e-6);
+  const carried = K.compareQuotes(c, Object.assign({}, p, { moqOverage: 'carry' }), s)[0];
+  close(carried.componentTotal, carried.landedPerUnit * 240, 1e-6);
+});
+
+test('compareQuotes: missing price or carton data is not eligible and never ranked first', () => {
+  const s = testSettings();
+  const c = component({ quotes: [
+    quote({ id: 'zero', price: 0 }),
+    quote({ id: 'nocbm', price: 5, cbmPerCarton: 0 }),
+    quote({ id: 'ok', price: 20 })
+  ] });
+  const rows = K.compareQuotes(c, project({ components: [c] }), s);
+  const zero = rows.find(r => r.quoteId === 'zero');
+  assert.equal(zero.eligible, false);
+  assert.match(zero.reason, /price/i);
+  assert.equal(zero.rank, null);
+  const nocbm = rows.find(r => r.quoteId === 'nocbm');
+  assert.equal(nocbm.eligible, false);
+  assert.match(nocbm.reason, /volume/i);
+  assert.equal(rows[0].quoteId, 'ok');
+  assert.equal(rows[0].rank, 1);
+  assert.equal(rows.find(r => r.quoteId === 'ok').cheapestFob, true);
+});
+
+test('recommendMix skips a tier C supplier when minTier is B and returns the next one', () => {
+  const s = testSettings();
+  const c = component({ quotes: [
+    quote({ id: 'cheapC', price: 20, risk: { checks: TIER_C_CHECKS } }),
+    quote({ id: 'midB', price: 22, risk: { checks: Object.assign({}, ALL_CHECKS, { thirdPartyAudit: false, certifications: false }) } }),
+    quote({ id: 'topA', price: 24 })
+  ] });
+  const p = project({ components: [c] });
+  const mix = K.recommendMix(p, s, { minTier: 'B' });
+  assert.equal(mix.picks.c1, 'midB');
+  assert.equal(mix.alternates.c1, 'topA');
+  const loose = K.recommendMix(p, s, { minTier: 'C' });
+  assert.equal(loose.picks.c1, 'cheapC');
+});

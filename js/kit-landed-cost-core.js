@@ -278,14 +278,176 @@
     return { fob: fob, freight: freight, duty: duty, mpf: mpf, hmf: hmf, broker: broker, insurance: insurance, drayage: drayage, total: total };
   }
 
+  // ---------- Quotes, supplier risk, recommended mix ----------
+
+  // Weights shown on the page. Factory verification and an approved sample carry the most.
+  var RISK_WEIGHTS = {
+    factoryVerified: 25, sampleApproved: 25, usExportHistory: 15,
+    businessLicense: 10, thirdPartyAudit: 10, certifications: 10, responsive: 5
+  };
+  var TIER_ORDER = { A: 3, B: 2, C: 1 };
+
+  function riskScore(checks) {
+    var c = checks || {};
+    var score = 0;
+    Object.keys(RISK_WEIGHTS).forEach(function (k) { if (c[k]) score += RISK_WEIGHTS[k]; });
+    var tier = score >= 80 ? 'A' : score >= 55 ? 'B' : 'C';
+    // A trader with no verified factory and no approved sample is tier C whatever else it shows.
+    if (!c.factoryVerified && !c.sampleApproved) tier = 'C';
+    return { score: score, tier: tier };
+  }
+
+  function kitOf(component, project) {
+    var kits = (project && project.kits) || [];
+    for (var i = 0; i < kits.length; i++) if (kits[i].id === component.kitId) return kits[i];
+    return kits[0] || { units: 0 };
+  }
+
+  // Units of measure needed, waste included: per kit (one apartment unit) and for the project.
+  function needQty(component, project) {
+    var units = Math.max(0, num(kitOf(component, project).units));
+    var perKit = Math.max(0, num(component.qtyPerUnit)) * (1 + Math.max(0, num(component.wastePct)));
+    return { perKit: perKit, total: perKit * units, units: units };
+  }
+
+  // What you actually buy: whole cartons, never below the MOQ.
+  function orderQty(component, quote, need) {
+    var upc = num(component.unitsPerCarton);
+    var q = upc > 0 ? Math.ceil(need / upc - 1e-9) * upc : need;
+    return Math.max(q, Math.max(0, num(quote.moq)));
+  }
+
+  function quoteEligibility(component, quote, settings) {
+    var s = settings || DEFAULTS;
+    if (!(num(quote.price) > 0)) return { ok: false, reason: 'Missing or zero price' };
+    if (!(num(component.unitsPerCarton) > 0)) return { ok: false, reason: 'Missing units per carton on the component' };
+    if (!(num(quote.cbmPerCarton) > 0)) return { ok: false, reason: 'Missing carton volume (CBM)' };
+    if (!(num(quote.kgPerCarton) > 0)) return { ok: false, reason: 'Missing carton weight (kg)' };
+    if (!s.origins || !s.origins[quote.origin]) return { ok: false, reason: 'Unknown origin' };
+    return { ok: true, reason: '' };
+  }
+
+  // Landed cost per unit for ranking quotes: freight and drayage at full-container rates (the
+  // carton's share of the cheapest box by volume or weight, whichever binds), duty and fees at
+  // their rates. Per-entry fixed fees are shared by every quote, so they stay out of the ranking.
+  function quoteLandedPerUnit(component, quote, settings, originOverride) {
+    var s = settings || DEFAULTS;
+    var f = s.fees || DEFAULTS.fees;
+    var origin = originOverride || quote.origin;
+    var o = originCfg(origin, s);
+    var line = buildLine(component, quote, 1, s, origin);
+    var upc = num(component.unitsPerCarton);
+    var cv = line.customsValuePerUnit;
+    var caps = s.containers || DEFAULTS.containers;
+    var dray = num(f.drayagePerContainer);
+    var freight = 0, drayage = 0, insurance = 0;
+    var cbm = num(quote.cbmPerCarton), kg = num(quote.kgPerCarton);
+    if (line.incoterm === 'CIF') {
+      freight = line.cifFreightPerUnit;
+      drayage = upc > 0 ? dray * cbm / num(caps['40HQ'] && caps['40HQ'].cbm, 68) / upc : 0;
+    } else if (upc > 0) {
+      var fr = o.freightPerContainer || {};
+      var best = null;
+      CONTAINER_TYPES.forEach(function (t) {
+        if (!caps[t] || !(num(fr[t]) > 0)) return;
+        var share = Math.max(cbm / caps[t].cbm, kg / caps[t].kg);
+        var cost = num(fr[t]) * share;
+        if (!best || cost < best.cost) best = { cost: cost, share: share };
+      });
+      if (best) {
+        freight = best.cost / upc;
+        drayage = dray * best.share / upc;
+      } else {
+        freight = num(o.lclPerCbm) * cbm / upc;
+      }
+      insurance = num(f.insuranceRate) * (cv + freight);
+    }
+    var duty = line.dutyRate * cv;
+    var mpf = num(f.mpfRate) * cv;
+    var hmf = num(f.hmfRate) * cv;
+    var total = cv + freight + duty + mpf + hmf + insurance + drayage;
+    return { fob: cv, freight: freight, duty: duty, mpf: mpf, hmf: hmf, broker: 0, insurance: insurance, drayage: drayage, total: total, dutyRate: line.dutyRate };
+  }
+
+  // Every quote for one component, ranked by its cost to the project (MOQ overage included when
+  // project.moqOverage is 'project'). Quotes with missing data are listed last, unranked.
+  function compareQuotes(component, project, settings) {
+    var s = settings || DEFAULTS;
+    var need = needQty(component, project).total;
+    var carry = project && project.moqOverage === 'carry';
+    var rows = (component.quotes || []).map(function (q) {
+      var el = quoteEligibility(component, q, s);
+      var r = {
+        quoteId: q.id, supplier: q.supplier, origin: q.origin, incoterm: incotermOf(q),
+        eligible: el.ok, reason: el.reason, needQty: need, orderQty: 0, overageQty: 0,
+        fobPerUnit: customsValue(q), landedPerUnit: null, componentTotal: null, breakdown: null,
+        cheapestFob: false, rank: null, risk: riskScore(q.risk && q.risk.checks)
+      };
+      if (el.ok) {
+        var b = quoteLandedPerUnit(component, q, s);
+        var oq = orderQty(component, q, need);
+        r.orderQty = oq;
+        r.overageQty = Math.max(0, oq - need);
+        r.breakdown = b;
+        r.landedPerUnit = b.total;
+        r.componentTotal = b.total * (carry ? need : oq);
+      }
+      return r;
+    });
+    var ok = rows.filter(function (r) { return r.eligible; });
+    ok.sort(function (a, b) { return a.componentTotal - b.componentTotal; });
+    ok.forEach(function (r, i) { r.rank = i + 1; });
+    var minFob = null;
+    ok.forEach(function (r) { if (!minFob || r.fobPerUnit < minFob.fobPerUnit) minFob = r; });
+    if (minFob) minFob.cheapestFob = true;
+    return ok.concat(rows.filter(function (r) { return !r.eligible; }));
+  }
+
+  // Per component: the cheapest landed quote that meets the risk floor, plus a second source.
+  function recommendMix(project, settings, opts) {
+    var s = settings || DEFAULTS;
+    var minTier = (opts && opts.minTier) || 'B';
+    var floor = TIER_ORDER[minTier] || 2;
+    var out = { picks: {}, alternates: {}, alternateDelta: {}, warnings: {}, rows: {}, cheapestFobLost: [] };
+    (project.components || []).forEach(function (c) {
+      var rows = compareQuotes(c, project, s);
+      out.rows[c.id] = rows;
+      var eligible = rows.filter(function (r) { return r.eligible; });
+      var passing = eligible.filter(function (r) { return TIER_ORDER[r.risk.tier] >= floor; });
+      var pick = passing[0] || null;
+      if (!pick && eligible.length) {
+        pick = eligible[0];
+        out.warnings[c.id] = 'No quote meets tier ' + minTier + '; using the cheapest eligible quote';
+      }
+      if (!pick) out.warnings[c.id] = 'No eligible quote';
+      out.picks[c.id] = pick ? pick.quoteId : null;
+      var rest = passing.filter(function (r) { return r !== pick; });
+      var alt = rest.filter(function (r) { return r.supplier !== (pick && pick.supplier); })[0] || rest[0] || null;
+      out.alternates[c.id] = alt ? alt.quoteId : null;
+      out.alternateDelta[c.id] = alt && pick ? alt.componentTotal - pick.componentTotal : null;
+      var cheapFob = eligible.filter(function (r) { return r.cheapestFob; })[0];
+      if (pick && cheapFob && cheapFob !== pick) {
+        out.cheapestFobLost.push({ componentId: c.id, cheapestFobQuoteId: cheapFob.quoteId, pickQuoteId: pick.quoteId, landedGapPerUnit: cheapFob.landedPerUnit - pick.landedPerUnit, belowTier: TIER_ORDER[cheapFob.risk.tier] < floor });
+      }
+    });
+    return out;
+  }
+
   return {
     DEFAULTS: DEFAULTS,
     CONTAINER_TYPES: CONTAINER_TYPES,
+    RISK_WEIGHTS: RISK_WEIGHTS,
     num: num,
     dutyRate: dutyRate,
     customsValue: customsValue,
     buildLine: buildLine,
     packLines: packLines,
-    landedCostPerUnit: landedCostPerUnit
+    landedCostPerUnit: landedCostPerUnit,
+    riskScore: riskScore,
+    needQty: needQty,
+    orderQty: orderQty,
+    quoteLandedPerUnit: quoteLandedPerUnit,
+    compareQuotes: compareQuotes,
+    recommendMix: recommendMix
   };
 });
