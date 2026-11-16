@@ -303,3 +303,92 @@ test('recommendMix skips a tier C supplier when minTier is B and returns the nex
   const loose = K.recommendMix(p, s, { minTier: 'C' });
   assert.equal(loose.picks.c1, 'cheapC');
 });
+
+// ---------- Task 3: totals, margin, scenarios, cash timeline ----------
+
+// Settings with no duty, no fees and LCL at a flat rate, so cost = goods + LCL freight.
+function zeroSettings() {
+  const s = testSettings();
+  s.origins.CN = { freightPerContainer: {}, lclPerCbm: 0, countryAdders: [] };
+  s.origins.VN = { freightPerContainer: {}, lclPerCbm: 100, countryAdders: [] };
+  s.fees = { mpfRate: 0, mpfMin: 0, mpfMax: 0, hmfRate: 0, brokerPerEntry: 0, isfPerEntry: 0, bondPerEntry: 0, insuranceRate: 0, drayagePerContainer: 0, lclDelivery: 0 };
+  return s;
+}
+function oneItemProject(over, quoteOver) {
+  const c = component({ unitsPerCarton: 1, baseDutyRate: 0, quotes: [quote(Object.assign({ id: 'q1', origin: 'VN', price: 100, cbmPerCarton: 0.1, kgPerCarton: 5 }, quoteOver))] });
+  return project(Object.assign({ kits: [{ id: 'k1', name: 'Standard', units: 10 }], components: [c], waves: [{ id: 'w1', date: '2027-01-04', units: 10 }] }, over));
+}
+
+test('projectTotals: 25% margin on a $1,000 kit = $1,250 price, $250 margin', () => {
+  const s = zeroSettings();
+  const p = oneItemProject({}, { origin: 'CN', price: 1000 });
+  const t = K.projectTotals(p, { c1: 'q1' }, s);
+  close(t.perKit.k1.cost, 1000);
+  close(t.perKit.k1.price, 1250);
+  close(t.perKit.k1.margin, 250);
+  close(t.project.cost, 10000);
+  close(t.project.margin, 2500);
+  const b = t.breakdown;
+  close(b.fob + b.freight + b.duty + b.fees + b.broker + b.insurance + b.drayage + b.storage + b.moqOverage, t.project.cost, 1e-6);
+});
+
+test('applyScenario: CN 40HQ from $3,000 to $25,000 scales freight per unit, FOB unchanged', () => {
+  const s = testSettings();
+  s.origins.CN.freightPerContainer = { '40HQ': 3000 };
+  // 1,360 cartons x 0.1 CBM = 136 CBM, light: exactly two 40HQ.
+  const c = component({ unitsPerCarton: 1, quotes: [quote({ id: 'q1', origin: 'CN', price: 20, cbmPerCarton: 0.1, kgPerCarton: 1 })] });
+  const p = project({ kits: [{ id: 'k1', name: 'Standard', units: 1360 }], components: [c], waves: [{ id: 'w1', date: '2027-01-04', units: 1360 }] });
+  const base = K.projectTotals(p, { c1: 'q1' }, s);
+  const s2 = K.applyScenario(s, { freightPerContainer: { CN: 25000 } });
+  assert.equal(s.origins.CN.freightPerContainer['40HQ'], 3000, 'input settings not mutated');
+  // The contract price is set on the base case; a freight shock after signing eats margin.
+  const hit = K.projectTotals(p, { c1: 'q1' }, s2, { fixedPrices: K.fixedPricesFrom(base) });
+  close(hit.perKit.k1.price, base.perKit.k1.price, 1e-9);
+  close(base.breakdown.freight, 6000, 1e-6);
+  close(hit.breakdown.freight / base.breakdown.freight, 25000 / 3000, 1e-9);
+  close(hit.breakdown.fob, base.breakdown.fob, 1e-9);
+  close(hit.breakdown.duty, base.breakdown.duty, 1e-9);
+  assert.ok(hit.project.margin < base.project.margin);
+});
+
+test('cashTimeline: one wave, every date and the peak checked by hand', () => {
+  const s = zeroSettings();
+  const p = oneItemProject();
+  // Cost 1,000 goods + 100 LCL (1 CBM x 100) = 1,100. Price = 1,375.
+  // 01-04 deposit -300, contract receipt +412.50 (outs first: -300, +112.50)
+  // 02-18 (PO + 45) balance -700 -> -587.50, freight -100 -> -687.50 (peak)
+  // arrival 03-12 (+22 VN west), on site 03-19 (+7), receipt 70% on 04-18 (+30): +962.50 -> 275
+  const t = K.cashTimeline(p, { c1: 'q1' }, s);
+  const ev = t.events.map(e => [e.date, e.kind, Math.round(e.amount * 100) / 100]);
+  assert.deepEqual(ev, [
+    ['2027-01-04', 'out', 300], ['2027-01-04', 'in', 412.5],
+    ['2027-02-18', 'out', 700], ['2027-02-18', 'out', 100],
+    ['2027-04-18', 'in', 962.5]
+  ]);
+  close(t.events[t.events.length - 1].cumulative, 275);
+  close(t.peakCapital, 687.5);
+  assert.equal(t.peakDate, '2027-02-18');
+  assert.equal(t.workingCapitalDays, 59); // negative from 02-18 to 04-18
+});
+
+test('cashTimeline: two waves pay suppliers twice and end at price minus cost', () => {
+  const s = zeroSettings();
+  const p = oneItemProject({ waves: [{ id: 'w1', date: '2027-01-04', units: 5 }, { id: 'w2', date: '2027-03-01', units: 5 }] });
+  const totals = K.projectTotals(p, { c1: 'q1' }, s);
+  close(totals.project.cost, 1200); // goods 1,000 + two LCL minimums of 100
+  const t = K.cashTimeline(p, { c1: 'q1' }, s);
+  assert.equal(t.events.filter(e => /deposit/i.test(e.label)).length, 2);
+  assert.equal(t.events.filter(e => /balance/i.test(e.label)).length, 2);
+  close(t.events[t.events.length - 1].cumulative, totals.project.price - totals.project.cost, 1e-6);
+  close(t.events[t.events.length - 1].cumulative, 300, 1e-6);
+});
+
+test('costRange: low <= mid <= high, and mid is the base cost per unit', () => {
+  const s = testSettings();
+  const c = component({ unitsPerCarton: 6, quotes: [quote({ id: 'q1', origin: 'CN', price: 30 })] });
+  const p = project({ components: [c] });
+  const r = K.costRange(p, { c1: 'q1' }, s);
+  assert.ok(r.low <= r.mid && r.mid <= r.high, JSON.stringify(r));
+  assert.ok(r.low < r.high);
+  close(r.mid, K.projectTotals(p, { c1: 'q1' }, s).perUnit.cost, 1e-9);
+});

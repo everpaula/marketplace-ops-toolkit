@@ -433,10 +433,291 @@
     return out;
   }
 
+  // ---------- Totals, margin, scenarios, cash ----------
+
+  function addDays(iso, days) {
+    var p = String(iso || '').split('-').map(Number);
+    var d = new Date(Date.UTC(p[0], (p[1] || 1) - 1, p[2] || 1));
+    if (isNaN(d.getTime())) return String(iso || '');
+    d.setUTCDate(d.getUTCDate() + Math.round(num(days)));
+    return d.toISOString().slice(0, 10);
+  }
+  function daysBetween(a, b) {
+    var pa = String(a).split('-').map(Number), pb = String(b).split('-').map(Number);
+    return Math.round((Date.UTC(pb[0], pb[1] - 1, pb[2]) - Date.UTC(pa[0], pa[1] - 1, pa[2])) / 86400000);
+  }
+
+  // Waves (shipment lots) as shares of the project. Every kit ships in the same proportion.
+  function normalizeWaves(project) {
+    var ws = ((project && project.waves) || []).filter(function (w) { return num(w.units) > 0; });
+    var total = ws.reduce(function (a, w) { return a + num(w.units); }, 0);
+    if (!ws.length || !(total > 0)) {
+      return [{ id: 'w1', date: (project && project.contractDate) || DEFAULTS.asOf, units: 0, share: 1 }];
+    }
+    return ws.map(function (w) { return { id: w.id, date: w.date || DEFAULTS.asOf, units: num(w.units), share: num(w.units) / total }; });
+  }
+
+  var BUCKETS = ['fob', 'freight', 'duty', 'mpf', 'hmf', 'broker', 'insurance', 'drayage', 'total'];
+
+  // Ship every picked component wave by wave, pack each wave, and price every line.
+  function simulate(project, picks, settings) {
+    var s = settings || DEFAULTS;
+    var items = [], missing = [];
+    (project.components || []).forEach(function (c) {
+      var qid = picks && picks[c.id];
+      var q = (c.quotes || []).filter(function (x) { return x.id === qid; })[0];
+      if (!q || !quoteEligibility(c, q, s).ok) { missing.push(c.id); return; }
+      var need = needQty(c, project).total;
+      var ord = orderQty(c, q, need);
+      var spend = {};
+      BUCKETS.forEach(function (k) { spend[k] = 0; });
+      items.push({
+        c: c, q: q, origin: (s.switchOrigin && s.switchOrigin[c.id]) || q.origin,
+        need: need, order: ord, overage: Math.max(0, ord - need), kitId: kitOf(c, project).id, spend: spend
+      });
+    });
+    var perPallet = num(s.cbmPerPallet, DEFAULTS.cbmPerPallet);
+    var st = project.storage || {};
+    var waves = normalizeWaves(project).map(function (w) {
+      var lines = items.map(function (it) { return buildLine(it.c, it.q, it.order * w.share, s, it.origin); });
+      var packing = packLines(lines, s);
+      var rows = lines.map(function (l, i) {
+        var u = landedCostPerUnit(l, packing, s);
+        BUCKETS.forEach(function (k) { items[i].spend[k] += u[k] * l.qty; });
+        return { item: items[i], line: l, unit: u };
+      });
+      var cbm = lines.reduce(function (a, l) { return a + num(l.cartons) * num(l.cbmPerCarton); }, 0);
+      var pallets = perPallet > 0 ? Math.ceil(cbm / perPallet - 1e-9) : 0;
+      var storage = pallets * Math.max(0, num(st.perPalletMonth)) * Math.max(0, num(st.months));
+      return { wave: w, lines: lines, packing: packing, rows: rows, cbm: cbm, pallets: pallets, storage: storage };
+    });
+    return { settings: s, items: items, missing: missing, waves: waves };
+  }
+
+  function totalsFromSim(sim, project, opts) {
+    var fixed = (opts && opts.fixedPrices) || null;
+    var carry = project.moqOverage === 'carry';
+    var b = { fob: 0, freight: 0, duty: 0, fees: 0, broker: 0, insurance: 0, drayage: 0, storage: 0, moqOverage: 0 };
+    var kitCost = {}, dutyByOrigin = {}, valueByOrigin = {}, carried = 0;
+    var components = {};
+    sim.items.forEach(function (it) {
+      var sp = it.spend;
+      var f = it.order > 0 ? it.need / it.order : 0;
+      var overCost = sp.total * (1 - f);
+      b.fob += sp.fob * f; b.freight += sp.freight * f; b.duty += sp.duty * f;
+      b.fees += (sp.mpf + sp.hmf) * f; b.broker += sp.broker * f;
+      b.insurance += sp.insurance * f; b.drayage += sp.drayage * f;
+      if (carry) carried += overCost; else b.moqOverage += overCost;
+      var charged = sp.total * f + (carry ? 0 : overCost);
+      kitCost[it.kitId] = (kitCost[it.kitId] || 0) + charged;
+      dutyByOrigin[it.origin] = (dutyByOrigin[it.origin] || 0) + sp.duty;
+      valueByOrigin[it.origin] = (valueByOrigin[it.origin] || 0) + sp.fob;
+      components[it.c.id] = {
+        quoteId: it.q.id, origin: it.origin, needQty: it.need, orderQty: it.order, overageQty: it.overage,
+        spend: sp.total, projectCost: charged, carried: carry ? overCost : 0,
+        landedPerUnit: it.order > 0 ? sp.total / it.order : 0,
+        perUnitBreakdown: BUCKETS.reduce(function (o, k) { o[k] = it.order > 0 ? sp[k] / it.order : 0; return o; }, {})
+      };
+    });
+    b.storage = sim.waves.reduce(function (a, w) { return a + w.storage; }, 0);
+    var kits = project.kits || [];
+    var totalUnits = kits.reduce(function (a, k) { return a + Math.max(0, num(k.units)); }, 0);
+    var pricing = project.pricing || { mode: 'margin', value: 0 };
+    var perKit = {}, projCost = 0, projPrice = 0;
+    kits.forEach(function (k) {
+      var units = Math.max(0, num(k.units));
+      var total = (kitCost[k.id] || 0) + (totalUnits > 0 ? b.storage * units / totalUnits : 0);
+      var cost = units > 0 ? total / units : 0;
+      var price = fixed && fixed[k.id] !== undefined ? num(fixed[k.id])
+        : pricing.mode === 'pricePerKit' ? num(k.price, num(pricing.value)) : cost * (1 + num(pricing.value));
+      perKit[k.id] = { units: units, cost: cost, price: price, margin: price - cost, marginPct: price > 0 ? (price - cost) / price : 0 };
+      projCost += total;
+      projPrice += price * units;
+    });
+    var sumB = b.fob + b.freight + b.duty + b.fees + b.broker + b.insurance + b.drayage + b.storage + b.moqOverage;
+    if (!kits.length) projCost = sumB;
+    return {
+      perKit: perKit,
+      perUnit: {
+        cost: totalUnits > 0 ? projCost / totalUnits : 0,
+        price: totalUnits > 0 ? projPrice / totalUnits : 0,
+        margin: totalUnits > 0 ? (projPrice - projCost) / totalUnits : 0
+      },
+      project: { units: totalUnits, cost: projCost, price: projPrice, margin: projPrice - projCost, marginPct: projPrice > 0 ? (projPrice - projCost) / projPrice : 0, carriedInventory: carried },
+      breakdown: b,
+      components: components,
+      missing: sim.missing,
+      containers: sim.waves.map(function (w) { return { waveId: w.wave.id, date: w.wave.date, share: w.wave.share, cbm: w.cbm, pallets: w.pallets, byOrigin: w.packing.byOrigin }; }),
+      dutyExposureByOrigin: dutyByOrigin,
+      valueByOrigin: valueByOrigin
+    };
+  }
+
+  // opts.fixedPrices {kitId: price} holds the contract price (used for scenarios after signing).
+  function projectTotals(project, picks, settings, opts) {
+    return totalsFromSim(simulate(project, picks, settings), project, opts);
+  }
+  function fixedPricesFrom(totals) {
+    var out = {};
+    Object.keys(totals.perKit || {}).forEach(function (k) { out[k] = totals.perKit[k].price; });
+    return out;
+  }
+
+  function scaleFreight(oc, factor) {
+    var fr = oc.freightPerContainer || {};
+    Object.keys(fr).forEach(function (t) { fr[t] = num(fr[t]) * factor; });
+    oc.lclPerCbm = num(oc.lclPerCbm) * factor;
+  }
+
+  // New settings for a what-if. Pure: the input is not touched.
+  // dutyAddPts {CN: 0.10} adds 10 points; freightPerContainer sets the 40HQ rate (number for every
+  // origin or {CN: n}) and moves the other box sizes and LCL by the same ratio; freightMultiplier
+  // scales all freight; switchOrigin {componentId: 'VN'} ships the picked quote from the other
+  // country at the same price.
+  function applyScenario(settings, sc) {
+    var s = JSON.parse(JSON.stringify(settings || DEFAULTS));
+    sc = sc || {};
+    var origins = s.origins || {};
+    if (sc.dutyAddPts) {
+      Object.keys(sc.dutyAddPts).forEach(function (o) {
+        var pts = num(sc.dutyAddPts[o]);
+        if (pts && origins[o]) origins[o].countryAdders = (origins[o].countryAdders || []).concat([{ label: 'Scenario', rate: pts, scenario: true }]);
+      });
+    }
+    if (sc.freightPerContainer !== undefined && sc.freightPerContainer !== null) {
+      var map = typeof sc.freightPerContainer === 'object' ? sc.freightPerContainer : null;
+      Object.keys(origins).forEach(function (o) {
+        var target = map ? map[o] : sc.freightPerContainer;
+        if (target === undefined || target === null || !(num(target) > 0)) return;
+        var oc = origins[o];
+        oc.freightPerContainer = oc.freightPerContainer || {};
+        var base = num(oc.freightPerContainer['40HQ']);
+        if (base > 0) scaleFreight(oc, num(target) / base);
+        else oc.freightPerContainer['40HQ'] = num(target);
+      });
+    }
+    if (num(sc.freightMultiplier, 1) !== 1) {
+      Object.keys(origins).forEach(function (o) { scaleFreight(origins[o], num(sc.freightMultiplier, 1)); });
+    }
+    if (sc.switchOrigin) s.switchOrigin = Object.assign({}, s.switchOrigin || {}, sc.switchOrigin);
+    return s;
+  }
+
+  // Cost per unit with tariff and freight sensitivity: low = duty -5 points; high = duty +5 points
+  // and freight doubled.
+  function costRange(project, picks, settings) {
+    var s = settings || DEFAULTS;
+    var all = function (pts) {
+      var m = {};
+      Object.keys(s.origins || {}).forEach(function (o) { m[o] = pts; });
+      return m;
+    };
+    var low = projectTotals(project, picks, applyScenario(s, { dutyAddPts: all(-0.05) })).perUnit.cost;
+    var mid = projectTotals(project, picks, s).perUnit.cost;
+    var high = projectTotals(project, picks, applyScenario(s, { dutyAddPts: all(0.05), freightMultiplier: 2 })).perUnit.cost;
+    return { low: low, mid: mid, high: high };
+  }
+
+  // Dated cash out and in for the project. Supplier deposit on the PO date (wave date), balance
+  // when the goods are ready (or on arrival), freight and insurance at sailing, duty, fees and
+  // drayage on arrival, storage monthly, customer receipts per the billing terms.
+  function cashTimeline(project, picks, settings, opts) {
+    var s = settings || DEFAULTS;
+    var sim = simulate(project, picks, s);
+    var totals = totalsFromSim(sim, project, opts);
+    var dest = s.destination || 'west';
+    var clearance = num(s.clearanceDays, DEFAULTS.clearanceDays);
+    var months = Math.max(0, Math.round(num(project.storage && project.storage.months)));
+    var events = [];
+    var push = function (date, label, amount, kind, group) {
+      if (amount > 0.004) events.push({ date: date, label: label, amount: amount, kind: kind, group: group });
+    };
+    var pctLabel = function (x) { return Math.round(x * 1000) / 10 + '%'; };
+    var waves = sim.waves;
+    var contractDate = project.contractDate || (waves[0] && waves[0].wave.date) || DEFAULTS.asOf;
+    var billing = project.billing || [];
+    billing.forEach(function (b) {
+      if (b.daysAfter === 'contract') push(addDays(contractDate, num(b.days)), 'Customer payment ' + pctLabel(num(b.pct)) + ' (contract)', totals.project.price * num(b.pct), 'in', 'customer');
+    });
+    waves.forEach(function (W, wi) {
+      var w = W.wave, po = w.date, tag = 'lot ' + (wi + 1);
+      var groups = {}, order = [];
+      W.rows.forEach(function (r) {
+        if (!(r.line.qty > 0)) return;
+        var o = r.line.origin;
+        if (!groups[o]) { groups[o] = { ready: po, rows: [] }; order.push(o); }
+        var ready = addDays(po, num(r.item.q.productionDays));
+        if (ready > groups[o].ready) groups[o].ready = ready;
+        groups[o].rows.push(r);
+      });
+      var lastOnSite = po;
+      order.forEach(function (o) {
+        var g = groups[o];
+        var transit = num(s.transitDays && s.transitDays[o] && s.transitDays[o][dest], 0);
+        var arrival = addDays(g.ready, transit);
+        var onSite = addDays(arrival, clearance);
+        if (onSite > lastOnSite) lastOnSite = onSite;
+        var freight = 0, duty = 0, fees = 0, dray = 0;
+        g.rows.forEach(function (r) {
+          var it = r.item, l = r.line, u = r.unit, q = it.q;
+          var supplierAmt = (u.fob + (l.incoterm === 'CIF' ? u.freight : 0)) * l.qty;
+          var terms = q.paymentTerms || {};
+          var dep = clamp(num(terms.depositPct, 0.3), 0, 1);
+          var name = (q.supplier || 'Supplier') + ', ' + (it.c.name || it.c.id) + ', ' + tag;
+          push(po, 'Deposit ' + pctLabel(dep) + ': ' + name, supplierAmt * dep, 'out', 'supplier');
+          var balDate = terms.balance === 'onArrival' ? arrival : addDays(po, num(q.productionDays));
+          push(balDate, 'Balance ' + pctLabel(1 - dep) + ': ' + name, supplierAmt * (1 - dep), 'out', 'supplier');
+          if (l.incoterm !== 'CIF') freight += u.freight * l.qty;
+          freight += u.insurance * l.qty;
+          duty += u.duty * l.qty;
+          fees += (u.mpf + u.hmf + u.broker) * l.qty;
+          dray += u.drayage * l.qty;
+        });
+        push(g.ready, 'Ocean freight and insurance: ' + o + ', ' + tag, freight, 'out', 'freight');
+        push(arrival, 'Duty: ' + o + ', ' + tag, duty, 'out', 'duty');
+        push(arrival, 'Customs fees and broker: ' + o + ', ' + tag, fees, 'out', 'fees');
+        push(arrival, 'Drayage: ' + o + ', ' + tag, dray, 'out', 'fees');
+      });
+      for (var m = 0; m < months; m++) {
+        push(addDays(lastOnSite, 30 * m), 'Storage month ' + (m + 1) + ', ' + tag, W.storage / months, 'out', 'storage');
+      }
+      var delivery = addDays(lastOnSite, 30 * months);
+      billing.forEach(function (b) {
+        if (b.daysAfter !== 'contract') push(addDays(delivery, num(b.days)), 'Customer payment ' + pctLabel(num(b.pct)) + ' (' + tag + ', ' + num(b.days) + ' days after delivery)', totals.project.price * w.share * num(b.pct), 'in', 'customer');
+      });
+    });
+    events.forEach(function (e, i) { e.seq = i; });
+    events.sort(function (a, b) {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      if (a.kind !== b.kind) return a.kind === 'out' ? -1 : 1;
+      return a.seq - b.seq;
+    });
+    // Peak and days are read at the end of each day, so a same-day receipt nets against a payment.
+    var cum = 0, min = 0, minDate = null, firstNeg = null, recovered = null;
+    events.forEach(function (e, i) {
+      cum += e.kind === 'out' ? -e.amount : e.amount;
+      e.cumulative = cum;
+      delete e.seq;
+      var next = events[i + 1];
+      if (next && next.date === e.date) return;
+      if (cum < -0.004 && firstNeg === null) firstNeg = e.date;
+      if (cum < min - 1e-9) { min = cum; minDate = e.date; recovered = null; }
+      if (cum >= -0.004 && minDate && recovered === null) recovered = e.date;
+    });
+    var days = firstNeg === null ? 0 : (cum < -0.004 || recovered === null ? null : daysBetween(firstNeg, recovered));
+    return { events: events, peakCapital: -min, peakDate: minDate, workingCapitalDays: days, totals: totals };
+  }
+
   return {
     DEFAULTS: DEFAULTS,
     CONTAINER_TYPES: CONTAINER_TYPES,
     RISK_WEIGHTS: RISK_WEIGHTS,
+    addDays: addDays,
+    projectTotals: projectTotals,
+    fixedPricesFrom: fixedPricesFrom,
+    applyScenario: applyScenario,
+    costRange: costRange,
+    cashTimeline: cashTimeline,
     num: num,
     dutyRate: dutyRate,
     customsValue: customsValue,
