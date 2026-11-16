@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) 2026 Plenor Group LLC. All rights reserved.
+ * Not covered by the MIT License in this repository's LICENSE file.
+ * See NOTICE.md and https://everpaula.github.io/marketplace-ops-toolkit/terms.html#ownership
+ */
+/*
  * Kit Landed Cost Calculator: math core.
  * Pure functions, no DOM. Loaded by kit-landed-cost-calculator.html as window.KitCore
  * and by the Node tests as a CommonJS module.

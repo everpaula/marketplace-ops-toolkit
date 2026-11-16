@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Plenor Group LLC. All rights reserved.
+ * Not covered by the MIT License in this repository's LICENSE file.
+ * See NOTICE.md and https://everpaula.github.io/marketplace-ops-toolkit/terms.html#ownership
+ */
 // Tests for js/kit-landed-cost-core.js. Every expected number is worked out by hand
 // in the comment next to it, using the test settings below (not the researched defaults).
 import { test } from 'node:test';

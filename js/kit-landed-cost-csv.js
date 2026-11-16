@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) 2026 Plenor Group LLC. All rights reserved.
+ * Not covered by the MIT License in this repository's LICENSE file.
+ * See NOTICE.md and https://everpaula.github.io/marketplace-ops-toolkit/terms.html#ownership
+ */
+/*
  * Kit Landed Cost Calculator: paste from a spreadsheet, export and re-import a project as CSV.
  * Loaded by the page as window.KitCsv and by the Node tests as a CommonJS module. No DOM.
  */

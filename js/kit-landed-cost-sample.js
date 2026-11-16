@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) 2026 Plenor Group LLC. All rights reserved.
+ * Not covered by the MIT License in this repository's LICENSE file.
+ * See NOTICE.md and https://everpaula.github.io/marketplace-ops-toolkit/terms.html#ownership
+ */
+/*
  * Example project for the Kit Landed Cost Calculator: a 120-unit multifamily renovation,
  * one mid-range finish kit, two shipment lots. Supplier names are placeholders; prices,
  * MOQs, cartons and weights are plausible ranges, not quotes from real factories.

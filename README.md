@@ -1,6 +1,6 @@
 # Marketplace Ops Toolkit
 
-> Thirteen interactive ops tools an operator wishes existed. Single-file HTML, no install, no signup, MIT licensed.
+> Thirteen interactive ops tools an operator wishes existed. Single-file HTML, no install, no signup, MIT licensed (except the Kit Landed Cost Calculator and the reports; see NOTICE.md).
 
 I'm Everton Paula. Fifteen years running marketplace operations across nine countries, most recently as Regional Operations Director at a multi-country ride-hail marketplace covering $40M in P&L. These tools are everything I either kept rewriting at every job or wanted to build but never had the engineering cycles for. Nothing in the toolkit phones home, requires an account, or runs server-side. Fork them, embed them, build paid versions on top of them, none of my business.
 
@@ -772,6 +772,8 @@ If your orders-per-agent is 50 against a 250 benchmark, that's a signal to inves
 ## License
 
 MIT. Use freely. If it helps you make a better decision, that's enough.
+
+Exception: the Kit Landed Cost Calculator and everything under `reports/` are © 2026 Plenor Group LLC, all rights reserved. See [NOTICE.md](NOTICE.md).
 
 ---
 

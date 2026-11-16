@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Plenor Group LLC. All rights reserved.
+ * Not covered by the MIT License in this repository's LICENSE file.
+ * See NOTICE.md and https://everpaula.github.io/marketplace-ops-toolkit/terms.html#ownership
+ */
 // Tests for js/kit-landed-cost-csv.js: paste from a spreadsheet, export and re-import a project.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
