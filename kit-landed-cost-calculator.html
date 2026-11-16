@@ -205,8 +205,37 @@
   .toolkit-strip-footer { text-align: center; color: var(--text-faint); font-size: 12.5px; padding: 24px 16px 32px; border-top: 1px solid var(--border); margin-top: 40px; }
   .toolkit-strip-footer a { color: var(--accent); text-decoration: none; }
   .toolkit-strip-footer a:hover { text-decoration: underline; }
+  .disclaimer { margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-faint); max-width: 110ch; }
+
+  /* First-use acknowledgment. Shown until the terms are accepted in this browser. */
+  html.terms-open, html.terms-open body { overflow: hidden; }
+  .terms-backdrop {
+    position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center;
+    padding: 16px; background: rgba(10, 9, 6, 0.72);
+  }
+  .terms-backdrop[hidden] { display: none; }
+  .terms-dialog {
+    width: 100%; max-width: 580px; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto;
+    background: var(--bg-elev); color: var(--text); border: 1px solid var(--border-bright); border-radius: var(--radius-lg);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35); padding: 1.35rem 1.5rem 1.2rem; animation: terms-in 160ms ease-out;
+  }
+  .terms-dialog .brand { margin-bottom: 0.35rem; }
+  .terms-dialog h2 { font-size: 1.3rem; line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 0.45rem; }
+  .terms-dialog h2:focus, header h1:focus { outline: none; } /* focused by script only (tabindex -1), never interactive */
+  .terms-dialog .lead { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.85rem; }
+  .terms-points { list-style: none; display: grid; gap: 0.6rem; margin: 0 0 0.95rem; }
+  .terms-points li { font-size: 0.86rem; color: var(--text-muted); padding-left: 0.8rem; border-left: 2px solid var(--accent-border); }
+  .terms-points strong { display: block; color: var(--text); font-weight: 600; }
+  .terms-dialog .accept-note { font-size: 0.84rem; color: var(--text-muted); }
+  .terms-actions { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; align-items: center; margin-top: 0.9rem; }
+  .terms-actions button.primary { font-size: 0.95rem; padding: 0.6rem 1.15rem; }
+  .terms-actions a { font-size: 0.86rem; color: var(--text-muted); }
+  .terms-actions a:hover { color: var(--accent); }
+  @keyframes terms-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
   @media (max-width: 720px) {
+    .terms-dialog { padding: 1.1rem 1rem 1rem; }
+    .terms-actions button.primary { width: 100%; }
     .container { padding: 1rem; }
     header h1 { font-size: 1.5rem; }
     .card { padding: 1.05rem 1rem; }
@@ -222,7 +251,10 @@
     header .tagline, .privacy, #mixCard .sub { display: none !important; }
     body { background: #fff; }
     .container { max-width: 100%; padding: 0; }
-    .no-print, .toolkit-home-link, #theme-toggle, .toolkit-strip-footer, .top-nav, .footer, button { display: none !important; }
+    .no-print, .toolkit-home-link, #theme-toggle, .toolkit-strip-footer, .top-nav, .footer, button, .terms-backdrop { display: none !important; }
+    html.terms-open, html.terms-open body { overflow: visible; }
+    #summary .disclaimer { display: none; }
+    #printHead { color: var(--text-muted); font-size: 0.85rem; max-width: 100%; }
     .print-only { display: block; }
     #resultsCard .band, #cashCard .band, .boxes, .legend, #resultsCard p.faint, #cashCard p.faint,
     #assumpCard .grid2, #assumpCard h3, #assumpCard ul, #mixBody h3 { display: none !important; }
@@ -247,6 +279,7 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
     html { scroll-behavior: auto; }
+    .terms-dialog { animation: none; }
   }
 </style>
 </head>
@@ -263,7 +296,7 @@
       Put every quote side by side and rank it by <strong>landed cost in the US</strong>, not by FOB. Duty layers by country, containers filled
       by volume and weight, freight at $3k or $25k a box, margin per unit and the week your cash is most exposed.
     </div>
-    <span class="privacy">Data stays in your browser. Nothing is sent anywhere.</span>
+    <span class="privacy">Your project data stays in your browser. We collect nothing.</span>
     <p class="print-only" id="printHead"></p>
   </header>
 
@@ -316,8 +349,8 @@
   </section>
 
   <section class="card" id="mixCard" aria-labelledby="h-mix">
-    <h2 id="h-mix"><span class="step">3</span>Recommended mix</h2>
-    <div class="sub">Per component, the lowest landed cost for the whole project among quotes at or above your tier floor, plus a second source. Ranking uses full-container freight rates so one quote does not change another's number; the results below use your real container fill.</div>
+    <h2 id="h-mix"><span class="step">3</span>Recommended mix, from your inputs</h2>
+    <div class="sub">Per component, the lowest landed cost for the whole project among quotes at or above your tier floor, plus a second source. Picks and tiers come only from the prices and checks you entered, run through the formula in step 7. They are not a rating or endorsement of any supplier. Ranking uses full-container freight rates so one quote does not change another's number; the results below use your real container fill.</div>
     <div id="mixBody"></div>
   </section>
 
@@ -350,7 +383,7 @@
       <li><strong>Sourcing on request (coming):</strong> a shortlist of factories for a component, checked against public records, with the questions to ask before the first PO.</li>
     </ul>
     <p class="faint" style="margin-top:0.6rem">Want either one, or have a kit to run through this? <a href="./about.html">Get in touch through the About page</a>.</p>
-    <p class="faint" style="margin-top:0.4rem">Related tools: <a href="./vendor-scorecard.html">Vendor Performance Scorecard</a> for suppliers after the first shipments, <a href="./operating-plan-generator.html">Operating Plan Generator</a>, <a href="./logistics-supply.html">Logistics Supply</a>.</p>
+    <p class="faint" style="margin-top:0.4rem">Sourcing report: <a href="./reports/vietnam-lvp-spc-flooring-manufacturers.html">LVP and SPC flooring manufacturers in Vietnam</a>. Related tools: <a href="./vendor-scorecard.html">Vendor Performance Scorecard</a> for suppliers after the first shipments, <a href="./operating-plan-generator.html">Operating Plan Generator</a>, <a href="./logistics-supply.html">Logistics Supply</a>.</p>
     <div class="toolbar" style="margin-top:0.8rem">
       <button type="button" data-action="send-scorecard" data-k="act||send-scorecard">Send suppliers to Vendor Scorecard</button>
       <span class="faint">Opens the scorecard with your suppliers on the kit sourcing preset. On-time and defect start as placeholders until you have shipments.</span>
@@ -359,8 +392,28 @@
 
   <div class="footer">
     <p>Part of <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">marketplace-ops-toolkit</a>. Single-file HTML, no install, no tracking.</p>
-    <p>Built by Everton Paula. Not customs or legal advice.</p>
+    <p>Built by Everton Paula. Estimates only. Not customs, legal, tax or financial advice. <a href="./terms.html">Terms of Use and Disclaimer</a></p>
     <p><a href="./index.html">← All tools</a></p>
+  </div>
+</div>
+
+<div class="terms-backdrop" id="termsModal" hidden>
+  <div class="terms-dialog" role="dialog" aria-modal="true" aria-labelledby="termsTitle" aria-describedby="termsLead">
+    <div class="brand">Before you start</div>
+    <h2 id="termsTitle" tabindex="-1">Five things to know about this calculator</h2>
+    <p class="lead" id="termsLead">It is a free estimating tool. These points are the short form of the Terms of Use and Disclaimer.</p>
+    <ul class="terms-points">
+      <li><strong>Estimates, not quotes.</strong> Tariffs, fees, freight, landed cost and margin come from formulas and defaults researched on a past date. Rates change often and may be wrong for your goods.</li>
+      <li><strong>Not professional advice.</strong> Nothing here is customs, legal, tax, financial or procurement advice. Confirm HTS codes, duty rates and origin with a licensed customs broker.</li>
+      <li><strong>Tiers and picks come from your inputs.</strong> Supplier tiers, scores, ranks and "recommended" picks are your own data and checks run through the formula on this page. They are not our rating or endorsement of any company.</li>
+      <li><strong>You decide, and you verify.</strong> You are responsible for your purchases, prices, contracts and customs filings. To the extent the law allows, we are not liable for losses from relying on these estimates.</li>
+      <li><strong>Your data stays in your browser.</strong> We collect nothing. Your project, and the date you accepted these terms, are saved only in this browser.</li>
+    </ul>
+    <p class="accept-note">By selecting "I understand and agree" you accept the <a href="./terms.html" target="_blank" rel="noopener">Terms of Use and Disclaimer<span class="sr"> (opens in a new tab)</span></a>.</p>
+    <div class="terms-actions">
+      <button type="button" class="primary" id="termsAgree">I understand and agree</button>
+      <a href="./index.html">Leave the calculator</a>
+    </div>
   </div>
 </div>
 
@@ -372,6 +425,10 @@
   'use strict';
   var K = window.KitCore, C = window.KitCsv, SAMPLE = window.KitSample;
   var STORE_KEY = 'kitLandedCost.v1';
+  // Terms acknowledgment. Bump TERMS_VERSION and the key suffix together when the terms change materially.
+  var TERMS_KEY = 'kitLandedCost.terms.v1', TERMS_VERSION = '1', TERMS_EFFECTIVE = '2026-11-16';
+  var PRINT_DISCLAIMER = 'Estimate only, not a quote. Not customs, legal, tax or financial advice; confirm with a licensed customs broker. ' +
+    'Supplier tiers and picks reflect the user\'s own inputs, not a rating of any company. Terms: everpaula.github.io/marketplace-ops-toolkit/terms.html';
   var CHECK_LABELS = [
     ['factoryVerified', 'Factory verified: they own the production line, not a trader'],
     ['sampleApproved', 'Production sample approved'],
@@ -538,9 +595,10 @@
     Object.keys(R.mix.warnings).forEach(function (cid) { var c = findComp(cid); warn.push(esc(c ? c.name : cid) + ': ' + esc(R.mix.warnings[cid])); });
     if (t.missing.length) warn.push(t.missing.length + ' component(s) have no usable quote and are left out of the totals.');
     if (warn.length) html += '<div class="note warn">' + warn.join('<br>') + '</div>';
+    html += '<p class="disclaimer">Estimate only, built from your inputs and defaults researched on ' + esc(state.settings.asOf) + '. Not a quote, and not customs, legal, tax or financial advice. Supplier tiers and picks reflect your inputs, not a rating of any company. <a href="./terms.html">Terms</a></p>';
     if (state.ui.example) html = '<div class="note start-actions"><span>You are looking at the example project: 120 units and made-up suppliers.</span><button type="button" class="primary" data-action="new-blank" data-k="act||new-blank-note">Start my own project</button></div>' + html;
     document.getElementById('summary').innerHTML = html;
-    document.getElementById('printHead').textContent = state.project.name + '. Summary printed ' + fmtDate(todayIso()) + '. Defaults as of ' + state.settings.asOf + '. Not customs or legal advice.';
+    document.getElementById('printHead').textContent = state.project.name + '. Summary printed ' + fmtDate(todayIso()) + '. Defaults as of ' + state.settings.asOf + '. ' + PRINT_DISCLAIMER;
   }
   function stat(k, v, d, hero) { return '<div class="stat' + (hero ? ' hero' : '') + '"><div class="k">' + esc(k) + '</div><div class="v">' + v + '</div><div class="d">' + d + '</div></div>'; }
 
@@ -619,7 +677,7 @@
         '<div class="table-wrap"><table><thead><tr><th scope="col">Supplier</th><th scope="col">Origin</th><th scope="col">Incoterm</th>' +
         '<th scope="col" class="r">Price<span class="u">USD / ' + esc(c.uom) + '</span></th><th scope="col" class="r">MOQ</th><th scope="col" class="r">Prod.<span class="u">days</span></th>' +
         '<th scope="col" class="r">Deposit<span class="u">%</span></th><th scope="col">Balance</th><th scope="col" class="r">CBM<span class="u">per carton</span></th><th scope="col" class="r">Kg<span class="u">per carton</span></th>' +
-        '<th scope="col" class="r">Incoterm adj.<span class="u">USD / ' + esc(c.uom) + '</span></th><th scope="col">Risk</th>' +
+        '<th scope="col" class="r">Incoterm adj.<span class="u">USD / ' + esc(c.uom) + '</span></th><th scope="col">Risk<span class="u">your checks</span></th>' +
         '<th scope="col" class="r">Duty<span class="u">rate</span></th><th scope="col" class="r">Landed<span class="u">USD / ' + esc(c.uom) + '</span></th><th scope="col" class="r">Project cost<span class="u">incl. MOQ</span></th><th scope="col" class="r">Rank</th><th scope="col"><span class="sr">Remove</span></th></tr></thead><tbody>';
       (c.quotes || []).forEach(function (q) {
         var r = byId[q.id] || {};
@@ -663,8 +721,8 @@
   // ---------- render: mix ----------
   function renderMix(R) {
     var p = state.project, mix = R.mix;
-    var h = '<div class="table-wrap"><table><thead><tr><th scope="col">Component</th><th scope="col">Recommended</th><th scope="col" class="r">Landed<span class="u">per UoM</span></th><th scope="col" class="r">Project cost</th>' +
-      '<th scope="col">Second source</th><th scope="col" class="r">Cost of the backup<span class="u">extra for the project</span></th></tr></thead><tbody>';
+    var h = '<div class="table-wrap"><table><thead><tr><th scope="col">Component</th><th scope="col">Pick<span class="u">lowest landed at your tier floor</span></th><th scope="col" class="r">Landed<span class="u">per UoM</span></th><th scope="col" class="r">Project cost</th>' +
+      '<th scope="col">Second source<span class="u">next lowest</span></th><th scope="col" class="r">Cost of the backup<span class="u">extra for the project</span></th></tr></thead><tbody>';
     p.components.forEach(function (c) {
       var rows = mix.rows[c.id] || [];
       var find = function (id) { return rows.filter(function (r) { return r.quoteId === id; })[0]; };
@@ -880,7 +938,7 @@
       '<li><strong>Freight split:</strong> each box\'s cost is shared by CBM, or by weight when the box closed on weight. LCL is billed per revenue ton (CBM or 1,000 kg, whichever is larger, minimum 1).</li>' +
       '<li><strong>Quote ranking</strong> uses full-container rates: a carton pays its share of the cheapest box by volume or weight, whichever binds. Per-entry fees are the same for every quote and stay out of the ranking.</li>' +
       '<li><strong>MOQ:</strong> you buy whole cartons and at least the MOQ. The leftover is costed to the project, or carried to the next one as stock (paid, but outside this project\'s cost).</li>' +
-      '<li><strong>Supplier risk score</strong> (0 to 100): factory verified 25, sample approved 25, US export history 15, business license 10, third-party audit 10, category certifications 10, responsiveness 5. Tier A at 80 or more, B at 55 or more, else C. No verified factory and no approved sample is tier C regardless.</li>' +
+      '<li><strong>Supplier risk score</strong> (0 to 100): factory verified 25, sample approved 25, US export history 15, business license 10, third-party audit 10, category certifications 10, responsiveness 5. Tier A at 80 or more, B at 55 or more, else C. No verified factory and no approved sample is tier C regardless. The score counts only the checks you tick; it is not our rating of any supplier.</li>' +
       '<li><strong>Storage:</strong> pallets = lot CBM ÷ CBM per pallet, rounded up, times the monthly rate and months. Storage months also push delivery to site, and with it the customer payments tied to delivery.</li>' +
       '</ul>';
     h += '<details class="no-print" style="margin-top:0.6rem"><summary data-k="csv||cols">CSV file format (version 1)</summary><p class="faint" style="margin:0.5rem 0">First line <code>' + esc(C.VERSION_LINE) + '</code>, then this header. Each row has a record type and fills the columns it needs. Export-only columns are ignored on import.</p><div class="table-wrap"><table><thead><tr><th scope="col">Column</th><th scope="col">Meaning</th></tr></thead><tbody>' +
@@ -975,8 +1033,8 @@
         if (p.components.length && !state.ui.example && !confirm('Start a blank project? The current one is replaced; export CSV first if you want to keep it. Your tariff and freight settings stay.')) return;
         p = state.project = blankProject(); state.ui.example = false; state.ui.scenario = defaultUi().scenario; break;
       case 'clear':
-        if (!confirm('Delete everything saved for this tool in this browser and start a blank project?')) return;
-        try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
+        if (!confirm('Delete everything saved for this tool in this browser, including your acceptance of the terms, and start a blank project?')) return;
+        try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(TERMS_KEY); } catch (e) { /* ignore */ }
         state = freshState(); state.project = blankProject(); break;
       case 'export': return exportCsv();
       case 'import': return document.getElementById('csvFile').click();
@@ -1024,6 +1082,7 @@
     return '<details class="find no-print"><summary data-k="find||' + esc(c.id) + '">Find suppliers for ' + esc(q) + '</summary><div class="find-links">' +
       links.map(function (l) { return '<span><a href="' + esc(l[1]) + '" target="_blank" rel="noopener">' + esc(l[0]) + '</a>' + (l[2] ? ' <span class="faint">' + esc(l[2]) + '</span>' : '') + '</span>'; }).join('') +
       '</div><p>Add each candidate with + Add quote and tick only the checks you have verified. ImportYeti shows US customs shipment records, a quick way to confirm a factory already exports to the US.</p>' +
+      '<p>These are third-party sites with their own terms. We are not affiliated with them and are not paid for these links; only the search words above are sent to them.</p>' +
       '<p>China tip: 1688.com, the domestic wholesale site of the Alibaba group, lists factory prices inside China in Chinese and RMB. It is a good price check through your agent in China. Taobao is retail and not a source for container orders.</p></details>';
   }
   // Suppliers sent from a sourcing report: #add-suppliers=<encodeURIComponent(JSON)>
@@ -1052,7 +1111,8 @@
         c.quotes.push(newQuote({ supplier: n, origin: s.origin === 'VN' ? 'VN' : 'CN' })); added++;
       });
       save();
-      msg.textContent = added ? 'Added ' + added + ' supplier' + (added === 1 ? '' : 's') + ' to ' + name + ' in step 2. Fill in price, MOQ and carton data from their quotes.'
+      msg.textContent = added ? 'Added ' + added + ' supplier' + (added === 1 ? '' : 's') + ' to ' + name + ' in step 2. Fill in price, MOQ and carton data from their quotes. ' +
+          'They show as tier C until you tick the checks you have done: the tier reflects your checks, not a rating of the company.'
         : 'Those suppliers are already in ' + name + ' in step 2.';
     } catch (err) { msg.textContent = 'That supplier link could not be read. Nothing was changed.'; }
     try { history.replaceState(null, '', location.pathname + location.search); } catch (err2) { /* ignore */ }
@@ -1127,10 +1187,67 @@
     location.href = './vendor-scorecard.html#import=' + b64;
   }
 
-  importFromHash();
-  window.addEventListener('hashchange', function () { if ((location.hash || '').indexOf('#add-suppliers=') === 0) { importFromHash(); rerender(); } });
+  // ---------- terms acknowledgment (clickwrap) ----------
+  // Acceptance lives in this browser only. If storage is blocked the notice simply shows on every visit.
+  function termsAccepted() {
+    try {
+      var t = JSON.parse(localStorage.getItem(TERMS_KEY) || 'null');
+      return !!(t && t.version === TERMS_VERSION && t.acceptedAt);
+    } catch (e) { return false; }
+  }
+  function recordAcceptance() {
+    try { localStorage.setItem(TERMS_KEY, JSON.stringify({ version: TERMS_VERSION, termsEffective: TERMS_EFFECTIVE, acceptedAt: new Date().toISOString() })); } catch (e) { /* storage blocked */ }
+  }
+  var termsOk = termsAccepted(), termsModal = document.getElementById('termsModal');
+  function setBackgroundInert(on) {
+    Array.prototype.forEach.call(document.body.children, function (el) {
+      if (el === termsModal || el.tagName === 'SCRIPT') return;
+      if (on) el.setAttribute('inert', ''); else el.removeAttribute('inert');
+    });
+  }
+  function termsFocusables() {
+    return Array.prototype.filter.call(termsModal.querySelectorAll('a[href], button:not([disabled])'), function (el) { return el.offsetParent !== null; });
+  }
+  function openTerms() {
+    termsModal.hidden = false;
+    document.documentElement.classList.add('terms-open');
+    setBackgroundInert(true);
+    document.getElementById('termsTitle').focus();
+  }
+  function closeTerms() {
+    termsModal.hidden = true;
+    document.documentElement.classList.remove('terms-open');
+    setBackgroundInert(false);
+    var h1 = document.querySelector('header h1');
+    h1.setAttribute('tabindex', '-1');
+    h1.focus({ preventScroll: true });
+  }
+  termsModal.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') { ev.preventDefault(); return; }
+    if (ev.key !== 'Tab') return;
+    var f = termsFocusables(); if (!f.length) return;
+    var first = f[0], last = f[f.length - 1], a = document.activeElement;
+    if (ev.shiftKey && (a === first || !termsModal.contains(a) || a.id === 'termsTitle')) { ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && a === last) { ev.preventDefault(); first.focus(); }
+  });
+  // Elements parsed after this script (footer, theme button) also go inert, and focus never leaves the dialog.
+  document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { if (!termsModal.hidden) setBackgroundInert(true); }, 0); });
+  document.addEventListener('focusin', function (ev) {
+    if (!termsModal.hidden && !termsModal.contains(ev.target)) document.getElementById('termsTitle').focus();
+  });
+  document.getElementById('termsAgree').addEventListener('click', function () {
+    termsOk = true;
+    recordAcceptance();
+    closeTerms();
+    if ((location.hash || '').indexOf('#add-suppliers=') === 0) { importFromHash(); rerender(); }
+  });
+
+  // Suppliers sent from a report load only after the terms are accepted.
+  if (termsOk) importFromHash();
+  window.addEventListener('hashchange', function () { if (termsOk && (location.hash || '').indexOf('#add-suppliers=') === 0) { importFromHash(); rerender(); } });
   renderAll();
   save();
+  if (!termsOk) openTerms();
 })();
 </script>
 <script>
@@ -1164,7 +1281,7 @@
 })();
 </script>
 <div class="toolkit-strip-footer">
-  <a href="./index.html">← Marketplace Ops Toolkit</a> · <a href="./case-studies.html">Case studies</a> · <a href="./about.html">About</a> · <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">GitHub · MIT</a>
+  <a href="./index.html">← Marketplace Ops Toolkit</a> · <a href="./case-studies.html">Case studies</a> · <a href="./about.html">About</a> · <a href="./terms.html">Terms</a> · <a href="https://github.com/everpaula/marketplace-ops-toolkit" target="_blank" rel="noopener">GitHub · MIT</a>
 </div>
 </body>
 </html>

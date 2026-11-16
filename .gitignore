@@ -24,3 +24,6 @@ NEXT_STEPS.md
 
 # Private design docs (never publish)
 docs/superpowers/
+
+# Local design-hook config
+.impeccable/
