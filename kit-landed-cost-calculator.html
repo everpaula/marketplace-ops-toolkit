@@ -181,6 +181,7 @@
   .footer a { color: var(--accent); text-decoration: none; }
   .footer p { margin-bottom: 0.35rem; }
   .print-only { display: none; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   .toolkit-home-link {
     position: fixed; top: 12px; left: 14px; z-index: 100; background: var(--bg-elev); color: var(--text);
@@ -466,10 +467,11 @@
 
   // ---------- inputs ----------
   function inp(scope, path, value, type, cls, extra) {
-    var shown = type === 'pct' ? pctIn(value || 0) : (value === null || value === undefined ? '' : value);
+    var shown = value === null || value === undefined || value === '' ? (type === 'pct' ? '0' : '')
+      : (type === 'pct' || type === 'pctopt' ? pctIn(value) : value);
     var ids = (extra && extra.id ? ' data-id="' + esc(extra.id) + '"' : '') + (extra && extra.cid ? ' data-cid="' + esc(extra.cid) + '"' : '') + (extra && extra.o ? ' data-o="' + esc(extra.o) + '"' : '');
     var key = scope + '|' + ((extra && (extra.cid ? extra.cid + '/' : '') + (extra.id || extra.o || '')) || '') + '|' + path;
-    var isNum = type === 'num' || type === 'pct';
+    var isNum = type === 'num' || type === 'pct' || type === 'pctopt';
     var label = extra && extra.label ? ' aria-label="' + esc(extra.label) + '"' : '';
     return '<input type="text"' + (isNum ? ' inputmode="decimal" class="n ' + (cls || '') + '"' : ' class="' + (cls || '') + '"') +
       ' data-scope="' + scope + '" data-path="' + path + '" data-type="' + (type || 'text') + '"' + ids + ' data-k="' + esc(key) + '" value="' + esc(shown) + '"' + label + '>';
@@ -530,7 +532,6 @@
       '<th scope="col" class="r">Per carton<span class="u">UoM</span></th><th scope="col">HTS code<span class="u">example, confirm</span></th>' +
       '<th scope="col" class="r">Base duty<span class="u">%</span></th><th scope="col" class="r">Sec. 232 share<span class="u">% of value</span></th><th scope="col" class="r">232 rate<span class="u">% if not default</span></th><th scope="col"><span class="sr">Remove</span></th></tr></thead><tbody>';
     p.components.forEach(function (c) {
-      var x = { id: c.id };
       h += '<tr><td>' + inp('comp', 'name', c.name, 'text', 'w-l', { id: c.id, label: 'Component name' }) + '</td>' +
         (p.kits.length > 1 ? '<td>' + sel('comp', 'kitId', c.kitId, kitOpts, { id: c.id, label: 'Kit' }) + '</td>' : '') +
         '<td>' + inp('comp', 'uom', c.uom, 'text', 'w-xs', { id: c.id, label: 'Unit of measure' }) + '</td>' +
@@ -540,9 +541,8 @@
         '<td>' + inp('comp', 'htsCode', c.htsCode, 'text', 'w-s', { id: c.id, label: 'HTS code' }) + '</td>' +
         '<td class="r">' + inp('comp', 'baseDutyRate', c.baseDutyRate, 'pct', 'w-xs', { id: c.id, label: 'Base duty percent' }) + '</td>' +
         '<td class="r">' + inp('comp', 'metal232Share', c.metal232Share, 'pct', 'w-xs', { id: c.id, label: 'Section 232 share' }) + '</td>' +
-        '<td class="r">' + inp('comp', 'metal232Rate', c.metal232Rate === undefined ? '' : c.metal232Rate, c.metal232Rate === undefined ? 'num' : 'pct', 'w-xs', { id: c.id, label: 'Section 232 rate override' }).replace('data-type="num"', 'data-type="pctopt"') + '</td>' +
+        '<td class="r">' + inp('comp', 'metal232Rate', c.metal232Rate, 'pctopt', 'w-xs', { id: c.id, label: 'Section 232 rate override' }) + '</td>' +
         '<td>' + btn('del-comp', '×', { id: c.id, label: 'Remove component ' + c.name }, 'icon') + '</td></tr>';
-      void x;
     });
     if (!p.components.length) h += '<tr><td colspan="11" class="faint">No components yet. Add one, or load the example.</td></tr>';
     h += '</tbody></table></div><div style="margin-top:0.5rem">' + btn('add-comp', '+ Add component') + '</div>';
