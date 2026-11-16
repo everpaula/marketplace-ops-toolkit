@@ -160,6 +160,13 @@
   .field span.f { color: var(--text-muted); }
   .note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 0.6rem 0.85rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.86rem; margin: 0.8rem 0; }
   .note.warn { border-left-color: var(--yellow); background: var(--yellow-soft); }
+  .start-lede { margin: 0.4rem 0 0; color: var(--text-muted); max-width: 62ch; }
+  .start-steps { list-style: none; margin: 0.9rem 0 1rem; padding: 0; display: grid; gap: 0.55rem; counter-reset: st; }
+  .start-steps li { counter-increment: st; display: grid; grid-template-columns: 1.7rem 1fr; gap: 0.65rem; align-items: start; font-size: 0.92rem; }
+  .start-steps li::before { content: counter(st); width: 1.7rem; height: 1.7rem; border-radius: 50%; border: 1px solid var(--border-bright); display: grid; place-items: center; font-size: 0.78rem; color: var(--text-muted); }
+  .start-steps li.done { color: var(--text-muted); }
+  .start-steps li.done::before { content: "\2713"; background: var(--green-soft); border-color: var(--green); color: var(--green); }
+  .start-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
   .errors { color: var(--red); font-size: 0.82rem; margin-top: 0.4rem; }
   .ok-msg { color: var(--green); font-size: 0.82rem; margin-top: 0.4rem; }
   ul.plain { padding-left: 1.1rem; font-size: 0.86rem; color: var(--text-muted); }
@@ -269,6 +276,7 @@
           <option value="A">A only</option><option value="B">B or better</option><option value="C">Any (C allowed)</option>
         </select></label>
       <span class="spacer"></span>
+      <button type="button" data-action="new-blank" data-k="act||new-blank">Start blank</button>
       <button type="button" data-action="load-example" data-k="act||load-example">Load example</button>
       <button type="button" data-action="export" data-k="act||export">Export CSV</button>
       <button type="button" data-action="import" data-k="act||import">Import CSV</button>
@@ -395,12 +403,13 @@
   function todayIso() { return new Date().toISOString().slice(0, 10); }
 
   // ---------- state ----------
-  function defaultUi() { return { minTier: 'B', pasteLocale: 'en', scenario: { dutyCN: 0, dutyVN: 0, freight: null, switchOrigin: {} } }; }
-  function freshState() { return { v: 1, project: clone(SAMPLE), settings: clone(K.DEFAULTS), ui: defaultUi() }; }
+  function defaultUi() { return { minTier: 'B', pasteLocale: 'en', example: false, scenario: { dutyCN: 0, dutyVN: 0, freight: null, switchOrigin: {} } }; }
+  // First visit opens a blank project; the example is one click away.
+  function freshState() { return { v: 1, project: blankProject(), settings: clone(K.DEFAULTS), ui: defaultUi() }; }
   function blankProject() {
     var d = K.addDays(todayIso(), 30);
-    return { name: 'New project', kits: [{ id: 'k1', name: 'Standard finish kit', units: 100 }], components: [],
-      waves: [{ id: 'w1', date: d, units: 100 }], pricing: { mode: 'margin', value: 0.2 },
+    return { name: 'New project', kits: [{ id: 'k1', name: 'Kit 1', units: null }], components: [],
+      waves: [{ id: 'w1', date: d, units: null }], pricing: { mode: 'margin', value: 0.2 },
       billing: [{ pct: 0.3, daysAfter: 'contract', days: 0 }, { pct: 0.7, daysAfter: 'delivery', days: 30 }],
       storage: { perPalletMonth: 28, months: 1 }, moqOverage: 'project' };
   }
@@ -416,7 +425,7 @@
           return { v: 1, project: s.project, settings: s.settings, ui: ui };
         }
       }
-    } catch (e) { /* storage blocked or corrupt: start from the example */ }
+    } catch (e) { /* storage blocked or corrupt: start blank */ }
     return freshState();
   }
   function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* private mode */ } }
@@ -491,7 +500,23 @@
   }
 
   // ---------- render: summary ----------
+  function hasNumbers(R) { var c = R.totals.project.cost; return isFinite(c) && c > 0; }
+  function renderStart() {
+    var p = state.project;
+    var anyCheck = p.components.some(function (c) { return c.quotes.some(function (q) { var ch = q.risk && q.risk.checks; return ch && Object.keys(ch).some(function (k) { return ch[k]; }); }); });
+    var steps = [
+      [p.kits.some(function (k) { return k.units > 0; }), '<strong>Step 1, kit:</strong> name each kit and enter how many apartment units it covers.'],
+      [p.components.length > 0, '<strong>Step 1, components:</strong> add each item of one unit with its quantity per unit, waste %, units per carton, HTS code and base duty.'],
+      [p.waves.some(function (w) { return w.units > 0; }), '<strong>Step 1, lots:</strong> enter the PO date and units of each shipment lot.'],
+      [p.components.length > 0 && p.components.every(function (c) { return c.quotes.some(function (q) { return q.price > 0; }); }), '<strong>Step 2, quotes:</strong> enter 2 to 4 supplier quotes per component, or paste them from a spreadsheet.'],
+      [anyCheck, '<strong>Step 2, risk:</strong> tick the supplier checks you have actually done. Unchecked suppliers rank as tier C.']
+    ];
+    return '<h2>Start here</h2><p class="start-lede">Your project starts blank. Fill these in and the landed cost, recommended suppliers, containers and cash calendar appear here as soon as one component has a priced quote.</p>' +
+      '<ol class="start-steps">' + steps.map(function (s) { return '<li' + (s[0] ? ' class="done"' : '') + '><span>' + s[1] + '</span></li>'; }).join('') + '</ol>' +
+      '<div class="start-actions"><button type="button" class="primary" data-action="load-example" data-k="act||load-example-start">See a filled example first</button><span class="faint">Opens a 120-unit sample project. Start blank again from the toolbar.</span></div>';
+  }
   function renderSummary(R) {
+    if (!hasNumbers(R)) { document.getElementById('summary').innerHTML = renderStart(); document.getElementById('printHead').textContent = state.project.name; return; }
     var t = R.totals, cash = R.cash;
     var boxes = 0, lcl = 0;
     t.containers.forEach(function (w) { Object.keys(w.byOrigin).forEach(function (o) { boxes += w.byOrigin[o].containers.length; if (w.byOrigin[o].lclCbm > 0) lcl++; }); });
@@ -508,6 +533,7 @@
     Object.keys(R.mix.warnings).forEach(function (cid) { var c = findComp(cid); warn.push(esc(c ? c.name : cid) + ': ' + esc(R.mix.warnings[cid])); });
     if (t.missing.length) warn.push(t.missing.length + ' component(s) have no usable quote and are left out of the totals.');
     if (warn.length) html += '<div class="note warn">' + warn.join('<br>') + '</div>';
+    if (state.ui.example) html = '<div class="note start-actions"><span>You are looking at the example project: 120 units and made-up suppliers.</span><button type="button" class="primary" data-action="new-blank" data-k="act||new-blank-note">Start my own project</button></div>' + html;
     document.getElementById('summary').innerHTML = html;
     document.getElementById('printHead').textContent = state.project.name + '. Summary printed ' + fmtDate(todayIso()) + '. Defaults as of ' + state.settings.asOf + '. Not customs or legal advice.';
   }
@@ -864,7 +890,13 @@
     document.querySelector('[data-scope="dest"]').value = state.settings.destination || 'west';
     document.querySelector('[data-k="ui||minTier"]').value = state.ui.minTier;
     document.querySelector('[data-k="ui||pasteLocale"]').value = state.ui.pasteLocale;
-    renderSummary(R); renderKit(); renderQuotes(R); renderMix(R); renderResults(R); renderScen(R); renderCash(R); renderAssump();
+    renderSummary(R); renderKit(); renderQuotes(R);
+    if (hasNumbers(R)) { renderMix(R); renderResults(R); renderScen(R); renderCash(R); }
+    else {
+      var wait = '<p class="faint">Appears once step 1 has units and lots and each component in step 2 has at least one priced quote.</p>';
+      ['mixBody', 'resultsBody', 'scenBody', 'cashBody'].forEach(function (id) { document.getElementById(id).innerHTML = wait; });
+    }
+    renderAssump();
     lastR = R;
   }
   var lastR = null, openRisk = {};
@@ -932,8 +964,11 @@
     var p = state.project, s = state.settings;
     switch (a) {
       case 'load-example':
-        if (!confirm('Replace the current project with the example? Your tariff and freight settings stay.')) return;
-        p = state.project = clone(SAMPLE); break;
+        if (p.components.length && !state.ui.example && !confirm('Replace the current project with the example? Export CSV first if you want to keep it. Your tariff and freight settings stay.')) return;
+        p = state.project = clone(SAMPLE); state.ui.example = true; break;
+      case 'new-blank':
+        if (p.components.length && !state.ui.example && !confirm('Start a blank project? The current one is replaced; export CSV first if you want to keep it. Your tariff and freight settings stay.')) return;
+        p = state.project = blankProject(); state.ui.example = false; state.ui.scenario = defaultUi().scenario; break;
       case 'clear':
         if (!confirm('Delete everything saved for this tool in this browser and start a blank project?')) return;
         try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
